@@ -56,6 +56,7 @@ export const AdminDashboard = ({ setActiveTab }) => {
           trendPositive={students.length > 0}
           accentColor="#4f46e5"
           lightBg="#e0e7ff"
+          onClick={() => setActiveTab('students')}
         />
         <StatCard
           label="Faculty & Teachers"
@@ -65,6 +66,7 @@ export const AdminDashboard = ({ setActiveTab }) => {
           trendPositive={teachers.length > 0}
           accentColor="#0ea5e9"
           lightBg="#e0f2fe"
+          onClick={() => setActiveTab('teachers')}
         />
         <StatCard
           label="Fees Collected"
@@ -74,6 +76,7 @@ export const AdminDashboard = ({ setActiveTab }) => {
           trendPositive={totalFeesPaid > 0}
           accentColor="#10b981"
           lightBg="#ecfdf5"
+          onClick={() => setActiveTab('fees')}
         />
         <StatCard
           label="Campus Classes"
@@ -83,6 +86,7 @@ export const AdminDashboard = ({ setActiveTab }) => {
           trendPositive={true}
           accentColor="#8b5cf6"
           lightBg="#f5f3ff"
+          onClick={() => setActiveTab('classes')}
         />
       </div>
 

@@ -60,24 +60,27 @@ export const TeacherDashboard = ({ setActiveTab }) => {
           trendPositive={isAttendanceMarkedToday}
           accentColor="#3b82f6"
           lightBg="#eff6ff"
+          onClick={() => setActiveTab('attendance')}
         />
         <StatCard
           label="Active Assigned Homework"
           value={homework.length}
           icon={BookOpen}
-          trend="82 Submissions Received"
+          trend="Submissions Tracking"
           trendPositive={true}
           accentColor="#10b981"
           lightBg="#ecfdf5"
+          onClick={() => setActiveTab('homework')}
         />
         <StatCard
-          label="Class Average GPA"
-          value="3.84"
+          label="Class Gradebook"
+          value="3.84 GPA"
           icon={Award}
-          trend="Top 5% in District"
+          trend="View Marks"
           trendPositive={true}
           accentColor="#8b5cf6"
           lightBg="#f5f3ff"
+          onClick={() => setActiveTab('gradebook')}
         />
         <StatCard
           label="Parent Leave Requests"
@@ -87,6 +90,7 @@ export const TeacherDashboard = ({ setActiveTab }) => {
           trendPositive={pendingLeavesCount === 0}
           accentColor="#f59e0b"
           lightBg="#fef3c7"
+          onClick={() => setActiveTab('leave')}
         />
       </div>
 

@@ -106,6 +106,7 @@ export const StudentDashboard = ({ setActiveTab }) => {
           trendPositive={true}
           accentColor="#10b981"
           lightBg="#ecfdf5"
+          onClick={() => setActiveTab('attendance')}
         />
         <StatCard
           label="Pending Homework"
@@ -115,6 +116,7 @@ export const StudentDashboard = ({ setActiveTab }) => {
           trendPositive={pendingHwCount === 0}
           accentColor="#f59e0b"
           lightBg="#fef3c7"
+          onClick={() => setActiveTab('homework')}
         />
         <StatCard
           label="Current Term GPA"
@@ -124,6 +126,7 @@ export const StudentDashboard = ({ setActiveTab }) => {
           trendPositive={true}
           accentColor="#4f46e5"
           lightBg="#e0e7ff"
+          onClick={() => setActiveTab('exams')}
         />
         <StatCard
           label="Fee Dues"
@@ -133,6 +136,7 @@ export const StudentDashboard = ({ setActiveTab }) => {
           trendPositive={pendingFeeAmount === 0}
           accentColor={pendingFeeAmount > 0 ? '#ef4444' : '#10b981'}
           lightBg={pendingFeeAmount > 0 ? '#fef2f2' : '#ecfdf5'}
+          onClick={() => setActiveTab('fees')}
         />
       </div>
 

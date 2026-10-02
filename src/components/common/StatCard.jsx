@@ -9,15 +9,26 @@ export const StatCard = ({
   trendPositive = true,
   accentColor = '#4f46e5',
   lightBg = '#e0e7ff',
-  subText
+  subText,
+  onClick,
 }) => {
   return (
     <div
-      className="stat-card"
+      className={`stat-card ${onClick ? 'clickable' : ''}`}
+      onClick={onClick}
       style={{
         '--card-accent': accentColor,
         '--icon-bg': lightBg,
         '--icon-color': accentColor,
+        cursor: onClick ? 'pointer' : 'default',
+      }}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick();
+        }
       }}
     >
       <div>
