@@ -13,6 +13,8 @@ import {
   Mail,
   Phone,
   CheckCircle,
+  Camera,
+  Upload,
 } from 'lucide-react';
 
 export const StudentManagement = () => {
@@ -22,9 +24,19 @@ export const StudentManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStudentForView, setSelectedStudentForView] = useState(null);
 
-  // New Student Form State
+  // New Student Form State with Photo
+  const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80';
+  const PRESET_AVATARS = [
+    'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80', // Boy 1
+    'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80', // Girl 1
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', // Boy 2
+    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80', // Girl 2
+    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', // Boy 3
+  ];
+
   const [formData, setFormData] = useState({
     name: '',
+    avatar: DEFAULT_AVATAR,
     class: 'Class 10-A',
     rollNo: '',
     phone: '',
@@ -35,6 +47,17 @@ export const StudentManagement = () => {
     bloodGroup: 'O+',
     house: 'Emerald Dragons',
   });
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, avatar: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const filteredStudents = students.filter((s) => {
     const matchesSearch =
@@ -53,6 +76,7 @@ export const StudentManagement = () => {
     setIsModalOpen(false);
     setFormData({
       name: '',
+      avatar: DEFAULT_AVATAR,
       class: 'Class 10-A',
       rollNo: '',
       phone: '',
@@ -254,6 +278,91 @@ export const StudentManagement = () => {
         title="Enroll New Student"
       >
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Student Photo Upload & Preview Section */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1.25rem',
+            padding: '1rem',
+            background: 'var(--bg-input)',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px dashed var(--border)'
+          }}>
+            <div style={{ position: 'relative' }}>
+              <img
+                src={formData.avatar}
+                alt="Student Preview"
+                style={{
+                  width: '68px',
+                  height: '68px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '3px solid var(--primary)',
+                  boxShadow: 'var(--shadow-sm)'
+                }}
+              />
+              <label
+                htmlFor="student-photo-file"
+                style={{
+                  position: 'absolute',
+                  bottom: '-2px',
+                  right: '-2px',
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '50%',
+                  background: 'var(--primary)',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+                }}
+                title="Upload Photo from Camera / Gallery"
+              >
+                <Camera size={14} />
+              </label>
+              <input
+                id="student-photo-file"
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                style={{ display: 'none' }}
+              />
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '3px' }}>
+                Student Photo (Identity Card)
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                Upload from Camera / Gallery or choose a sample avatar below:
+              </div>
+
+              {/* Sample Preset Avatars for 1-Click Pick */}
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                {PRESET_AVATARS.map((url, idx) => (
+                  <img
+                    key={idx}
+                    src={url}
+                    alt={`Avatar ${idx}`}
+                    onClick={() => setFormData(prev => ({ ...prev, avatar: url }))}
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      cursor: 'pointer',
+                      border: formData.avatar === url ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      opacity: formData.avatar === url ? 1 : 0.6,
+                      transition: 'all 0.15s ease'
+                    }}
+                    title="Select Avatar"
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
           <div>
             <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
               Student Full Name *
