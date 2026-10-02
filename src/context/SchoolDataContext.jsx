@@ -127,6 +127,10 @@ export const SchoolDataProvider = ({ children }) => {
     return parent;
   };
 
+  const updateParent = (id, updatedData) => {
+    setParents(prev => prev.map(p => (p.id === id ? { ...p, ...updatedData } : p)));
+  };
+
   const deleteParent = (id) => {
     setParents(prev => prev.filter(p => p.id !== id));
   };
@@ -154,6 +158,15 @@ export const SchoolDataProvider = ({ children }) => {
     }
 
     return teacher;
+  };
+
+  const updateTeacher = (id, updatedData) => {
+    setTeachers(prev => prev.map(t => (t.id === id ? { ...t, ...updatedData } : t)));
+    if (updatedData.classTeacherOf && updatedData.classTeacherOf !== 'None') {
+      setClasses(prev => prev.map(c => 
+        c.name === updatedData.classTeacherOf ? { ...c, classTeacher: updatedData.name || c.classTeacher } : c
+      ));
+    }
   };
 
   const deleteTeacher = (id) => {
@@ -516,8 +529,10 @@ export const SchoolDataProvider = ({ children }) => {
         deleteStudent,
         clearAllStudents,
         addParent,
+        updateParent,
         deleteParent,
         addTeacher,
+        updateTeacher,
         deleteTeacher,
         addSubject,
         deleteSubject,

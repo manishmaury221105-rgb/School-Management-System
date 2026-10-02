@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
+import { useAuth, ROLES } from '../../context/AuthContext';
 import { Modal } from '../common/Modal';
 import {
   Users,
@@ -15,13 +16,18 @@ import {
   CheckCircle,
   Camera,
   Upload,
+  Pencil,
 } from 'lucide-react';
 
 export const StudentManagement = () => {
-  const { students, addStudent, deleteStudent, clearAllStudents, classes } = useSchoolData();
+  const { currentRole } = useAuth();
+  const isAdmin = currentRole === ROLES.ADMIN;
+  const { students, addStudent, updateStudent, deleteStudent, clearAllStudents, classes } = useSchoolData();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingStudentId, setEditingStudentId] = useState(null);
   const [selectedStudentForView, setSelectedStudentForView] = useState(null);
 
   // New Student Form State with Photo
@@ -48,6 +54,21 @@ export const StudentManagement = () => {
     house: 'Emerald Dragons',
   });
 
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    avatar: DEFAULT_AVATAR,
+    class: 'Class 10-A',
+    rollNo: '',
+    phone: '',
+    dob: '2010-05-15',
+    email: '',
+    parentName: '',
+    parentContact: '',
+    bloodGroup: 'O+',
+    house: 'Emerald Dragons',
+    feeStatus: 'Pending',
+  });
+
   const handlePhotoUpload = (e) => {
     const file = e.target.files && e.target.files[0];
     if (file) {
@@ -57,6 +78,44 @@ export const StudentManagement = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleEditPhotoUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditFormData(prev => ({ ...prev, avatar: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleOpenEditModal = (student) => {
+    setEditingStudentId(student.id);
+    setEditFormData({
+      name: student.name || '',
+      avatar: student.avatar || DEFAULT_AVATAR,
+      class: student.class || 'Class 10-A',
+      rollNo: student.rollNo || '',
+      phone: student.phone || '',
+      dob: student.dob || '2010-05-15',
+      email: student.email || '',
+      parentName: student.parentName || '',
+      parentContact: student.parentContact || '',
+      bloodGroup: student.bloodGroup || 'O+',
+      house: student.house || 'Emerald Dragons',
+      feeStatus: student.feeStatus || 'Pending',
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault();
+    if (!editFormData.name || !editFormData.rollNo || !editFormData.phone) return;
+    updateStudent(editingStudentId, editFormData);
+    setIsEditModalOpen(false);
+    setEditingStudentId(null);
   };
 
   const filteredStudents = students.filter((s) => {
@@ -174,7 +233,7 @@ export const StudentManagement = () => {
                 <th>Class & Roll</th>
                 <th>Attendance</th>
                 <th>GPA</th>
-                <th>Fee Status</th>
+                {isAdmin && <th>Fee Status</th>}
                 <th>Guardian Contact</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
@@ -182,7 +241,7 @@ export const StudentManagement = () => {
             <tbody>
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '3.5rem 1.5rem', color: 'var(--text-muted)' }}>
+                  <td colSpan={isAdmin ? 8 : 7} style={{ textAlign: 'center', padding: '3.5rem 1.5rem', color: 'var(--text-muted)' }}>
                     <div style={{
                       width: '64px',
                       height: '64px',
@@ -256,11 +315,13 @@ export const StudentManagement = () => {
                         {stu.gpa ? `${stu.gpa} / 4.0` : '3.8 / 4.0'}
                       </span>
                     </td>
-                    <td>
-                      <span className={`badge-status ${stu.feeStatus === 'Paid' ? 'badge-paid' : 'badge-pending'}`}>
-                        {stu.feeStatus}
-                      </span>
-                    </td>
+                    {isAdmin && (
+                      <td>
+                        <span className={`badge-status ${stu.feeStatus === 'Paid' ? 'badge-paid' : 'badge-pending'}`}>
+                          {stu.feeStatus}
+                        </span>
+                      </td>
+                    )}
                     <td>
                       <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>{stu.parentName}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{stu.parentContact}</div>
@@ -274,6 +335,14 @@ export const StudentManagement = () => {
                           title="View Profile Details"
                         >
                           <Eye size={15} />
+                        </button>
+                        <button
+                          onClick={() => handleOpenEditModal(stu)}
+                          className="icon-btn"
+                          style={{ width: '32px', height: '32px', color: 'var(--primary)' }}
+                          title="Edit Student Information"
+                        >
+                          <Pencil size={15} />
                         </button>
                         <button
                           onClick={() => deleteStudent(stu.id)}
@@ -557,6 +626,284 @@ export const StudentManagement = () => {
         </form>
       </Modal>
 
+      {/* Edit Student Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingStudentId(null);
+        }}
+        title="Edit Student Information"
+      >
+        <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Student Photo Upload & Preview Section */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1.25rem',
+            padding: '1rem',
+            background: 'var(--bg-input)',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px dashed var(--border)'
+          }}>
+            <div style={{ position: 'relative' }}>
+              <img
+                src={editFormData.avatar}
+                alt="Student Preview"
+                style={{
+                  width: '68px',
+                  height: '68px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '3px solid var(--primary)',
+                  boxShadow: 'var(--shadow-sm)'
+                }}
+              />
+              <label
+                htmlFor="edit-student-photo-file"
+                style={{
+                  position: 'absolute',
+                  bottom: '-2px',
+                  right: '-2px',
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '50%',
+                  background: 'var(--primary)',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+                }}
+                title="Upload Photo from Camera / Gallery"
+              >
+                <Camera size={14} />
+              </label>
+              <input
+                id="edit-student-photo-file"
+                type="file"
+                accept="image/*"
+                onChange={handleEditPhotoUpload}
+                style={{ display: 'none' }}
+              />
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '3px' }}>
+                Student Photo (Identity Card)
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                Upload new photo or choose avatar below:
+              </div>
+
+              {/* Sample Preset Avatars */}
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                {PRESET_AVATARS.map((url, idx) => (
+                  <img
+                    key={idx}
+                    src={url}
+                    alt={`Avatar ${idx}`}
+                    onClick={() => setEditFormData(prev => ({ ...prev, avatar: url }))}
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      cursor: 'pointer',
+                      border: editFormData.avatar === url ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      opacity: editFormData.avatar === url ? 1 : 0.6,
+                      transition: 'all 0.15s ease'
+                    }}
+                    title="Select Avatar"
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+              Student Full Name *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Liam Johnson"
+              value={editFormData.name}
+              onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Class & Section *
+              </label>
+              <select
+                value={editFormData.class}
+                onChange={(e) => setEditFormData({ ...editFormData, class: e.target.value })}
+                style={{ width: '100%' }}
+              >
+                {classes.map((c) => (
+                  <option key={c.id} value={c.name}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Roll Number *
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. 24"
+                value={editFormData.rollNo}
+                onChange={(e) => setEditFormData({ ...editFormData, rollNo: e.target.value })}
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Phone Number (Login ID) *
+              </label>
+              <input
+                type="tel"
+                required
+                placeholder="e.g. 9876543299"
+                value={editFormData.phone}
+                onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Date of Birth (Password) *
+              </label>
+              <input
+                type="date"
+                required
+                value={editFormData.dob}
+                onChange={(e) => setEditFormData({ ...editFormData, dob: e.target.value })}
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+              Student Email
+            </label>
+            <input
+              type="email"
+              placeholder="e.g. liam.j@edusphere.edu"
+              value={editFormData.email}
+              onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Parent / Guardian Name
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Michael Johnson"
+                value={editFormData.parentName}
+                onChange={(e) => setEditFormData({ ...editFormData, parentName: e.target.value })}
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Parent Contact Number
+              </label>
+              <input
+                type="tel"
+                placeholder="+1 (555) 000-0000"
+                value={editFormData.parentContact}
+                onChange={(e) => setEditFormData({ ...editFormData, parentContact: e.target.value })}
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: isAdmin ? '1fr 1fr 1fr' : '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Blood Group
+              </label>
+              <select
+                value={editFormData.bloodGroup}
+                onChange={(e) => setEditFormData({ ...editFormData, bloodGroup: e.target.value })}
+                style={{ width: '100%' }}
+              >
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                House Assignment
+              </label>
+              <select
+                value={editFormData.house}
+                onChange={(e) => setEditFormData({ ...editFormData, house: e.target.value })}
+                style={{ width: '100%' }}
+              >
+                <option value="Emerald Dragons">Emerald Dragons</option>
+                <option value="Ruby Phoenix">Ruby Phoenix</option>
+                <option value="Sapphire Titans">Sapphire Titans</option>
+                <option value="Golden Gryphons">Golden Gryphons</option>
+              </select>
+            </div>
+            {isAdmin && (
+              <div>
+                <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                  Fee Status (Admin Only)
+                </label>
+                <select
+                  value={editFormData.feeStatus}
+                  onChange={(e) => setEditFormData({ ...editFormData, feeStatus: e.target.value })}
+                  style={{ width: '100%' }}
+                >
+                  <option value="Paid">Paid</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Overdue">Overdue</option>
+                </select>
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditModalOpen(false);
+                setEditingStudentId(null);
+              }}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary">
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </Modal>
+
       {/* Student View Modal */}
       {selectedStudentForView && (
         <Modal
@@ -606,6 +953,14 @@ export const StudentManagement = () => {
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>ATTENDANCE RATE</div>
                 <div style={{ fontWeight: '700', fontSize: '0.9rem', color: '#10b981' }}>{selectedStudentForView.attendancePercent}%</div>
               </div>
+              {isAdmin && (
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>FEE STATUS</div>
+                  <div style={{ fontWeight: '700', fontSize: '0.9rem', color: selectedStudentForView.feeStatus === 'Paid' ? '#10b981' : '#f59e0b' }}>
+                    {selectedStudentForView.feeStatus || 'Pending'}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
