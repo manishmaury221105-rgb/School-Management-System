@@ -127,7 +127,7 @@ export const StudentDashboard = ({ setActiveTab }) => {
         />
         <StatCard
           label="Fee Dues"
-          value={`$${pendingFeeAmount}`}
+          value={`₹${pendingFeeAmount}`}
           icon={Wallet}
           trend={pendingFeeAmount > 0 ? 'Due by Oct 15' : 'All Clear'}
           trendPositive={pendingFeeAmount === 0}

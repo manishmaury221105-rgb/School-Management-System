@@ -68,9 +68,9 @@ export const AdminDashboard = ({ setActiveTab }) => {
         />
         <StatCard
           label="Fees Collected"
-          value={`$${totalFeesPaid.toLocaleString()}`}
+          value={`₹${totalFeesPaid.toLocaleString()}`}
           icon={CreditCard}
-          trend={`$${totalFeesPending.toLocaleString()} Pending`}
+          trend={`₹${totalFeesPending.toLocaleString()} Pending`}
           trendPositive={totalFeesPaid > 0}
           accentColor="#10b981"
           lightBg="#ecfdf5"

@@ -78,7 +78,7 @@ export const StudentFees = () => {
         <div className="card-elevated" style={{ padding: '1.5rem', borderLeft: '4px solid #10b981' }}>
           <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)' }}>TOTAL FEES SETTLED</div>
           <div style={{ fontSize: '1.85rem', fontWeight: '800', color: '#15803d', marginTop: '4px' }}>
-            ${totalPaid.toLocaleString()}
+            ₹{totalPaid.toLocaleString()}
           </div>
           <div style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: '700', marginTop: '4px' }}>
             ✓ Verified Institutional Receipts
@@ -88,7 +88,7 @@ export const StudentFees = () => {
         <div className="card-elevated" style={{ padding: '1.5rem', borderLeft: '4px solid #ef4444' }}>
           <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)' }}>OUTSTANDING BALANCE</div>
           <div style={{ fontSize: '1.85rem', fontWeight: '800', color: '#b91c1c', marginTop: '4px' }}>
-            ${totalPending.toLocaleString()}
+            ₹{totalPending.toLocaleString()}
           </div>
           <div style={{ fontSize: '0.78rem', color: totalPending > 0 ? '#b91c1c' : '#10b981', fontWeight: '700', marginTop: '4px' }}>
             {totalPending > 0 ? 'Due by October 15, 2026' : 'No Overdue Dues'}
@@ -124,7 +124,7 @@ export const StudentFees = () => {
                   </td>
                   <td>
                     <span style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-                      ${fee.amount}
+                      ₹{fee.amount}
                     </span>
                   </td>
                   <td>
@@ -198,7 +198,7 @@ export const StudentFees = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(79, 70, 229, 0.2)' }}>
                 <span style={{ fontWeight: '700' }}>Payable Amount:</span>
                 <span style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--primary)' }}>
-                  ${selectedFeeToPay.amount}.00 USD
+                  ₹{selectedFeeToPay.amount}.00
                 </span>
               </div>
             </div>
@@ -252,7 +252,7 @@ export const StudentFees = () => {
                 Cancel
               </button>
               <button type="submit" className="btn-primary" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
-                <span>Confirm & Pay ${selectedFeeToPay.amount}.00</span>
+                <span>Confirm & Pay ₹{selectedFeeToPay.amount}.00</span>
               </button>
             </div>
           </form>
@@ -285,13 +285,13 @@ export const StudentFees = () => {
             <div style={{ borderTop: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', padding: '0.75rem 0', margin: '1rem 0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', fontSize: '0.9rem' }}>
                 <span>{selectedReceipt.feeType}</span>
-                <span>${selectedReceipt.amount}.00</span>
+                <span>₹{selectedReceipt.amount}.00</span>
               </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.15rem', fontWeight: '800' }}>
               <span>Total Amount Settled:</span>
-              <span style={{ color: '#15803d' }}>${selectedReceipt.amount}.00 USD</span>
+              <span style={{ color: '#15803d' }}>₹{selectedReceipt.amount}.00</span>
             </div>
 
             <div style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.75rem', color: '#15803d', fontWeight: '700' }}>

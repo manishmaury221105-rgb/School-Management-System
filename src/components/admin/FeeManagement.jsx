@@ -6,7 +6,7 @@ import {
   CreditCard,
   CheckCircle2,
   Clock,
-  DollarSign,
+  IndianRupee,
   Search,
   Filter,
   Receipt,
@@ -65,16 +65,16 @@ export const FeeManagement = () => {
       <div className="stats-grid-4">
         <StatCard
           label="Total Collected Revenue"
-          value={`$${(totalCollected + 140000).toLocaleString()}`}
+          value={`₹${totalCollected.toLocaleString()}`}
           icon={CheckCircle2}
-          trend="+8.2% this quarter"
-          trendPositive={true}
+          trend={`${fees.filter(f => f.status === 'Paid').length} Paid Invoices`}
+          trendPositive={totalCollected > 0}
           accentColor="#10b981"
           lightBg="#ecfdf5"
         />
         <StatCard
           label="Pending Outstanding Dues"
-          value={`$${totalPending.toLocaleString()}`}
+          value={`₹${totalPending.toLocaleString()}`}
           icon={Clock}
           trend={`${fees.filter(f => f.status === 'Pending').length} Pending Invoices`}
           trendPositive={false}
@@ -93,7 +93,7 @@ export const FeeManagement = () => {
         <StatCard
           label="Payment Gateway Uptime"
           value="99.9%"
-          icon={DollarSign}
+          icon={IndianRupee}
           subText="UPI, Stripe, NetBanking"
           accentColor="#0ea5e9"
           lightBg="#e0f2fe"
@@ -160,7 +160,7 @@ export const FeeManagement = () => {
                     )}
                   </td>
                   <td>
-                    <span style={{ fontWeight: '800', fontSize: '1rem' }}>${fee.amount}</span>
+                    <span style={{ fontWeight: '800', fontSize: '1rem' }}>₹{fee.amount}</span>
                   </td>
                   <td>
                     <span style={{ fontSize: '0.85rem', color: fee.status === 'Pending' ? '#b91c1c' : 'var(--text-muted)' }}>
@@ -231,13 +231,13 @@ export const FeeManagement = () => {
             <div style={{ borderTop: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', padding: '0.75rem 0', margin: '1rem 0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', fontSize: '0.9rem' }}>
                 <span>{selectedReceipt.feeType}</span>
-                <span>${selectedReceipt.amount}.00</span>
+                <span>₹{selectedReceipt.amount}.00</span>
               </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: '800', marginTop: '0.5rem' }}>
               <span>Total Paid:</span>
-              <span style={{ color: '#15803d' }}>${selectedReceipt.amount}.00 USD</span>
+              <span style={{ color: '#15803d' }}>₹{selectedReceipt.amount}.00</span>
             </div>
 
             <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.75rem', color: '#64748b' }}>

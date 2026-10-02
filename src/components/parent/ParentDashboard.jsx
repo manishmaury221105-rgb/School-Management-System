@@ -156,7 +156,7 @@ export const ParentDashboard = ({ setActiveTab }) => {
         />
         <StatCard
           label="Fee Dues"
-          value={`$${pendingFee}`}
+          value={`₹${pendingFee}`}
           icon={Wallet}
           trend={pendingFee > 0 ? 'Due by Oct 15' : 'Settled'}
           trendPositive={pendingFee === 0}
