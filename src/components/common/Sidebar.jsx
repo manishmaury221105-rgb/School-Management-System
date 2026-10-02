@@ -37,6 +37,8 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
         return [
           { id: 'dashboard', label: 'Executive Overview', icon: LayoutDashboard },
           { id: 'teachers', label: 'Faculty & Staff (Onboarding)', icon: UserCheck },
+          { id: 'students', label: 'Student Directory', icon: Users },
+          { id: 'parents', label: 'Parent Directory', icon: HeartHandshake },
           { id: 'classes', label: 'Classes & Sections', icon: School },
           { id: 'subjects', label: 'Subjects Master', icon: Layers },
           { id: 'timetable', label: 'Master Timetable', icon: Calendar },
