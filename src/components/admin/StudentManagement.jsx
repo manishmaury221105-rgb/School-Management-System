@@ -59,12 +59,6 @@ export const StudentManagement = () => {
     }
   };
 
-  const handleDeleteAll = () => {
-    if (window.confirm('Are you sure you want to delete all students from the directory?')) {
-      clearAllStudents();
-    }
-  };
-
   const filteredStudents = students.filter((s) => {
     const matchesSearch =
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -125,17 +119,6 @@ export const StudentManagement = () => {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          {students.length > 0 && (
-            <button
-              onClick={handleDeleteAll}
-              className="btn-secondary"
-              style={{ color: '#ef4444', borderColor: '#fca5a5' }}
-              title="Delete all enrolled students"
-            >
-              <Trash2 size={16} />
-              <span>Delete All Students</span>
-            </button>
-          )}
           <button onClick={exportCSV} className="btn-secondary">
             <Download size={16} />
             <span>Export CSV</span>
