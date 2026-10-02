@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
         console.error('Failed to parse saved user', e);
       }
     }
-    return INITIAL_USERS.find(u => u.role === ROLES.ADMIN);
+    return null; // App opens on Login Page by default
   });
 
   const [theme, setTheme] = useState(() => {
