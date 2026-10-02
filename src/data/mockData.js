@@ -43,6 +43,8 @@ export const ROLE_PERMISSIONS = {
     description: 'Assigned classrooms, student & parent onboarding, daily attendance, homework grading & exam marks.',
     allowedTabs: [
       'dashboard',
+      'teachers',
+      'faculty',
       'students',
       'parents',
       'attendance',
@@ -63,6 +65,8 @@ export const ROLE_PERMISSIONS = {
     description: 'Digital ID pass, subject-wise attendance, timetable, homework submission, exam marksheet, fees checkout & study notes.',
     allowedTabs: [
       'dashboard',
+      'teachers',
+      'faculty',
       'profile',
       'attendance',
       'timetable',
@@ -82,6 +86,8 @@ export const ROLE_PERMISSIONS = {
     description: 'Multi-child monitoring, attendance alerts, homework oversight, report card marks, online fee payment & leave apply.',
     allowedTabs: [
       'dashboard',
+      'teachers',
+      'faculty',
       'attendance',
       'academics',
       'homework',

@@ -115,6 +115,9 @@ export const App = () => {
         switch (activeTab) {
           case 'dashboard':
             return <TeacherDashboard setActiveTab={setActiveTab} />;
+          case 'teachers':
+          case 'faculty':
+            return <TeacherManagement />;
           case 'students':
             return <StudentManagement />;
           case 'parents':
@@ -143,6 +146,9 @@ export const App = () => {
         switch (activeTab) {
           case 'dashboard':
             return <StudentDashboard setActiveTab={setActiveTab} />;
+          case 'teachers':
+          case 'faculty':
+            return <TeacherManagement />;
           case 'profile':
             return <StudentProfile />;
           case 'attendance':
@@ -169,6 +175,9 @@ export const App = () => {
         switch (activeTab) {
           case 'dashboard':
             return <ParentDashboard setActiveTab={setActiveTab} />;
+          case 'teachers':
+          case 'faculty':
+            return <TeacherManagement />;
           case 'attendance':
             return <ParentAttendance />;
           case 'academics':

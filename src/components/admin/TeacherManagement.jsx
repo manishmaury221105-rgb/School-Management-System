@@ -17,6 +17,7 @@ import {
 export const TeacherManagement = () => {
   const { teachers, addTeacher, classes } = useSchoolData();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const DEFAULT_TEACHER_AVATAR = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80';
   const PRESET_TEACHER_AVATARS = [
     'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80', // Female Faculty 1

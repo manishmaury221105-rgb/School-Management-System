@@ -54,6 +54,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       case ROLES.TEACHER:
         return [
           { id: 'dashboard', label: 'Faculty Dashboard', icon: LayoutDashboard },
+          { id: 'teachers', label: 'Faculty Directory', icon: UserCheck },
           { id: 'students', label: 'Student Directory & Add', icon: Users },
           { id: 'parents', label: 'Parent Directory & Link', icon: HeartHandshake },
           { id: 'attendance', label: 'Mark Attendance', icon: UserCheck },
@@ -69,6 +70,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
         return [
           { id: 'dashboard', label: 'Student Portal', icon: LayoutDashboard },
           { id: 'profile', label: 'Digital ID Card', icon: CreditCard },
+          { id: 'teachers', label: 'Faculty & Teachers', icon: UserCheck },
           { id: 'attendance', label: 'Live Attendance', icon: CalendarCheck },
           { id: 'timetable', label: 'Class Timetable', icon: Clock },
           { id: 'homework', label: 'Homework & Tasks', icon: BookOpen },
@@ -81,6 +83,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       case ROLES.PARENT:
         return [
           { id: 'dashboard', label: 'Parent 360 Hub', icon: LayoutDashboard },
+          { id: 'teachers', label: 'Faculty & Teachers', icon: UserCheck },
           { id: 'attendance', label: 'Child Attendance', icon: CalendarCheck },
           { id: 'academics', label: 'Grades & Report Card', icon: Award },
           { id: 'homework', label: 'Homework Tracker', icon: BookOpen },

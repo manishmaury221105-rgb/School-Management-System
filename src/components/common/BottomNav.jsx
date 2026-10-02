@@ -13,6 +13,8 @@ import {
   Clock,
   Wallet,
   FileText,
+  School,
+  HeartHandshake,
 } from 'lucide-react';
 
 export const BottomNav = ({ activeTab, setActiveTab }) => {
@@ -23,18 +25,18 @@ export const BottomNav = ({ activeTab, setActiveTab }) => {
       case ROLES.ADMIN:
         return [
           { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
-          { id: 'students', label: 'Students', icon: Users },
           { id: 'teachers', label: 'Faculty', icon: UserCheck },
+          { id: 'classes', label: 'Classes', icon: School },
           { id: 'fees', label: 'Fees', icon: CreditCard },
           { id: 'notices', label: 'Notices', icon: BellRing },
         ];
       case ROLES.TEACHER:
         return [
           { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
+          { id: 'students', label: 'Students', icon: Users },
+          { id: 'parents', label: 'Parents', icon: HeartHandshake },
           { id: 'attendance', label: 'Attendance', icon: UserCheck },
           { id: 'homework', label: 'Homework', icon: BookOpen },
-          { id: 'gradebook', label: 'Grades', icon: Award },
-          { id: 'notices', label: 'Notices', icon: BellRing },
         ];
       case ROLES.STUDENT:
         return [
@@ -63,12 +65,15 @@ export const BottomNav = ({ activeTab, setActiveTab }) => {
     <nav className="mobile-bottom-nav">
       {navItems.map((item) => {
         const Icon = item.icon;
-        const isActive = activeTab === item.id;
+        const isActive =
+          activeTab === item.id ||
+          ((item.id === 'teachers' || item.id === 'faculty') && (activeTab === 'teachers' || activeTab === 'faculty'));
         return (
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
             className={`mobile-nav-btn ${isActive ? 'active' : ''}`}
+            aria-label={item.label}
           >
             <Icon size={20} />
             <span>{item.label}</span>

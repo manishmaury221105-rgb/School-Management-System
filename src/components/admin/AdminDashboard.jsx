@@ -35,9 +35,9 @@ export const AdminDashboard = ({ setActiveTab }) => {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button onClick={() => setActiveTab('students')} className="btn-primary">
+          <button onClick={() => setActiveTab('teachers')} className="btn-primary">
             <PlusCircle size={16} />
-            <span>Manage Students</span>
+            <span>Onboard Faculty</span>
           </button>
           <button onClick={() => setActiveTab('notices')} className="btn-secondary">
             <BellRing size={16} />
