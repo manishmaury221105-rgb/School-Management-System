@@ -109,13 +109,36 @@ export const AuthProvider = ({ children }) => {
 
     if (user) {
       const rawInput = (passwordOrDob || '').trim();
-      const inputPass = rawInput.replace(/[\s\-\/]/g, '');
-      const userDobClean = (user.dob || '').replace(/[\s\-\/]/g, '');
-      let dobDDMMYYYY = '';
-      if (user.dob && user.dob.includes('-')) {
-        const parts = user.dob.split('-');
-        if (parts.length === 3) {
-          dobDDMMYYYY = `${parts[2]}${parts[1]}${parts[0]}`; // DDMMYYYY
+      const inputPass = rawInput.replace(/[\s\-\/\.]/g, '');
+
+      // Build possible DOB variations for the user
+      const possibleDobFormats = new Set();
+      if (user.dob) {
+        const rawDobStr = String(user.dob).trim();
+        possibleDobFormats.add(rawDobStr);
+        possibleDobFormats.add(rawDobStr.replace(/[\s\-\/\.]/g, ''));
+
+        const ymdMatch = rawDobStr.match(/^(\d{4})[-\/\.](\d{1,2})[-\/\.](\d{1,2})$/);
+        const dmyMatch = rawDobStr.match(/^(\d{1,2})[-\/\.](\d{1,2})[-\/\.](\d{4})$/);
+
+        if (ymdMatch) {
+          const [, y, m, d] = ymdMatch;
+          const dd = d.padStart(2, '0');
+          const mm = m.padStart(2, '0');
+          possibleDobFormats.add(`${dd}${mm}${y}`); // DDMMYYYY
+          possibleDobFormats.add(`${y}${mm}${dd}`); // YYYYMMDD
+          possibleDobFormats.add(`${dd}-${mm}-${y}`);
+          possibleDobFormats.add(`${y}-${mm}-${dd}`);
+          possibleDobFormats.add(`${dd}/${mm}/${y}`);
+        } else if (dmyMatch) {
+          const [, d, m, y] = dmyMatch;
+          const dd = d.padStart(2, '0');
+          const mm = m.padStart(2, '0');
+          possibleDobFormats.add(`${dd}${mm}${y}`); // DDMMYYYY
+          possibleDobFormats.add(`${y}${mm}${dd}`); // YYYYMMDD
+          possibleDobFormats.add(`${dd}-${mm}-${y}`);
+          possibleDobFormats.add(`${y}-${mm}-${dd}`);
+          possibleDobFormats.add(`${dd}/${mm}/${y}`);
         }
       }
 
@@ -126,9 +149,8 @@ export const AuthProvider = ({ children }) => {
         rawInput === 'Teacher@123' ||
         rawInput === 'Student@123' ||
         rawInput === 'Parent@123' ||
-        inputPass === userDobClean ||
-        inputPass === dobDDMMYYYY ||
-        rawInput === user.dob;
+        possibleDobFormats.has(rawInput) ||
+        possibleDobFormats.has(inputPass);
 
       if (passMatches) {
         setCurrentUser(user);

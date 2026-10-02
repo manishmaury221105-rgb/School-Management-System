@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
 import { useAuth, ROLES } from '../../context/AuthContext';
 import { Modal } from '../common/Modal';
+import { FeeCollectionModal } from './FeeCollectionModal';
 import {
   Users,
   Search,
@@ -10,26 +11,45 @@ import {
   Eye,
   Filter,
   Download,
-  GraduationCap,
-  Mail,
-  Phone,
-  CheckCircle,
-  Camera,
-  Upload,
   Pencil,
   CreditCard,
-  IndianRupee,
-  Receipt,
 } from 'lucide-react';
 
 export const StudentManagement = ({ setActiveTab }) => {
-  const { currentRole } = useAuth();
+  const { currentRole, currentUser } = useAuth();
   const isAdmin = currentRole === ROLES.ADMIN;
-  const { students, addStudent, updateStudent, deleteStudent, clearAllStudents, classes } = useSchoolData();
+  const { students, addStudent, updateStudent, deleteStudent, clearAllStudents, classes, teachers } = useSchoolData();
+
+  // Identify teacher profile and calculate allowed classrooms
+  const activeTeacher = teachers?.find(t =>
+    t.id === currentUser?.id ||
+    (currentUser?.phone && t.phone === currentUser?.phone) ||
+    (currentUser?.email && t.email?.toLowerCase() === currentUser?.email?.toLowerCase())
+  ) || currentUser;
+
+  const allowedClasses = React.useMemo(() => {
+    if (isAdmin) return classes;
+    const allowedNames = new Set();
+    if (activeTeacher?.classTeacherOf) {
+      allowedNames.add(activeTeacher.classTeacherOf);
+    }
+    if (Array.isArray(activeTeacher?.assignedClasses) && activeTeacher.assignedClasses.length > 0) {
+      activeTeacher.assignedClasses.forEach(c => allowedNames.add(c));
+    }
+    if (allowedNames.size === 0) {
+      if (classes.length > 0) allowedNames.add(classes[0].name);
+    }
+    const filtered = classes.filter(c => allowedNames.has(c.name));
+    return filtered.length > 0 ? filtered : (classes.length > 0 ? [classes[0]] : [{ id: 'c1', name: 'Class 10-A' }]);
+  }, [isAdmin, classes, activeTeacher]);
+
+  const defaultAssignedClass = allowedClasses[0]?.name || 'Class 10-A';
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedClass, setSelectedClass] = useState('ALL');
+  const [selectedClass, setSelectedClass] = useState(isAdmin ? 'ALL' : defaultAssignedClass);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isFeeModalOpen, setIsFeeModalOpen] = useState(false);
   const [editingStudentId, setEditingStudentId] = useState(null);
   const [selectedStudentForView, setSelectedStudentForView] = useState(null);
   const [selectedStudentForFee, setSelectedStudentForFee] = useState(null);
@@ -47,7 +67,7 @@ export const StudentManagement = ({ setActiveTab }) => {
   const [formData, setFormData] = useState({
     name: '',
     avatar: DEFAULT_AVATAR,
-    class: 'Class 10-A',
+    class: defaultAssignedClass,
     rollNo: '',
     phone: '',
     dob: '2010-05-15',
@@ -95,12 +115,34 @@ export const StudentManagement = ({ setActiveTab }) => {
     }
   };
 
+  const handleOpenAddModal = () => {
+    const initialClass = (selectedClass !== 'ALL' && allowedClasses.some(c => c.name === selectedClass))
+      ? selectedClass
+      : defaultAssignedClass;
+
+    setFormData({
+      name: '',
+      avatar: DEFAULT_AVATAR,
+      class: initialClass,
+      rollNo: '',
+      phone: '',
+      dob: '2010-05-15',
+      email: '',
+      parentName: '',
+      parentContact: '',
+      bloodGroup: 'O+',
+      house: 'Emerald Dragons',
+    });
+    setIsModalOpen(true);
+  };
+
   const handleOpenEditModal = (student) => {
     setEditingStudentId(student.id);
+    const isClassAllowed = allowedClasses.some(c => c.name === student.class);
     setEditFormData({
       name: student.name || '',
       avatar: student.avatar || DEFAULT_AVATAR,
-      class: student.class || 'Class 10-A',
+      class: isClassAllowed ? student.class : defaultAssignedClass,
       rollNo: student.rollNo || '',
       phone: student.phone || '',
       dob: student.dob || '2010-05-15',
@@ -117,17 +159,23 @@ export const StudentManagement = ({ setActiveTab }) => {
   const handleEditSubmit = (e) => {
     e.preventDefault();
     if (!editFormData.name || !editFormData.rollNo || !editFormData.phone) return;
-    updateStudent(editingStudentId, editFormData);
+    const targetClass = (!isAdmin && !allowedClasses.some(c => c.name === editFormData.class))
+      ? defaultAssignedClass
+      : editFormData.class;
+    updateStudent(editingStudentId, { ...editFormData, class: targetClass });
     setIsEditModalOpen(false);
     setEditingStudentId(null);
   };
 
   const filteredStudents = students.filter((s) => {
+    const isAllowedForRole = isAdmin || allowedClasses.some(c => c.name === s.class);
+    if (!isAllowedForRole) return false;
+
     const matchesSearch =
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.studentId && s.studentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (s.phone && s.phone.includes(searchTerm)) ||
-      s.email.toLowerCase().includes(searchTerm.toLowerCase());
+      (s.email && s.email.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesClass = selectedClass === 'ALL' || s.class === selectedClass;
     return matchesSearch && matchesClass;
   });
@@ -135,12 +183,16 @@ export const StudentManagement = ({ setActiveTab }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name || !formData.rollNo || !formData.phone) return;
-    addStudent(formData);
+    const targetClass = (!isAdmin && !allowedClasses.some(c => c.name === formData.class))
+      ? defaultAssignedClass
+      : formData.class;
+
+    addStudent({ ...formData, class: targetClass });
     setIsModalOpen(false);
     setFormData({
       name: '',
       avatar: DEFAULT_AVATAR,
-      class: 'Class 10-A',
+      class: defaultAssignedClass,
       rollNo: '',
       phone: '',
       dob: '2010-05-15',
@@ -183,7 +235,7 @@ export const StudentManagement = ({ setActiveTab }) => {
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           {isAdmin && (
-            <button onClick={() => setActiveTab && setActiveTab('fees')} className="btn-secondary">
+            <button onClick={() => { setSelectedStudentForFee(null); setIsFeeModalOpen(true); }} className="btn-secondary">
               <CreditCard size={16} />
               <span>Fees</span>
             </button>
@@ -192,7 +244,7 @@ export const StudentManagement = ({ setActiveTab }) => {
             <Download size={16} />
             <span>Export CSV</span>
           </button>
-          <button onClick={() => setIsModalOpen(true)} className="btn-primary">
+          <button onClick={handleOpenAddModal} className="btn-primary">
             <Plus size={16} />
             <span>Enroll New Student</span>
           </button>
@@ -220,9 +272,13 @@ export const StudentManagement = ({ setActiveTab }) => {
                 onChange={(e) => setSelectedClass(e.target.value)}
                 style={{ padding: '8px 12px', fontSize: '0.88rem' }}
               >
-                <option value="ALL">All Classes & Sections</option>
-                {classes.map((c) => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
+                {isAdmin ? (
+                  <option value="ALL">All Classes & Sections</option>
+                ) : (
+                  allowedClasses.length > 1 && <option value="ALL">All My Assigned Classes</option>
+                )}
+                {allowedClasses.map((c) => (
+                  <option key={c.id || c.name} value={c.name}>{c.name}</option>
                 ))}
               </select>
             </div>
@@ -328,7 +384,10 @@ export const StudentManagement = ({ setActiveTab }) => {
                     {isAdmin && (
                       <td>
                         <button
-                          onClick={() => setSelectedStudentForFee(stu)}
+                          onClick={() => {
+                            setSelectedStudentForFee(stu);
+                            setIsFeeModalOpen(true);
+                          }}
                           className={`badge-status ${stu.feeStatus === 'Paid' ? 'badge-paid' : 'badge-pending'}`}
                           style={{
                             border: 'none',
@@ -338,7 +397,7 @@ export const StudentManagement = ({ setActiveTab }) => {
                             gap: '4px',
                             fontWeight: '700',
                           }}
-                          title="Click to manage student fee"
+                          title="Click to open fee collection form"
                         >
                           <CreditCard size={12} />
                           <span>{stu.feeStatus || 'Pending'}</span>
@@ -353,7 +412,10 @@ export const StudentManagement = ({ setActiveTab }) => {
                       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '6px' }}>
                         {isAdmin && (
                           <button
-                            onClick={() => setSelectedStudentForFee(stu)}
+                            onClick={() => {
+                              setSelectedStudentForFee(stu);
+                              setIsFeeModalOpen(true);
+                            }}
                             className="btn-secondary"
                             style={{
                               padding: '4px 9px',
@@ -367,7 +429,7 @@ export const StudentManagement = ({ setActiveTab }) => {
                               borderColor: stu.feeStatus === 'Paid' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)',
                               background: stu.feeStatus === 'Paid' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)',
                             }}
-                            title="Manage / Collect Fee"
+                            title="Collect Fee / Open Fee Form"
                           >
                             <CreditCard size={13} />
                             <span>Fee</span>
@@ -522,11 +584,19 @@ export const StudentManagement = ({ setActiveTab }) => {
                 value={formData.class}
                 onChange={(e) => setFormData({ ...formData, class: e.target.value })}
                 style={{ width: '100%' }}
+                disabled={!isAdmin && allowedClasses.length === 1}
               >
-                {classes.map((c) => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
+                {allowedClasses.map((c) => (
+                  <option key={c.id || c.name} value={c.name}>
+                    {c.name} {!isAdmin && (activeTeacher?.classTeacherOf === c.name ? '(Class Teacher)' : '(Assigned)')}
+                  </option>
                 ))}
               </select>
+              {!isAdmin && (
+                <div style={{ fontSize: '0.72rem', color: 'var(--primary)', marginTop: '3px', fontWeight: '600' }}>
+                  🔒 Limited to your assigned classroom
+                </div>
+              )}
             </div>
             <div>
               <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
@@ -789,11 +859,19 @@ export const StudentManagement = ({ setActiveTab }) => {
                 value={editFormData.class}
                 onChange={(e) => setEditFormData({ ...editFormData, class: e.target.value })}
                 style={{ width: '100%' }}
+                disabled={!isAdmin && allowedClasses.length === 1}
               >
-                {classes.map((c) => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
+                {allowedClasses.map((c) => (
+                  <option key={c.id || c.name} value={c.name}>
+                    {c.name} {!isAdmin && (activeTeacher?.classTeacherOf === c.name ? '(Class Teacher)' : '(Assigned)')}
+                  </option>
                 ))}
               </select>
+              {!isAdmin && (
+                <div style={{ fontSize: '0.72rem', color: 'var(--primary)', marginTop: '3px', fontWeight: '600' }}>
+                  🔒 Limited to your assigned classroom
+                </div>
+              )}
             </div>
             <div>
               <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
@@ -1017,115 +1095,15 @@ export const StudentManagement = ({ setActiveTab }) => {
         </Modal>
       )}
 
-      {/* Student Individual Fee Modal */}
-      {selectedStudentForFee && (
-        <Modal
-          isOpen={!!selectedStudentForFee}
-          onClose={() => setSelectedStudentForFee(null)}
-          title="Student Fee & Invoice Governance"
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {/* Student Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)' }}>
-              <img
-                src={selectedStudentForFee.avatar || DEFAULT_AVATAR}
-                alt={selectedStudentForFee.name}
-                style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }}
-              />
-              <div style={{ flex: 1 }}>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: '800', margin: 0 }}>{selectedStudentForFee.name}</h3>
-                <div style={{ color: 'var(--primary)', fontWeight: '700', fontFamily: 'monospace', fontSize: '0.85rem' }}>
-                  {selectedStudentForFee.studentId} • {selectedStudentForFee.class} (Roll #{selectedStudentForFee.rollNo})
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                  Guardian: {selectedStudentForFee.parentName || 'Parent'} ({selectedStudentForFee.parentContact || 'Contact Not Set'})
-                </div>
-              </div>
-              <div>
-                <span className={`badge-status ${selectedStudentForFee.feeStatus === 'Paid' ? 'badge-paid' : 'badge-pending'}`} style={{ fontSize: '0.85rem', padding: '6px 12px' }}>
-                  {selectedStudentForFee.feeStatus || 'Pending'}
-                </span>
-              </div>
-            </div>
-
-            {/* Fee Breakdown Table */}
-            <div style={{ background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
-                Academic Term 2026 Fee Breakdown
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.88rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Annual Tuition & Faculty Fee</span>
-                  <span style={{ fontWeight: '700' }}>₹18,000</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Science & Computer Lab Maintenance</span>
-                  <span style={{ fontWeight: '700' }}>₹4,000</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Sports, Co-Curricular & Library Fund</span>
-                  <span style={{ fontWeight: '700' }}>₹3,000</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px dashed var(--border)', fontWeight: '800', fontSize: '1.05rem', color: 'var(--primary)' }}>
-                  <span>Total Payable Amount</span>
-                  <span>₹25,000</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-              <div>
-                {selectedStudentForFee.feeStatus === 'Paid' ? (
-                  <button
-                    onClick={() => {
-                      updateStudent(selectedStudentForFee.id, { feeStatus: 'Pending' });
-                      setSelectedStudentForFee(prev => ({ ...prev, feeStatus: 'Pending' }));
-                    }}
-                    className="btn-secondary"
-                    style={{ fontSize: '0.82rem', color: '#ef4444' }}
-                  >
-                    Mark as Pending / Revert
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      updateStudent(selectedStudentForFee.id, { feeStatus: 'Paid' });
-                      setSelectedStudentForFee(prev => ({ ...prev, feeStatus: 'Paid' }));
-                    }}
-                    className="btn-primary"
-                    style={{ background: '#10b981', borderColor: '#10b981', color: 'white' }}
-                  >
-                    <CheckCircle size={16} />
-                    <span>Collect & Mark as Paid (₹25,000)</span>
-                  </button>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {setActiveTab && (
-                  <button
-                    onClick={() => {
-                      setSelectedStudentForFee(null);
-                      setActiveTab('fees');
-                    }}
-                    className="btn-secondary"
-                  >
-                    <CreditCard size={15} />
-                    <span>All Fee Ledgers</span>
-                  </button>
-                )}
-                <button
-                  onClick={() => setSelectedStudentForFee(null)}
-                  className="btn-secondary"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
+      {/* Fee Collection Form Modal with student details */}
+      <FeeCollectionModal
+        isOpen={isFeeModalOpen}
+        initialStudent={selectedStudentForFee}
+        onClose={() => {
+          setIsFeeModalOpen(false);
+          setSelectedStudentForFee(null);
+        }}
+      />
     </div>
   );
 };

@@ -46,16 +46,6 @@ import { StudentFees } from './components/student/StudentFees';
 import { StudentNotices } from './components/student/StudentNotices';
 import { StudentEvents } from './components/student/StudentEvents';
 
-// Parent Components
-import { ParentDashboard } from './components/parent/ParentDashboard';
-import { ParentAttendance } from './components/parent/ParentAttendance';
-import { ParentAcademics } from './components/parent/ParentAcademics';
-import { ParentHomework } from './components/parent/ParentHomework';
-import { ParentFees } from './components/parent/ParentFees';
-import { ParentLeaveApply } from './components/parent/ParentLeaveApply';
-import { ParentNotices } from './components/parent/ParentNotices';
-import { ParentEvents } from './components/parent/ParentEvents';
-
 export const App = () => {
   const { isAuthenticated, currentRole } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -169,31 +159,6 @@ export const App = () => {
             return <StudentNotices />;
           default:
             return <StudentDashboard setActiveTab={setActiveTab} />;
-        }
-
-      case ROLES.PARENT:
-        switch (activeTab) {
-          case 'dashboard':
-            return <ParentDashboard setActiveTab={setActiveTab} />;
-          case 'teachers':
-          case 'faculty':
-            return <TeacherManagement />;
-          case 'attendance':
-            return <ParentAttendance />;
-          case 'academics':
-            return <ParentAcademics />;
-          case 'homework':
-            return <ParentHomework />;
-          case 'fees':
-            return <ParentFees />;
-          case 'leave':
-            return <ParentLeaveApply />;
-          case 'events':
-            return <ParentEvents />;
-          case 'notices':
-            return <ParentNotices />;
-          default:
-            return <ParentDashboard setActiveTab={setActiveTab} />;
         }
 
       default:

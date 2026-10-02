@@ -189,7 +189,6 @@ export const NoticeBroadcast = () => {
                 <option value="ALL">All (Everyone)</option>
                 <option value="TEACHER">Teachers Only</option>
                 <option value="STUDENT">Students Only</option>
-                <option value="PARENT">Parents Only</option>
               </select>
             </div>
           </div>

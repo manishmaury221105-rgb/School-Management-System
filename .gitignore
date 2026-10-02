@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# iOS Build and derived data
+ios/build/
+build_sim/
+ios/App/App/public/
+*.xcbuilddata/
+DerivedData/

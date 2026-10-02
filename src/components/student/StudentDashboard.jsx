@@ -22,10 +22,28 @@ export const StudentDashboard = ({ setActiveTab }) => {
   const myHomework = homework.filter(h => h.class === (currentUser?.class || 'Class 10-A'));
   const pendingHwCount = myHomework.filter(h => !h.studentStatus?.[currentUser?.id || 'user-student-1']?.submitted).length;
 
-  const myFees = fees.filter(f => f.studentId === (currentUser?.id || 'user-student-1'));
-  const pendingFeeAmount = myFees
-    .filter(f => f.status === 'Pending')
-    .reduce((sum, f) => sum + f.amount, 0);
+  const myFees = fees.filter(f => {
+    if (!currentUser) return false;
+    const matchId = f.studentId && (
+      f.studentId === currentUser.id ||
+      f.studentId === currentUser.studentId ||
+      f.id === currentUser.id
+    );
+    const matchName = f.studentName && currentUser.name && (
+      f.studentName.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
+    );
+    const matchRollAndClass = f.rollNo && f.class && currentUser.rollNo && currentUser.class && (
+      String(f.rollNo) === String(currentUser.rollNo) && f.class === currentUser.class
+    );
+    const matchPhone = f.phone && currentUser.phone && (
+      f.phone.replace(/\D/g, '') === currentUser.phone.replace(/\D/g, '')
+    );
+    return matchId || matchName || matchRollAndClass || matchPhone;
+  });
+
+  const pendingFeeAmount = currentUser?.feeStatus === 'Paid'
+    ? 0
+    : (myFees.filter(f => f.status === 'Pending').reduce((sum, f) => sum + f.amount, 0) || (myFees.some(f => f.status === 'Paid') ? 0 : 25000));
 
   const studentResult = examsData.results[currentUser?.id || 'user-student-1'] || examsData.results['user-student-1'];
 

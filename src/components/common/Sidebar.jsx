@@ -3,7 +3,6 @@ import { useAuth } from '../../context/AuthContext';
 import { ROLES, ROLE_PERMISSIONS } from '../../data/mockData';
 import {
   LayoutDashboard,
-  Users,
   UserCheck,
   School,
   BookOpen,
@@ -24,7 +23,6 @@ import {
   FileSpreadsheet,
   UploadCloud,
   Layers,
-  HeartHandshake,
 } from 'lucide-react';
 
 export const Sidebar = ({ activeTab, setActiveTab }) => {
@@ -37,8 +35,6 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
         return [
           { id: 'dashboard', label: 'Executive Overview', icon: LayoutDashboard },
           { id: 'teachers', label: 'Faculty & Staff (Onboarding)', icon: UserCheck },
-          { id: 'students', label: 'Student Directory', icon: Users },
-          { id: 'parents', label: 'Parent Directory', icon: HeartHandshake },
           { id: 'classes', label: 'Classes & Sections', icon: School },
           { id: 'subjects', label: 'Subjects Master', icon: Layers },
           { id: 'timetable', label: 'Master Timetable', icon: Calendar },
@@ -55,8 +51,6 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
         return [
           { id: 'dashboard', label: 'Faculty Dashboard', icon: LayoutDashboard },
           { id: 'teachers', label: 'Faculty Directory', icon: UserCheck },
-          { id: 'students', label: 'Student Directory & Add', icon: Users },
-          { id: 'parents', label: 'Parent Directory & Link', icon: HeartHandshake },
           { id: 'attendance', label: 'Mark Attendance', icon: UserCheck },
           { id: 'timetable', label: 'My Timetable', icon: Clock },
           { id: 'homework', label: 'Homework & Tasks', icon: BookOpen },
@@ -79,18 +73,6 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
           { id: 'fees', label: 'Fee Invoices & Pay', icon: Wallet },
           { id: 'events', label: 'School Events', icon: Calendar },
           { id: 'notices', label: 'Notice Board', icon: BellRing },
-        ];
-      case ROLES.PARENT:
-        return [
-          { id: 'dashboard', label: 'Parent 360 Hub', icon: LayoutDashboard },
-          { id: 'teachers', label: 'Faculty & Teachers', icon: UserCheck },
-          { id: 'attendance', label: 'Child Attendance', icon: CalendarCheck },
-          { id: 'academics', label: 'Grades & Report Card', icon: Award },
-          { id: 'homework', label: 'Homework Tracker', icon: BookOpen },
-          { id: 'fees', label: 'Pay Child Fees', icon: CreditCard },
-          { id: 'leave', label: 'Apply for Leave', icon: FileText },
-          { id: 'events', label: 'PTM & Events', icon: Calendar },
-          { id: 'notices', label: 'Notice Circulars', icon: BellRing },
         ];
       default:
         return [];

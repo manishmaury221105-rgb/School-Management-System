@@ -3,18 +3,14 @@ import { useAuth } from '../../context/AuthContext';
 import { ROLES } from '../../data/mockData';
 import {
   LayoutDashboard,
-  Users,
   CreditCard,
   BellRing,
   UserCheck,
   BookOpen,
-  Award,
   CalendarCheck,
   Clock,
   Wallet,
-  FileText,
   School,
-  HeartHandshake,
 } from 'lucide-react';
 
 export const BottomNav = ({ activeTab, setActiveTab }) => {
@@ -33,9 +29,9 @@ export const BottomNav = ({ activeTab, setActiveTab }) => {
       case ROLES.TEACHER:
         return [
           { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
-          { id: 'students', label: 'Students', icon: Users },
-          { id: 'parents', label: 'Parents', icon: HeartHandshake },
+          { id: 'teachers', label: 'Faculty', icon: UserCheck },
           { id: 'attendance', label: 'Attendance', icon: UserCheck },
+          { id: 'timetable', label: 'Schedule', icon: Clock },
           { id: 'homework', label: 'Homework', icon: BookOpen },
         ];
       case ROLES.STUDENT:
@@ -45,14 +41,6 @@ export const BottomNav = ({ activeTab, setActiveTab }) => {
           { id: 'timetable', label: 'Schedule', icon: Clock },
           { id: 'homework', label: 'Homework', icon: BookOpen },
           { id: 'fees', label: 'Fees', icon: Wallet },
-        ];
-      case ROLES.PARENT:
-        return [
-          { id: 'dashboard', label: 'Child 360', icon: LayoutDashboard },
-          { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
-          { id: 'academics', label: 'Report Card', icon: Award },
-          { id: 'fees', label: 'Pay Fees', icon: CreditCard },
-          { id: 'leave', label: 'Leave', icon: FileText },
         ];
       default:
         return [];

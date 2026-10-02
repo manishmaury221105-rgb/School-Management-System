@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
 import { StatCard } from '../common/StatCard';
 import { Modal } from '../common/Modal';
+import { FeeCollectionModal } from './FeeCollectionModal';
+import {
+  downloadReceiptPdf,
+  printReceiptPdf,
+  shareReceiptPdf,
+} from '../../utils/pdfReceiptGenerator';
 import {
   CreditCard,
   CheckCircle2,
@@ -11,7 +17,9 @@ import {
   Filter,
   Receipt,
   Download,
+  Printer,
   Check,
+  Plus,
 } from 'lucide-react';
 
 export const FeeManagement = () => {
@@ -19,6 +27,7 @@ export const FeeManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
 
   const totalCollected = fees
     .filter(f => f.status === 'Paid')
@@ -60,6 +69,10 @@ export const FeeManagement = () => {
             Track tuition fee payments, overdue accounts, issue receipts and reconcile collections.
           </p>
         </div>
+        <button onClick={() => setIsCollectModalOpen(true)} className="btn-primary">
+          <Plus size={16} />
+          <span>Collect Fee / New Payment</span>
+        </button>
       </div>
 
       <div className="stats-grid-4">
@@ -244,19 +257,33 @@ export const FeeManagement = () => {
               ✓ Status: PAID IN FULL • Computer Generated Digital Receipt
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5rem', gap: '0.75rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1.5rem' }}>
               <button
-                onClick={() => window.print()}
+                onClick={() => printReceiptPdf(selectedReceipt)}
                 className="btn-primary"
-                style={{ padding: '6px 14px', fontSize: '0.85rem' }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '0.65rem 1rem' }}
               >
-                <Download size={15} />
-                <span>Print / Download Receipt</span>
+                <Printer size={16} />
+                <span>Print PDF</span>
+              </button>
+              <button
+                onClick={() => downloadReceiptPdf(selectedReceipt)}
+                className="btn-secondary"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '0.65rem 1rem' }}
+              >
+                <Download size={16} />
+                <span>Download PDF</span>
               </button>
             </div>
           </div>
         </Modal>
       )}
+
+      {/* Fee Collection Form Modal */}
+      <FeeCollectionModal
+        isOpen={isCollectModalOpen}
+        onClose={() => setIsCollectModalOpen(false)}
+      />
     </div>
   );
 };

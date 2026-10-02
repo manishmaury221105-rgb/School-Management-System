@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
 import { StatCard } from '../common/StatCard';
+import { FeeCollectionModal } from './FeeCollectionModal';
 import {
   Users,
   UserCheck,
@@ -15,6 +16,7 @@ import {
 
 export const AdminDashboard = ({ setActiveTab }) => {
   const { students, teachers, classes, fees, notices } = useSchoolData();
+  const [isFeeModalOpen, setIsFeeModalOpen] = useState(false);
 
   const totalFeesPaid = fees
     .filter(f => f.status === 'Paid')
@@ -39,7 +41,7 @@ export const AdminDashboard = ({ setActiveTab }) => {
             <PlusCircle size={16} />
             <span>Onboard Faculty</span>
           </button>
-          <button onClick={() => setActiveTab('fees')} className="btn-secondary">
+          <button onClick={() => setIsFeeModalOpen(true)} className="btn-secondary">
             <CreditCard size={16} />
             <span>Fees</span>
           </button>
@@ -182,6 +184,12 @@ export const AdminDashboard = ({ setActiveTab }) => {
           </div>
         </div>
       </div>
+
+      {/* Fee Collection Form Modal */}
+      <FeeCollectionModal
+        isOpen={isFeeModalOpen}
+        onClose={() => setIsFeeModalOpen(false)}
+      />
     </div>
   );
 };

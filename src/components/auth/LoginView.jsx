@@ -6,7 +6,6 @@ import {
   Shield,
   UserCheck,
   User,
-  Users,
   Phone,
   Calendar,
   Lock,
@@ -43,7 +42,7 @@ export const LoginView = () => {
     },
     [ROLES.TEACHER]: {
       label: 'Faculty Member',
-      subtitle: 'Class Incharge, Attendance & Student/Parent Registration',
+      subtitle: 'Class Incharge, Attendance & Student Registration',
       icon: UserCheck,
       dotColor: '#3B82F6', // Blue dot as in screenshot
       textColor: '#2563eb',
@@ -51,7 +50,7 @@ export const LoginView = () => {
       demoPhone: '9876543211',
       demoDob: '1990-01-01',
       dobFormatted: '01011990 (DDMMYYYY)',
-      scopeNote: 'Faculty onboards Students & Parents and manages Classroom.',
+      scopeNote: 'Faculty onboards Students and manages Classroom.',
     },
     [ROLES.STUDENT]: {
       label: 'Enrolled Student',
@@ -64,18 +63,6 @@ export const LoginView = () => {
       demoDob: '2010-01-01',
       dobFormatted: '01012010 (DDMMYYYY)',
       scopeNote: 'Log in with Registered Mobile Number & Date of Birth.',
-    },
-    [ROLES.PARENT]: {
-      label: 'Guardian / Parent',
-      subtitle: 'Multi-Child 360° Monitor, Fee Payments & Leave',
-      icon: Users,
-      dotColor: '#8B5CF6', // Purple dot as in screenshot
-      textColor: '#7c3aed',
-      demoUser: INITIAL_USERS.find((u) => u.role === ROLES.PARENT),
-      demoPhone: '9876543213',
-      demoDob: '1985-01-01',
-      dobFormatted: '01011985 (DDMMYYYY)',
-      scopeNote: 'Monitor linked children, attendance & pay school fees.',
     },
   };
 

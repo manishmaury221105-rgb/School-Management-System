@@ -111,7 +111,7 @@ export const SchoolDataProvider = ({ children }) => {
 
   const clearAllStudents = () => {
     setStudents([]);
-    localStorage.setItem('edusphere_students', JSON.stringify([]));
+    localStorage.setItem(`${DB_VERSION}_students`, JSON.stringify([]));
   };
 
   // Parents CRUD
@@ -410,26 +410,101 @@ export const SchoolDataProvider = ({ children }) => {
   };
 
   // Fees & Receipts
-  const payFee = (feeId, paymentMethod = 'Online Payment') => {
+  const payFee = (feeId, paymentMethod = 'Online Payment', fallbackFeeObj = null) => {
     const receiptNo = `REC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const paidDate = new Date().toISOString().split('T')[0];
 
-    setFees(prev =>
-      prev.map(f => {
+    let targetFee = null;
+    let found = false;
+    setFees(prev => {
+      const updated = prev.map(f => {
         if (f.id === feeId) {
-          return {
+          found = true;
+          targetFee = {
             ...f,
             status: 'Paid',
             paidDate,
             receiptNo,
             paymentMethod,
           };
+          return targetFee;
         }
         return f;
-      })
-    );
+      });
+
+      if (!found && fallbackFeeObj) {
+        targetFee = {
+          ...fallbackFeeObj,
+          id: feeId,
+          status: 'Paid',
+          paidDate,
+          receiptNo,
+          paymentMethod,
+        };
+        return [targetFee, ...prev];
+      }
+      return updated;
+    });
+
+    // Also update student feeStatus
+    setStudents(prev => prev.map(s => {
+      if (!targetFee) return s;
+      if (
+        (targetFee.studentId && (s.id === targetFee.studentId || s.studentId === targetFee.studentId)) ||
+        (targetFee.studentName && s.name?.toLowerCase() === targetFee.studentName.toLowerCase()) ||
+        (targetFee.rollNo && targetFee.class && String(s.rollNo) === String(targetFee.rollNo) && s.class === targetFee.class)
+      ) {
+        return { ...s, feeStatus: 'Paid' };
+      }
+      return s;
+    }));
 
     return { receiptNo, paidDate };
+  };
+
+  const collectFee = (newFeeData) => {
+    const id = `fee-${Date.now()}`;
+    const receiptNo = `REC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const paidDate = new Date().toISOString().split('T')[0];
+
+    // Find student in directory
+    const matchedStudent = students.find(s => 
+      (newFeeData.studentId && (s.studentId === newFeeData.studentId || s.id === newFeeData.studentId)) ||
+      (newFeeData.rollNo && newFeeData.class && String(s.rollNo) === String(newFeeData.rollNo) && s.class === newFeeData.class) ||
+      (newFeeData.studentName && s.name?.trim().toLowerCase() === newFeeData.studentName?.trim().toLowerCase())
+    );
+
+    const targetStudentId = matchedStudent?.id || matchedStudent?.studentId || newFeeData.studentId || 'user-student-default';
+
+    const newRecord = {
+      id,
+      receiptNo,
+      paidDate,
+      status: 'Paid',
+      amount: Number(newFeeData.amount) || 25000,
+      feeType: newFeeData.feeType || 'Tuition Fee',
+      paymentMethod: newFeeData.paymentMethod || 'Cash Counter',
+      dueDate: newFeeData.dueDate || paidDate,
+      studentId: targetStudentId,
+      studentName: newFeeData.studentName || matchedStudent?.name || 'Student User',
+      rollNo: newFeeData.rollNo || matchedStudent?.rollNo || '01',
+      class: newFeeData.class || matchedStudent?.class || 'Class 10-A',
+      fatherName: newFeeData.fatherName || matchedStudent?.parentName || '',
+      phone: newFeeData.phone || matchedStudent?.phone || matchedStudent?.parentContact || '',
+      feeMonth: newFeeData.feeMonth || 'October 2026',
+      ...newFeeData,
+    };
+
+    setFees(prev => [newRecord, ...prev]);
+
+    // Also update student feeStatus in students directory
+    setStudents(prev => prev.map(s => 
+      (s.id === targetStudentId || s.studentId === targetStudentId || (newFeeData.studentName && s.name?.toLowerCase() === newFeeData.studentName.toLowerCase()))
+        ? { ...s, feeStatus: 'Paid' }
+        : s
+    ));
+
+    return newRecord;
   };
 
   // Notices
@@ -552,6 +627,7 @@ export const SchoolDataProvider = ({ children }) => {
         gradeHomework,
         updateStudentMarks,
         payFee,
+        collectFee,
         addNotice,
         deleteNotice,
         applyLeave,

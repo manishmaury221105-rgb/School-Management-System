@@ -22,8 +22,42 @@ export const StudentFees = () => {
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('UPI');
 
-  const studentId = currentUser?.id || 'user-student-1';
-  const myFees = fees.filter(f => f.studentId === studentId);
+  // Dynamically match all fees for current student across ID, Name, Roll+Class, or Phone
+  const rawMatchedFees = fees.filter(f => {
+    if (!currentUser) return false;
+    const matchId = f.studentId && (
+      f.studentId === currentUser.id ||
+      f.studentId === currentUser.studentId ||
+      f.id === currentUser.id
+    );
+    const matchName = f.studentName && currentUser.name && (
+      f.studentName.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
+    );
+    const matchRollAndClass = f.rollNo && f.class && currentUser.rollNo && currentUser.class && (
+      String(f.rollNo) === String(currentUser.rollNo) && f.class === currentUser.class
+    );
+    const matchPhone = f.phone && currentUser.phone && (
+      f.phone.replace(/\D/g, '') === currentUser.phone.replace(/\D/g, '')
+    );
+    return matchId || matchName || matchRollAndClass || matchPhone;
+  });
+
+  // Fallback to active term invoice if no custom fee record created yet
+  const myFees = rawMatchedFees.length > 0 ? rawMatchedFees : [
+    {
+      id: `default-fee-${currentUser?.id || 'std'}`,
+      studentId: currentUser?.id || 'user-student-default',
+      studentName: currentUser?.name || 'Student User',
+      feeType: 'Tuition Fee (Term 1 - Academic Year 2026-27)',
+      class: currentUser?.class || 'Class 10-A',
+      amount: 25000,
+      dueDate: '2026-10-15',
+      status: currentUser?.feeStatus === 'Paid' ? 'Paid' : 'Pending',
+      paymentMethod: currentUser?.feeStatus === 'Paid' ? 'Cash / Institutional Counter' : '',
+      receiptNo: currentUser?.feeStatus === 'Paid' ? 'REC-2026-INST' : '',
+      paidDate: currentUser?.feeStatus === 'Paid' ? new Date().toISOString().split('T')[0] : '',
+    }
+  ];
 
   const totalPaid = myFees
     .filter(f => f.status === 'Paid')
@@ -37,8 +71,8 @@ export const StudentFees = () => {
     e.preventDefault();
     if (!selectedFeeToPay) return;
 
-    const res = payFee(selectedFeeToPay.id, paymentMethod === 'UPI' ? 'Instant UPI (rohan@okhdfc)' : 'Credit Card (**** 4242)');
     const feeItem = selectedFeeToPay;
+    const res = payFee(selectedFeeToPay.id, paymentMethod === 'UPI' ? 'Instant UPI (rohan@okhdfc)' : 'Credit Card (**** 4242)', selectedFeeToPay);
     setSelectedFeeToPay(null);
 
     // Confetti celebration
