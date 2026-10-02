@@ -140,6 +140,10 @@ export const AuthProvider = ({ children }) => {
     if (!currentUser) return false;
     const permissions = ROLE_PERMISSIONS[currentUser.role];
     if (!permissions) return false;
+    if (currentUser.role === ROLES.ADMIN) return true; // Administrator has universal access
+    if (tabId === 'teachers' || tabId === 'faculty') {
+      return permissions.allowedTabs.includes('teachers') || permissions.allowedTabs.includes('faculty');
+    }
     return permissions.allowedTabs.includes(tabId);
   };
 

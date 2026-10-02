@@ -79,6 +79,7 @@ export const App = () => {
           case 'parents':
             return <ParentManagement />;
           case 'teachers':
+          case 'faculty':
             return <TeacherManagement />;
           case 'classes':
             return <ClassManagement />;
