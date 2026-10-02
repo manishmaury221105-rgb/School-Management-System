@@ -39,6 +39,10 @@ export const AdminDashboard = ({ setActiveTab }) => {
             <PlusCircle size={16} />
             <span>Onboard Faculty</span>
           </button>
+          <button onClick={() => setActiveTab('fees')} className="btn-secondary">
+            <CreditCard size={16} />
+            <span>Fees</span>
+          </button>
           <button onClick={() => setActiveTab('notices')} className="btn-secondary">
             <BellRing size={16} />
             <span>Broadcast Notice</span>

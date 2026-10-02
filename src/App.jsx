@@ -75,7 +75,7 @@ export const App = () => {
           case 'dashboard':
             return <AdminDashboard setActiveTab={setActiveTab} />;
           case 'students':
-            return <StudentManagement />;
+            return <StudentManagement setActiveTab={setActiveTab} />;
           case 'parents':
             return <ParentManagement />;
           case 'teachers':
@@ -119,7 +119,7 @@ export const App = () => {
           case 'faculty':
             return <TeacherManagement />;
           case 'students':
-            return <StudentManagement />;
+            return <StudentManagement setActiveTab={setActiveTab} />;
           case 'parents':
             return <ParentManagement />;
           case 'attendance':

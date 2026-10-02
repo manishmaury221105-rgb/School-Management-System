@@ -17,9 +17,12 @@ import {
   Camera,
   Upload,
   Pencil,
+  CreditCard,
+  IndianRupee,
+  Receipt,
 } from 'lucide-react';
 
-export const StudentManagement = () => {
+export const StudentManagement = ({ setActiveTab }) => {
   const { currentRole } = useAuth();
   const isAdmin = currentRole === ROLES.ADMIN;
   const { students, addStudent, updateStudent, deleteStudent, clearAllStudents, classes } = useSchoolData();
@@ -29,6 +32,7 @@ export const StudentManagement = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingStudentId, setEditingStudentId] = useState(null);
   const [selectedStudentForView, setSelectedStudentForView] = useState(null);
+  const [selectedStudentForFee, setSelectedStudentForFee] = useState(null);
 
   // New Student Form State with Photo
   const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80';
@@ -178,6 +182,12 @@ export const StudentManagement = () => {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          {isAdmin && (
+            <button onClick={() => setActiveTab && setActiveTab('fees')} className="btn-secondary">
+              <CreditCard size={16} />
+              <span>Fees</span>
+            </button>
+          )}
           <button onClick={exportCSV} className="btn-secondary">
             <Download size={16} />
             <span>Export CSV</span>
@@ -317,9 +327,22 @@ export const StudentManagement = () => {
                     </td>
                     {isAdmin && (
                       <td>
-                        <span className={`badge-status ${stu.feeStatus === 'Paid' ? 'badge-paid' : 'badge-pending'}`}>
-                          {stu.feeStatus}
-                        </span>
+                        <button
+                          onClick={() => setSelectedStudentForFee(stu)}
+                          className={`badge-status ${stu.feeStatus === 'Paid' ? 'badge-paid' : 'badge-pending'}`}
+                          style={{
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontWeight: '700',
+                          }}
+                          title="Click to manage student fee"
+                        >
+                          <CreditCard size={12} />
+                          <span>{stu.feeStatus || 'Pending'}</span>
+                        </button>
                       </td>
                     )}
                     <td>
@@ -327,7 +350,29 @@ export const StudentManagement = () => {
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{stu.parentContact}</div>
                     </td>
                     <td style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '6px' }}>
+                        {isAdmin && (
+                          <button
+                            onClick={() => setSelectedStudentForFee(stu)}
+                            className="btn-secondary"
+                            style={{
+                              padding: '4px 9px',
+                              fontSize: '0.78rem',
+                              fontWeight: '700',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              borderRadius: '7px',
+                              color: stu.feeStatus === 'Paid' ? '#059669' : '#d97706',
+                              borderColor: stu.feeStatus === 'Paid' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)',
+                              background: stu.feeStatus === 'Paid' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)',
+                            }}
+                            title="Manage / Collect Fee"
+                          >
+                            <CreditCard size={13} />
+                            <span>Fee</span>
+                          </button>
+                        )}
                         <button
                           onClick={() => setSelectedStudentForView(stu)}
                           className="icon-btn"
@@ -967,6 +1012,116 @@ export const StudentManagement = () => {
               <button onClick={() => setSelectedStudentForView(null)} className="btn-secondary">
                 Close
               </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Student Individual Fee Modal */}
+      {selectedStudentForFee && (
+        <Modal
+          isOpen={!!selectedStudentForFee}
+          onClose={() => setSelectedStudentForFee(null)}
+          title="Student Fee & Invoice Governance"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Student Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)' }}>
+              <img
+                src={selectedStudentForFee.avatar || DEFAULT_AVATAR}
+                alt={selectedStudentForFee.name}
+                style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }}
+              />
+              <div style={{ flex: 1 }}>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: '800', margin: 0 }}>{selectedStudentForFee.name}</h3>
+                <div style={{ color: 'var(--primary)', fontWeight: '700', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                  {selectedStudentForFee.studentId} • {selectedStudentForFee.class} (Roll #{selectedStudentForFee.rollNo})
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  Guardian: {selectedStudentForFee.parentName || 'Parent'} ({selectedStudentForFee.parentContact || 'Contact Not Set'})
+                </div>
+              </div>
+              <div>
+                <span className={`badge-status ${selectedStudentForFee.feeStatus === 'Paid' ? 'badge-paid' : 'badge-pending'}`} style={{ fontSize: '0.85rem', padding: '6px 12px' }}>
+                  {selectedStudentForFee.feeStatus || 'Pending'}
+                </span>
+              </div>
+            </div>
+
+            {/* Fee Breakdown Table */}
+            <div style={{ background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
+                Academic Term 2026 Fee Breakdown
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.88rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Annual Tuition & Faculty Fee</span>
+                  <span style={{ fontWeight: '700' }}>₹18,000</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Science & Computer Lab Maintenance</span>
+                  <span style={{ fontWeight: '700' }}>₹4,000</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Sports, Co-Curricular & Library Fund</span>
+                  <span style={{ fontWeight: '700' }}>₹3,000</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px dashed var(--border)', fontWeight: '800', fontSize: '1.05rem', color: 'var(--primary)' }}>
+                  <span>Total Payable Amount</span>
+                  <span>₹25,000</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div>
+                {selectedStudentForFee.feeStatus === 'Paid' ? (
+                  <button
+                    onClick={() => {
+                      updateStudent(selectedStudentForFee.id, { feeStatus: 'Pending' });
+                      setSelectedStudentForFee(prev => ({ ...prev, feeStatus: 'Pending' }));
+                    }}
+                    className="btn-secondary"
+                    style={{ fontSize: '0.82rem', color: '#ef4444' }}
+                  >
+                    Mark as Pending / Revert
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      updateStudent(selectedStudentForFee.id, { feeStatus: 'Paid' });
+                      setSelectedStudentForFee(prev => ({ ...prev, feeStatus: 'Paid' }));
+                    }}
+                    className="btn-primary"
+                    style={{ background: '#10b981', borderColor: '#10b981', color: 'white' }}
+                  >
+                    <CheckCircle size={16} />
+                    <span>Collect & Mark as Paid (₹25,000)</span>
+                  </button>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {setActiveTab && (
+                  <button
+                    onClick={() => {
+                      setSelectedStudentForFee(null);
+                      setActiveTab('fees');
+                    }}
+                    className="btn-secondary"
+                  >
+                    <CreditCard size={15} />
+                    <span>All Fee Ledgers</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setSelectedStudentForFee(null)}
+                  className="btn-secondary"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </Modal>
