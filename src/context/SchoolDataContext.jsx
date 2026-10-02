@@ -20,9 +20,12 @@ import {
   INITIAL_LEAVE_REQUESTS,
 } from '../data/mockData';
 
+const DB_VERSION = 'edusphere_v2';
+
 const getSafeStorage = (key, fallback) => {
   try {
-    const saved = localStorage.getItem(key);
+    const versionedKey = `${DB_VERSION}_${key}`;
+    const saved = localStorage.getItem(versionedKey);
     if (!saved) return fallback;
     const parsed = JSON.parse(saved);
     return parsed ?? fallback;
@@ -35,46 +38,46 @@ const getSafeStorage = (key, fallback) => {
 const SchoolDataContext = createContext(null);
 
 export const SchoolDataProvider = ({ children }) => {
-  // State initialization with safe LocalStorage backing
-  const [classes, setClasses] = useState(() => getSafeStorage('edusphere_classes', INITIAL_CLASSES));
-  const [subjects, setSubjects] = useState(() => getSafeStorage('edusphere_subjects', INITIAL_SUBJECTS));
-  const [parents, setParents] = useState(() => getSafeStorage('edusphere_parents', INITIAL_PARENTS_DIRECTORY));
-  const [students, setStudents] = useState(() => getSafeStorage('edusphere_students', INITIAL_STUDENTS_DIRECTORY));
-  const [teachers, setTeachers] = useState(() => getSafeStorage('edusphere_teachers', INITIAL_TEACHERS));
-  const [studyMaterials, setStudyMaterials] = useState(() => getSafeStorage('edusphere_materials', INITIAL_STUDY_MATERIALS));
-  const [books, setBooks] = useState(() => getSafeStorage('edusphere_books', INITIAL_LIBRARY_BOOKS));
-  const [libraryTransactions, setLibraryTransactions] = useState(() => getSafeStorage('edusphere_lib_tx', INITIAL_LIBRARY_TRANSACTIONS));
-  const [transportRoutes, setTransportRoutes] = useState(() => getSafeStorage('edusphere_transport', INITIAL_TRANSPORT_ROUTES));
-  const [events, setEvents] = useState(() => getSafeStorage('edusphere_events', INITIAL_EVENTS));
-  const [notifications, setNotifications] = useState(() => getSafeStorage('edusphere_notifications', INITIAL_NOTIFICATIONS));
-  const [attendance, setAttendance] = useState(() => getSafeStorage('edusphere_attendance', INITIAL_ATTENDANCE_RECORDS));
-  const [homework, setHomework] = useState(() => getSafeStorage('edusphere_homework', INITIAL_HOMEWORK));
-  const [timetable, setTimetable] = useState(() => getSafeStorage('edusphere_timetable', INITIAL_TIMETABLE));
-  const [examsData, setExamsData] = useState(() => getSafeStorage('edusphere_exams', INITIAL_EXAMS_AND_RESULTS));
-  const [fees, setFees] = useState(() => getSafeStorage('edusphere_fees', INITIAL_FEES));
-  const [notices, setNotices] = useState(() => getSafeStorage('edusphere_notices', INITIAL_NOTICES));
-  const [leaveRequests, setLeaveRequests] = useState(() => getSafeStorage('edusphere_leaves', INITIAL_LEAVE_REQUESTS));
-  const [selectedChildId, setSelectedChildId] = useState('user-student-1');
+  // State initialization with clean LocalStorage backing
+  const [classes, setClasses] = useState(() => getSafeStorage('classes', INITIAL_CLASSES));
+  const [subjects, setSubjects] = useState(() => getSafeStorage('subjects', INITIAL_SUBJECTS));
+  const [parents, setParents] = useState(() => getSafeStorage('parents', INITIAL_PARENTS_DIRECTORY));
+  const [students, setStudents] = useState(() => getSafeStorage('students', INITIAL_STUDENTS_DIRECTORY));
+  const [teachers, setTeachers] = useState(() => getSafeStorage('teachers', INITIAL_TEACHERS));
+  const [studyMaterials, setStudyMaterials] = useState(() => getSafeStorage('materials', INITIAL_STUDY_MATERIALS));
+  const [books, setBooks] = useState(() => getSafeStorage('books', INITIAL_LIBRARY_BOOKS));
+  const [libraryTransactions, setLibraryTransactions] = useState(() => getSafeStorage('lib_tx', INITIAL_LIBRARY_TRANSACTIONS));
+  const [transportRoutes, setTransportRoutes] = useState(() => getSafeStorage('transport', INITIAL_TRANSPORT_ROUTES));
+  const [events, setEvents] = useState(() => getSafeStorage('events', INITIAL_EVENTS));
+  const [notifications, setNotifications] = useState(() => getSafeStorage('notifications', INITIAL_NOTIFICATIONS));
+  const [attendance, setAttendance] = useState(() => getSafeStorage('attendance', INITIAL_ATTENDANCE_RECORDS));
+  const [homework, setHomework] = useState(() => getSafeStorage('homework', INITIAL_HOMEWORK));
+  const [timetable, setTimetable] = useState(() => getSafeStorage('timetable', INITIAL_TIMETABLE));
+  const [examsData, setExamsData] = useState(() => getSafeStorage('exams', INITIAL_EXAMS_AND_RESULTS));
+  const [fees, setFees] = useState(() => getSafeStorage('fees', INITIAL_FEES));
+  const [notices, setNotices] = useState(() => getSafeStorage('notices', INITIAL_NOTICES));
+  const [leaveRequests, setLeaveRequests] = useState(() => getSafeStorage('leaves', INITIAL_LEAVE_REQUESTS));
+  const [selectedChildId, setSelectedChildId] = useState(null);
 
   // Sync to LocalStorage
-  useEffect(() => { localStorage.setItem('edusphere_classes', JSON.stringify(classes)); }, [classes]);
-  useEffect(() => { localStorage.setItem('edusphere_subjects', JSON.stringify(subjects)); }, [subjects]);
-  useEffect(() => { localStorage.setItem('edusphere_parents', JSON.stringify(parents)); }, [parents]);
-  useEffect(() => { localStorage.setItem('edusphere_students', JSON.stringify(students)); }, [students]);
-  useEffect(() => { localStorage.setItem('edusphere_teachers', JSON.stringify(teachers)); }, [teachers]);
-  useEffect(() => { localStorage.setItem('edusphere_materials', JSON.stringify(studyMaterials)); }, [studyMaterials]);
-  useEffect(() => { localStorage.setItem('edusphere_books', JSON.stringify(books)); }, [books]);
-  useEffect(() => { localStorage.setItem('edusphere_lib_tx', JSON.stringify(libraryTransactions)); }, [libraryTransactions]);
-  useEffect(() => { localStorage.setItem('edusphere_transport', JSON.stringify(transportRoutes)); }, [transportRoutes]);
-  useEffect(() => { localStorage.setItem('edusphere_events', JSON.stringify(events)); }, [events]);
-  useEffect(() => { localStorage.setItem('edusphere_notifications', JSON.stringify(notifications)); }, [notifications]);
-  useEffect(() => { localStorage.setItem('edusphere_attendance', JSON.stringify(attendance)); }, [attendance]);
-  useEffect(() => { localStorage.setItem('edusphere_homework', JSON.stringify(homework)); }, [homework]);
-  useEffect(() => { localStorage.setItem('edusphere_timetable', JSON.stringify(timetable)); }, [timetable]);
-  useEffect(() => { localStorage.setItem('edusphere_exams', JSON.stringify(examsData)); }, [examsData]);
-  useEffect(() => { localStorage.setItem('edusphere_fees', JSON.stringify(fees)); }, [fees]);
-  useEffect(() => { localStorage.setItem('edusphere_notices', JSON.stringify(notices)); }, [notices]);
-  useEffect(() => { localStorage.setItem('edusphere_leaves', JSON.stringify(leaveRequests)); }, [leaveRequests]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_classes`, JSON.stringify(classes)); }, [classes]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_subjects`, JSON.stringify(subjects)); }, [subjects]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_parents`, JSON.stringify(parents)); }, [parents]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_students`, JSON.stringify(students)); }, [students]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_teachers`, JSON.stringify(teachers)); }, [teachers]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_materials`, JSON.stringify(studyMaterials)); }, [studyMaterials]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_books`, JSON.stringify(books)); }, [books]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_lib_tx`, JSON.stringify(libraryTransactions)); }, [libraryTransactions]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_transport`, JSON.stringify(transportRoutes)); }, [transportRoutes]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_events`, JSON.stringify(events)); }, [events]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_notifications`, JSON.stringify(notifications)); }, [notifications]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_attendance`, JSON.stringify(attendance)); }, [attendance]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_homework`, JSON.stringify(homework)); }, [homework]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_timetable`, JSON.stringify(timetable)); }, [timetable]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_exams`, JSON.stringify(examsData)); }, [examsData]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_fees`, JSON.stringify(fees)); }, [fees]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_notices`, JSON.stringify(notices)); }, [notices]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_leaves`, JSON.stringify(leaveRequests)); }, [leaveRequests]);
 
   // ----------------------------------------------------
   // CRUD ACTIONS

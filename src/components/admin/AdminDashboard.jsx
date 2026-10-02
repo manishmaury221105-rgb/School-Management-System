@@ -50,36 +50,36 @@ export const AdminDashboard = ({ setActiveTab }) => {
       <div className="stats-grid-4">
         <StatCard
           label="Total Active Students"
-          value={students.length + 175}
+          value={students.length}
           icon={Users}
-          trend="+12% this term"
-          trendPositive={true}
+          trend={students.length === 0 ? "Ready for Enrollment" : `${students.length} Enrolled`}
+          trendPositive={students.length > 0}
           accentColor="#4f46e5"
           lightBg="#e0e7ff"
         />
         <StatCard
           label="Faculty & Teachers"
-          value={teachers.length + 18}
+          value={teachers.length}
           icon={UserCheck}
-          trend="100% Present Today"
-          trendPositive={true}
+          trend={teachers.length === 0 ? "No Staff Onboarded" : `${teachers.length} Active`}
+          trendPositive={teachers.length > 0}
           accentColor="#0ea5e9"
           lightBg="#e0f2fe"
         />
         <StatCard
-          label="Fees Collected (Term 1 & 2)"
-          value={`$${(totalFeesPaid + 125000).toLocaleString()}`}
+          label="Fees Collected"
+          value={`$${totalFeesPaid.toLocaleString()}`}
           icon={CreditCard}
           trend={`$${totalFeesPending.toLocaleString()} Pending`}
-          trendPositive={false}
+          trendPositive={totalFeesPaid > 0}
           accentColor="#10b981"
           lightBg="#ecfdf5"
         />
         <StatCard
-          label="Campus Attendance Today"
-          value="94.8%"
+          label="Campus Classes"
+          value={classes.length}
           icon={CalendarCheck}
-          trend="+1.4% vs last week"
+          trend={`${classes.length} Standard Sections`}
           trendPositive={true}
           accentColor="#8b5cf6"
           lightBg="#f5f3ff"
@@ -101,14 +101,15 @@ export const AdminDashboard = ({ setActiveTab }) => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {classes.map((cls) => {
-              const fillPercent = Math.round((cls.studentCount / cls.maxCapacity) * 100);
+            {classes.slice(0, 6).map((cls) => {
+              const enrolledInClass = students.filter(s => s.class === cls.name).length;
+              const fillPercent = Math.round((enrolledInClass / cls.maxCapacity) * 100);
               return (
                 <div key={cls.id}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: '600', marginBottom: '4px' }}>
                     <span>{cls.name} ({cls.roomNo})</span>
                     <span style={{ color: fillPercent >= 90 ? '#ef4444' : 'var(--text-secondary)' }}>
-                      {cls.studentCount} / {cls.maxCapacity} Students ({fillPercent}%)
+                      {enrolledInClass} / {cls.maxCapacity} Students ({fillPercent}%)
                     </span>
                   </div>
                   <div style={{ width: '100%', height: '8px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden' }}>

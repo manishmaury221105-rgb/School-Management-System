@@ -39,7 +39,7 @@ export const LoginView = () => {
       demoPhone: '9876543210',
       demoDob: '1980-01-01',
       dobFormatted: '01011980 (DDMMYYYY)',
-      scopeNote: 'Administrator adds and manages Faculty & Staff only.',
+      scopeNote: 'Administrator manages Faculty, Classes, Subjects & Finances.',
     },
     [ROLES.TEACHER]: {
       label: 'Faculty Member',
@@ -49,9 +49,9 @@ export const LoginView = () => {
       textColor: '#2563eb',
       demoUser: INITIAL_USERS.find((u) => u.role === ROLES.TEACHER),
       demoPhone: '9876543211',
-      demoDob: '1988-05-15',
-      dobFormatted: '15051988 (DDMMYYYY)',
-      scopeNote: 'Faculty adds and manages Students & Parents directly.',
+      demoDob: '1990-01-01',
+      dobFormatted: '01011990 (DDMMYYYY)',
+      scopeNote: 'Faculty onboards Students & Parents and manages Classroom.',
     },
     [ROLES.STUDENT]: {
       label: 'Enrolled Student',
@@ -61,8 +61,8 @@ export const LoginView = () => {
       textColor: '#059669',
       demoUser: INITIAL_USERS.find((u) => u.role === ROLES.STUDENT),
       demoPhone: '9876543212',
-      demoDob: '2010-04-14',
-      dobFormatted: '14042010 (DDMMYYYY)',
+      demoDob: '2010-01-01',
+      dobFormatted: '01012010 (DDMMYYYY)',
       scopeNote: 'Log in with Registered Mobile Number & Date of Birth.',
     },
     [ROLES.PARENT]: {
@@ -73,9 +73,9 @@ export const LoginView = () => {
       textColor: '#7c3aed',
       demoUser: INITIAL_USERS.find((u) => u.role === ROLES.PARENT),
       demoPhone: '9876543213',
-      demoDob: '1985-04-12',
-      dobFormatted: '12041985 (DDMMYYYY)',
-      scopeNote: 'Monitor linked children, attendance & pay term fees.',
+      demoDob: '1985-01-01',
+      dobFormatted: '01011985 (DDMMYYYY)',
+      scopeNote: 'Monitor linked children, attendance & pay school fees.',
     },
   };
 

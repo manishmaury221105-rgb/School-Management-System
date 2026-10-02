@@ -28,8 +28,62 @@ export const AuthProvider = ({ children }) => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
+  const getSafeStorageList = (key) => {
+    try {
+      const saved = localStorage.getItem(key);
+      return saved ? JSON.parse(saved) || [] : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const getAllKnownUsers = () => {
+    const dynamicTeachers = (getSafeStorageList('edusphere_v2_teachers') || []).map(t => ({
+      id: t.id,
+      role: ROLES.TEACHER,
+      name: t.name,
+      email: t.email,
+      phone: t.phone,
+      dob: t.dob || '1990-01-01',
+      avatar: t.avatar,
+      subject: t.subject || 'Faculty',
+      assignedClasses: t.assignedClasses || [],
+      classTeacherOf: t.classTeacherOf || '',
+    }));
+
+    const dynamicStudents = (getSafeStorageList('edusphere_v2_students') || []).map(s => ({
+      id: s.id,
+      role: ROLES.STUDENT,
+      studentId: s.studentId,
+      name: s.name,
+      email: s.email,
+      phone: s.phone,
+      dob: s.dob || '2010-01-01',
+      avatar: s.avatar,
+      class: s.class,
+      rollNo: s.rollNo,
+      parentId: s.parentId,
+      parentName: s.parentName,
+      parentContact: s.parentContact,
+    }));
+
+    const dynamicParents = (getSafeStorageList('edusphere_v2_parents') || []).map(p => ({
+      id: p.id,
+      role: ROLES.PARENT,
+      name: p.name,
+      email: p.email,
+      phone: p.phone,
+      dob: p.dob || '1985-01-01',
+      avatar: p.avatar,
+      childrenIds: p.childrenIds || [],
+    }));
+
+    return [...INITIAL_USERS, ...dynamicTeachers, ...dynamicStudents, ...dynamicParents];
+  };
+
   const loginWithRole = (role) => {
-    const user = INITIAL_USERS.find(u => u.role === role);
+    const allUsers = getAllKnownUsers();
+    const user = allUsers.find(u => u.role === role);
     if (user) {
       setCurrentUser(user);
       return true;
@@ -42,8 +96,10 @@ export const AuthProvider = ({ children }) => {
     const cleanDigits = rawId.replace(/\D/g, '');
     const cleanEmail = rawId.toLowerCase();
 
+    const allUsers = getAllKnownUsers();
+
     // Find in seed users and dynamic rosters
-    const user = INITIAL_USERS.find(u => {
+    const user = allUsers.find(u => {
       const uPhoneDigits = (u.phone || '').replace(/\D/g, '');
       const phoneMatch = cleanDigits.length >= 4 && uPhoneDigits.length >= 4 && (uPhoneDigits === cleanDigits || uPhoneDigits.endsWith(cleanDigits) || cleanDigits.endsWith(uPhoneDigits));
       const emailMatch = u.email && u.email.toLowerCase() === cleanEmail;
@@ -80,13 +136,13 @@ export const AuthProvider = ({ children }) => {
       } else {
         return {
           success: false,
-          error: `Incorrect Date of Birth / Password. (Demo DOB is ${user.dob || 'YYYY-MM-DD'})`,
+          error: `Incorrect Date of Birth / Password for ${user.name}.`,
         };
       }
     }
 
     if (role) {
-      const fallback = INITIAL_USERS.find(u => u.role === role);
+      const fallback = allUsers.find(u => u.role === role);
       if (fallback) {
         setCurrentUser(fallback);
         return { success: true, user: fallback };
