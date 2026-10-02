@@ -10,15 +10,25 @@ import {
   BookOpen,
   Award,
   CheckCircle2,
+  Camera,
+  Upload,
 } from 'lucide-react';
 
 export const TeacherManagement = () => {
   const { teachers, addTeacher, classes } = useSchoolData();
   const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const DEFAULT_TEACHER_AVATAR = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80';
+  const PRESET_TEACHER_AVATARS = [
+    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80', // Female Faculty 1
+    'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80', // Male Faculty 1
+    'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80', // Female Faculty 2
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', // Female Faculty 3
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', // Male Faculty 2
+  ];
 
   const [formData, setFormData] = useState({
     name: '',
+    avatar: DEFAULT_TEACHER_AVATAR,
     email: '',
     subject: '',
     assignedClasses: ['Class 10-A'],
@@ -27,6 +37,17 @@ export const TeacherManagement = () => {
     dob: '1988-05-15',
     experience: '5 Years',
   });
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, avatar: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const filteredTeachers = teachers.filter((t) =>
     t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -42,6 +63,7 @@ export const TeacherManagement = () => {
     setIsModalOpen(false);
     setFormData({
       name: '',
+      avatar: DEFAULT_TEACHER_AVATAR,
       email: '',
       subject: '',
       assignedClasses: ['Class 10-A'],
@@ -169,6 +191,91 @@ export const TeacherManagement = () => {
         title="Register Faculty Member"
       >
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Faculty Photo Upload & Preview Section */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1.25rem',
+            padding: '1rem',
+            background: 'var(--bg-input)',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px dashed var(--border)'
+          }}>
+            <div style={{ position: 'relative' }}>
+              <img
+                src={formData.avatar}
+                alt="Faculty Preview"
+                style={{
+                  width: '68px',
+                  height: '68px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '3px solid var(--primary)',
+                  boxShadow: 'var(--shadow-sm)'
+                }}
+              />
+              <label
+                htmlFor="teacher-photo-file"
+                style={{
+                  position: 'absolute',
+                  bottom: '-2px',
+                  right: '-2px',
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '50%',
+                  background: 'var(--primary)',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+                }}
+                title="Upload Photo from Camera / Gallery"
+              >
+                <Camera size={14} />
+              </label>
+              <input
+                id="teacher-photo-file"
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                style={{ display: 'none' }}
+              />
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '3px' }}>
+                Faculty Profile Photo
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                Upload from Camera / Gallery or choose a faculty avatar below:
+              </div>
+
+              {/* Sample Preset Avatars for 1-Click Pick */}
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                {PRESET_TEACHER_AVATARS.map((url, idx) => (
+                  <img
+                    key={idx}
+                    src={url}
+                    alt={`Faculty Avatar ${idx}`}
+                    onClick={() => setFormData(prev => ({ ...prev, avatar: url }))}
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      cursor: 'pointer',
+                      border: formData.avatar === url ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      opacity: formData.avatar === url ? 1 : 0.6,
+                      transition: 'all 0.15s ease'
+                    }}
+                    title="Select Avatar"
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
           <div>
             <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
               Full Name & Title *
