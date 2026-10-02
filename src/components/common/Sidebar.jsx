@@ -6,11 +6,11 @@ import {
   Users,
   UserCheck,
   School,
+  BookOpen,
   CreditCard,
   BellRing,
   Calendar,
   Settings,
-  BookOpen,
   Award,
   TrendingUp,
   Clock,
@@ -19,6 +19,12 @@ import {
   FileText,
   ShieldCheck,
   LogOut,
+  Book,
+  Bus,
+  FileSpreadsheet,
+  UploadCloud,
+  Layers,
+  HeartHandshake,
 } from 'lucide-react';
 
 export const Sidebar = ({ activeTab, setActiveTab }) => {
@@ -31,21 +37,33 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
         return [
           { id: 'dashboard', label: 'Executive Overview', icon: LayoutDashboard },
           { id: 'students', label: 'Student Directory', icon: Users },
+          { id: 'parents', label: 'Parent Directory', icon: HeartHandshake },
           { id: 'teachers', label: 'Faculty & Staff', icon: UserCheck },
           { id: 'classes', label: 'Classes & Sections', icon: School },
-          { id: 'fees', label: 'Fee Management', icon: CreditCard },
-          { id: 'notices', label: 'Notice Circulars', icon: BellRing },
+          { id: 'subjects', label: 'Subjects Master', icon: Layers },
           { id: 'timetable', label: 'Master Timetable', icon: Calendar },
+          { id: 'attendance', label: 'Attendance Hub', icon: CalendarCheck },
+          { id: 'fees', label: 'Fees & Invoicing', icon: CreditCard },
+          { id: 'study-material', label: 'Study Materials', icon: UploadCloud },
+          { id: 'library', label: 'Library Catalog', icon: Book },
+          { id: 'transport', label: 'Transport Logistics', icon: Bus },
+          { id: 'events', label: 'School Events', icon: Calendar },
+          { id: 'notices', label: 'Notice Circulars', icon: BellRing },
+          { id: 'leave', label: 'Leave Approvals', icon: FileText },
+          { id: 'reports', label: 'Audit & Reports', icon: FileSpreadsheet },
           { id: 'settings', label: 'School Settings', icon: Settings },
         ];
       case ROLES.TEACHER:
         return [
           { id: 'dashboard', label: 'Faculty Dashboard', icon: LayoutDashboard },
           { id: 'attendance', label: 'Mark Attendance', icon: UserCheck },
+          { id: 'timetable', label: 'My Timetable', icon: Clock },
           { id: 'homework', label: 'Homework & Tasks', icon: BookOpen },
+          { id: 'study-material', label: 'Study Materials', icon: UploadCloud },
           { id: 'gradebook', label: 'Exam & Gradebook', icon: Award },
           { id: 'performance', label: 'Student Analytics', icon: TrendingUp },
           { id: 'notices', label: 'Class Notices', icon: BellRing },
+          { id: 'leave', label: 'Leave Approvals', icon: FileText },
         ];
       case ROLES.STUDENT:
         return [
@@ -54,8 +72,10 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
           { id: 'attendance', label: 'Live Attendance', icon: CalendarCheck },
           { id: 'timetable', label: 'Class Timetable', icon: Clock },
           { id: 'homework', label: 'Homework & Tasks', icon: BookOpen },
+          { id: 'study-material', label: 'Study Notes & PDF', icon: UploadCloud },
           { id: 'exams', label: 'Exams & Results', icon: Award },
           { id: 'fees', label: 'Fee Invoices & Pay', icon: Wallet },
+          { id: 'events', label: 'School Events', icon: Calendar },
           { id: 'notices', label: 'Notice Board', icon: BellRing },
         ];
       case ROLES.PARENT:
@@ -66,7 +86,8 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
           { id: 'homework', label: 'Homework Tracker', icon: BookOpen },
           { id: 'fees', label: 'Pay Child Fees', icon: CreditCard },
           { id: 'leave', label: 'Apply for Leave', icon: FileText },
-          { id: 'notices', label: 'PTM & Circulars', icon: BellRing },
+          { id: 'events', label: 'PTM & Events', icon: Calendar },
+          { id: 'notices', label: 'Notice Circulars', icon: BellRing },
         ];
       default:
         return [];
@@ -93,7 +114,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
               {currentRole} WORKSPACE
             </div>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-              Strict Access Control
+              Strict RBAC Enforced
             </div>
           </div>
         </div>
@@ -117,7 +138,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
         })}
       </nav>
 
-      {/* User Info & Quick Logout */}
+      {/* User Info */}
       <div className="sidebar-user-box">
         <img
           src={currentUser?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'}

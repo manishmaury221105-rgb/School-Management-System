@@ -1,8 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   INITIAL_CLASSES,
+  INITIAL_SUBJECTS,
+  INITIAL_PARENTS_DIRECTORY,
   INITIAL_STUDENTS_DIRECTORY,
   INITIAL_TEACHERS,
+  INITIAL_STUDY_MATERIALS,
+  INITIAL_LIBRARY_BOOKS,
+  INITIAL_LIBRARY_TRANSACTIONS,
+  INITIAL_TRANSPORT_ROUTES,
+  INITIAL_EVENTS,
+  INITIAL_NOTIFICATIONS,
   INITIAL_ATTENDANCE_RECORDS,
   INITIAL_HOMEWORK,
   INITIAL_TIMETABLE,
@@ -15,10 +23,20 @@ import {
 const SchoolDataContext = createContext(null);
 
 export const SchoolDataProvider = ({ children }) => {
-  // Load or initialize state from LocalStorage
+  // State initialization with LocalStorage backing
   const [classes, setClasses] = useState(() => {
     const saved = localStorage.getItem('edusphere_classes');
     return saved ? JSON.parse(saved) : INITIAL_CLASSES;
+  });
+
+  const [subjects, setSubjects] = useState(() => {
+    const saved = localStorage.getItem('edusphere_subjects');
+    return saved ? JSON.parse(saved) : INITIAL_SUBJECTS;
+  });
+
+  const [parents, setParents] = useState(() => {
+    const saved = localStorage.getItem('edusphere_parents');
+    return saved ? JSON.parse(saved) : INITIAL_PARENTS_DIRECTORY;
   });
 
   const [students, setStudents] = useState(() => {
@@ -29,6 +47,36 @@ export const SchoolDataProvider = ({ children }) => {
   const [teachers, setTeachers] = useState(() => {
     const saved = localStorage.getItem('edusphere_teachers');
     return saved ? JSON.parse(saved) : INITIAL_TEACHERS;
+  });
+
+  const [studyMaterials, setStudyMaterials] = useState(() => {
+    const saved = localStorage.getItem('edusphere_materials');
+    return saved ? JSON.parse(saved) : INITIAL_STUDY_MATERIALS;
+  });
+
+  const [books, setBooks] = useState(() => {
+    const saved = localStorage.getItem('edusphere_books');
+    return saved ? JSON.parse(saved) : INITIAL_LIBRARY_BOOKS;
+  });
+
+  const [libraryTransactions, setLibraryTransactions] = useState(() => {
+    const saved = localStorage.getItem('edusphere_lib_tx');
+    return saved ? JSON.parse(saved) : INITIAL_LIBRARY_TRANSACTIONS;
+  });
+
+  const [transportRoutes, setTransportRoutes] = useState(() => {
+    const saved = localStorage.getItem('edusphere_transport');
+    return saved ? JSON.parse(saved) : INITIAL_TRANSPORT_ROUTES;
+  });
+
+  const [events, setEvents] = useState(() => {
+    const saved = localStorage.getItem('edusphere_events');
+    return saved ? JSON.parse(saved) : INITIAL_EVENTS;
+  });
+
+  const [notifications, setNotifications] = useState(() => {
+    const saved = localStorage.getItem('edusphere_notifications');
+    return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
   });
 
   const [attendance, setAttendance] = useState(() => {
@@ -66,59 +114,43 @@ export const SchoolDataProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : INITIAL_LEAVE_REQUESTS;
   });
 
-  // Selected child for Parent role view
   const [selectedChildId, setSelectedChildId] = useState('user-student-1');
 
-  // Persistence effects
-  useEffect(() => {
-    localStorage.setItem('edusphere_classes', JSON.stringify(classes));
-  }, [classes]);
+  // Sync to LocalStorage
+  useEffect(() => { localStorage.setItem('edusphere_classes', JSON.stringify(classes)); }, [classes]);
+  useEffect(() => { localStorage.setItem('edusphere_subjects', JSON.stringify(subjects)); }, [subjects]);
+  useEffect(() => { localStorage.setItem('edusphere_parents', JSON.stringify(parents)); }, [parents]);
+  useEffect(() => { localStorage.setItem('edusphere_students', JSON.stringify(students)); }, [students]);
+  useEffect(() => { localStorage.setItem('edusphere_teachers', JSON.stringify(teachers)); }, [teachers]);
+  useEffect(() => { localStorage.setItem('edusphere_materials', JSON.stringify(studyMaterials)); }, [studyMaterials]);
+  useEffect(() => { localStorage.setItem('edusphere_books', JSON.stringify(books)); }, [books]);
+  useEffect(() => { localStorage.setItem('edusphere_lib_tx', JSON.stringify(libraryTransactions)); }, [libraryTransactions]);
+  useEffect(() => { localStorage.setItem('edusphere_transport', JSON.stringify(transportRoutes)); }, [transportRoutes]);
+  useEffect(() => { localStorage.setItem('edusphere_events', JSON.stringify(events)); }, [events]);
+  useEffect(() => { localStorage.setItem('edusphere_notifications', JSON.stringify(notifications)); }, [notifications]);
+  useEffect(() => { localStorage.setItem('edusphere_attendance', JSON.stringify(attendance)); }, [attendance]);
+  useEffect(() => { localStorage.setItem('edusphere_homework', JSON.stringify(homework)); }, [homework]);
+  useEffect(() => { localStorage.setItem('edusphere_timetable', JSON.stringify(timetable)); }, [timetable]);
+  useEffect(() => { localStorage.setItem('edusphere_exams', JSON.stringify(examsData)); }, [examsData]);
+  useEffect(() => { localStorage.setItem('edusphere_fees', JSON.stringify(fees)); }, [fees]);
+  useEffect(() => { localStorage.setItem('edusphere_notices', JSON.stringify(notices)); }, [notices]);
+  useEffect(() => { localStorage.setItem('edusphere_leaves', JSON.stringify(leaveRequests)); }, [leaveRequests]);
 
-  useEffect(() => {
-    localStorage.setItem('edusphere_students', JSON.stringify(students));
-  }, [students]);
+  // ----------------------------------------------------
+  // CRUD ACTIONS
+  // ----------------------------------------------------
 
-  useEffect(() => {
-    localStorage.setItem('edusphere_teachers', JSON.stringify(teachers));
-  }, [teachers]);
-
-  useEffect(() => {
-    localStorage.setItem('edusphere_attendance', JSON.stringify(attendance));
-  }, [attendance]);
-
-  useEffect(() => {
-    localStorage.setItem('edusphere_homework', JSON.stringify(homework));
-  }, [homework]);
-
-  useEffect(() => {
-    localStorage.setItem('edusphere_timetable', JSON.stringify(timetable));
-  }, [timetable]);
-
-  useEffect(() => {
-    localStorage.setItem('edusphere_exams', JSON.stringify(examsData));
-  }, [examsData]);
-
-  useEffect(() => {
-    localStorage.setItem('edusphere_fees', JSON.stringify(fees));
-  }, [fees]);
-
-  useEffect(() => {
-    localStorage.setItem('edusphere_notices', JSON.stringify(notices));
-  }, [notices]);
-
-  useEffect(() => {
-    localStorage.setItem('edusphere_leaves', JSON.stringify(leaveRequests));
-  }, [leaveRequests]);
-
-  // Actions
+  // Students CRUD
   const addStudent = (newStudent) => {
     const id = `stu-${Date.now()}`;
     const student = {
       id,
       studentId: `STU-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      admissionNo: `ADM-2026-${Math.floor(1000 + Math.random() * 9000)}`,
       attendancePercent: 100,
       gpa: 3.8,
       feeStatus: 'Pending',
+      status: 'Active',
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
       ...newStudent,
     };
@@ -126,39 +158,173 @@ export const SchoolDataProvider = ({ children }) => {
     return student;
   };
 
-  const deleteStudent = (studentId) => {
-    setStudents(prev => prev.filter(s => s.id !== studentId));
+  const updateStudent = (id, updatedData) => {
+    setStudents(prev => prev.map(s => (s.id === id ? { ...s, ...updatedData } : s)));
   };
 
+  const deleteStudent = (id) => {
+    setStudents(prev => prev.filter(s => s.id !== id));
+  };
+
+  // Parents CRUD
+  const addParent = (newParent) => {
+    const id = `parent-${Date.now()}`;
+    const parent = {
+      id,
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+      children: [],
+      ...newParent,
+    };
+    setParents(prev => [parent, ...prev]);
+    return parent;
+  };
+
+  const deleteParent = (id) => {
+    setParents(prev => prev.filter(p => p.id !== id));
+  };
+
+  // Teachers CRUD
   const addTeacher = (newTeacher) => {
     const id = `t-${Date.now()}`;
     const teacher = {
       id,
+      teacherId: `TCH-2026-${Math.floor(100 + Math.random() * 900)}`,
       avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
       status: 'Active',
+      salary: 65000,
       ...newTeacher,
     };
     setTeachers(prev => [teacher, ...prev]);
     return teacher;
   };
 
-  const markAttendance = (className, date, studentId, status) => {
-    setAttendance(prev => {
-      const classData = prev[className] || {};
-      const dateData = classData[date] || {};
-      return {
-        ...prev,
-        [className]: {
-          ...classData,
-          [date]: {
-            ...dateData,
-            [studentId]: status,
-          },
-        },
-      };
-    });
+  const deleteTeacher = (id) => {
+    setTeachers(prev => prev.filter(t => t.id !== id));
   };
 
+  // Subjects CRUD
+  const addSubject = (newSubject) => {
+    const id = `sub-${Date.now()}`;
+    const subject = {
+      id,
+      maxMarks: 100,
+      passingMarks: 35,
+      ...newSubject,
+    };
+    setSubjects(prev => [subject, ...prev]);
+    return subject;
+  };
+
+  const deleteSubject = (id) => {
+    setSubjects(prev => prev.filter(s => s.id !== id));
+  };
+
+  // Study Materials CRUD
+  const addStudyMaterial = (newMaterial) => {
+    const id = `mat-${Date.now()}`;
+    const mat = {
+      id,
+      uploadedDate: new Date().toISOString().split('T')[0],
+      downloadUrl: '#',
+      ...newMaterial,
+    };
+    setStudyMaterials(prev => [mat, ...prev]);
+    return mat;
+  };
+
+  const deleteStudyMaterial = (id) => {
+    setStudyMaterials(prev => prev.filter(m => m.id !== id));
+  };
+
+  // Library Books CRUD & Transactions
+  const addBook = (newBook) => {
+    const id = `lib-${Date.now()}`;
+    const book = {
+      id,
+      bookId: `BK-${Math.floor(1000 + Math.random() * 9000)}`,
+      availableCopies: newBook.quantity || 1,
+      ...newBook,
+    };
+    setBooks(prev => [book, ...prev]);
+    return book;
+  };
+
+  const deleteBook = (id) => {
+    setBooks(prev => prev.filter(b => b.id !== id));
+  };
+
+  const issueBook = (bookId, studentId, studentName) => {
+    const book = books.find(b => b.id === bookId);
+    if (!book || book.availableCopies <= 0) return false;
+
+    // Decrement available copies
+    setBooks(prev =>
+      prev.map(b => (b.id === bookId ? { ...b, availableCopies: b.availableCopies - 1 } : b))
+    );
+
+    const txId = `tx-${Date.now()}`;
+    const newTx = {
+      id: txId,
+      bookId: book.bookId,
+      bookTitle: book.title,
+      studentId,
+      studentName,
+      issueDate: new Date().toISOString().split('T')[0],
+      dueDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+      returnDate: null,
+      fineAmount: 0,
+      status: 'ISSUED',
+    };
+    setLibraryTransactions(prev => [newTx, ...prev]);
+    return true;
+  };
+
+  const returnBook = (txId) => {
+    const tx = libraryTransactions.find(t => t.id === txId);
+    if (!tx || tx.status === 'RETURNED') return;
+
+    setBooks(prev =>
+      prev.map(b => (b.bookId === tx.bookId ? { ...b, availableCopies: b.availableCopies + 1 } : b))
+    );
+
+    setLibraryTransactions(prev =>
+      prev.map(t =>
+        t.id === txId
+          ? { ...t, returnDate: new Date().toISOString().split('T')[0], status: 'RETURNED' }
+          : t
+      )
+    );
+  };
+
+  // Events CRUD
+  const addEvent = (newEvent) => {
+    const id = `ev-${Date.now()}`;
+    const ev = {
+      id,
+      image: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=400&auto=format&fit=crop&q=80',
+      ...newEvent,
+    };
+    setEvents(prev => [ev, ...prev]);
+    return ev;
+  };
+
+  const deleteEvent = (id) => {
+    setEvents(prev => prev.filter(e => e.id !== id));
+  };
+
+  // Notifications
+  const markNotificationRead = (id) => {
+    setNotifications(prev =>
+      prev.map(n => (n.id === id ? { ...n, isRead: true } : n))
+    );
+  };
+
+  const addNotification = (notif) => {
+    const id = `notif-${Date.now()}`;
+    setNotifications(prev => [{ id, time: 'Just now', isRead: false, ...notif }, ...prev]);
+  };
+
+  // Attendance
   const markBulkAttendance = (className, date, statusMap) => {
     setAttendance(prev => {
       const classData = prev[className] || {};
@@ -166,14 +332,13 @@ export const SchoolDataProvider = ({ children }) => {
         ...prev,
         [className]: {
           ...classData,
-          [date]: {
-            ...statusMap,
-          },
+          [date]: { ...statusMap },
         },
       };
     });
   };
 
+  // Homework
   const addHomework = (newHw) => {
     const id = `hw-${Date.now()}`;
     const hw = {
@@ -222,11 +387,7 @@ export const SchoolDataProvider = ({ children }) => {
             ...hw,
             studentStatus: {
               ...hw.studentStatus,
-              [studentId]: {
-                ...current,
-                grade,
-                feedback,
-              },
+              [studentId]: { ...current, grade, feedback },
             },
           };
         }
@@ -235,6 +396,7 @@ export const SchoolDataProvider = ({ children }) => {
     );
   };
 
+  // Exam Marks
   const updateStudentMarks = (studentId, subjectName, marks, remarks) => {
     setExamsData(prev => {
       const studentResult = prev.results[studentId];
@@ -276,6 +438,7 @@ export const SchoolDataProvider = ({ children }) => {
     });
   };
 
+  // Fees & Receipts
   const payFee = (feeId, paymentMethod = 'Online Payment') => {
     const receiptNo = `REC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const paidDate = new Date().toISOString().split('T')[0];
@@ -298,6 +461,7 @@ export const SchoolDataProvider = ({ children }) => {
     return { receiptNo, paidDate };
   };
 
+  // Notices
   const addNotice = (newNotice) => {
     const id = `not-${Date.now()}`;
     const notice = {
@@ -313,6 +477,7 @@ export const SchoolDataProvider = ({ children }) => {
     setNotices(prev => prev.filter(n => n.id !== noticeId));
   };
 
+  // Leaves
   const applyLeave = (leaveData) => {
     const id = `leave-${Date.now()}`;
     const newLeave = {
@@ -341,11 +506,20 @@ export const SchoolDataProvider = ({ children }) => {
     );
   };
 
+  // Reset to default seed data
   const resetAllData = () => {
     localStorage.clear();
     setClasses(INITIAL_CLASSES);
+    setSubjects(INITIAL_SUBJECTS);
+    setParents(INITIAL_PARENTS_DIRECTORY);
     setStudents(INITIAL_STUDENTS_DIRECTORY);
     setTeachers(INITIAL_TEACHERS);
+    setStudyMaterials(INITIAL_STUDY_MATERIALS);
+    setBooks(INITIAL_LIBRARY_BOOKS);
+    setLibraryTransactions(INITIAL_LIBRARY_TRANSACTIONS);
+    setTransportRoutes(INITIAL_TRANSPORT_ROUTES);
+    setEvents(INITIAL_EVENTS);
+    setNotifications(INITIAL_NOTIFICATIONS);
     setAttendance(INITIAL_ATTENDANCE_RECORDS);
     setHomework(INITIAL_HOMEWORK);
     setTimetable(INITIAL_TIMETABLE);
@@ -360,8 +534,16 @@ export const SchoolDataProvider = ({ children }) => {
     <SchoolDataContext.Provider
       value={{
         classes,
+        subjects,
+        parents,
         students,
         teachers,
+        studyMaterials,
+        books,
+        libraryTransactions,
+        transportRoutes,
+        events,
+        notifications,
         attendance,
         homework,
         timetable,
@@ -372,9 +554,24 @@ export const SchoolDataProvider = ({ children }) => {
         selectedChildId,
         setSelectedChildId,
         addStudent,
+        updateStudent,
         deleteStudent,
+        addParent,
+        deleteParent,
         addTeacher,
-        markAttendance,
+        deleteTeacher,
+        addSubject,
+        deleteSubject,
+        addStudyMaterial,
+        deleteStudyMaterial,
+        addBook,
+        deleteBook,
+        issueBook,
+        returnBook,
+        addEvent,
+        deleteEvent,
+        markNotificationRead,
+        addNotification,
         markBulkAttendance,
         addHomework,
         submitHomework,

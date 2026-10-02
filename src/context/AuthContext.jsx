@@ -13,7 +13,6 @@ export const AuthProvider = ({ children }) => {
         console.error('Failed to parse saved user', e);
       }
     }
-    // Default to Student or Admin for first launch
     return INITIAL_USERS.find(u => u.role === ROLES.ADMIN);
   });
 
@@ -47,19 +46,49 @@ export const AuthProvider = ({ children }) => {
     return false;
   };
 
-  const loginWithCredentials = (email, password, role) => {
-    const user = INITIAL_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
+  const loginWithCredentials = (identifier, password, role) => {
+    const cleanId = identifier.trim().toLowerCase();
+    const user = INITIAL_USERS.find(
+      u => u.email.toLowerCase() === cleanId || (u.phone && u.phone.includes(cleanId))
+    );
+
     if (user && (!role || user.role === role)) {
       setCurrentUser(user);
       return { success: true, user };
     }
-    // If not found in seed, check if role was selected and provide demo login
     if (role) {
       const fallback = INITIAL_USERS.find(u => u.role === role);
       setCurrentUser(fallback);
       return { success: true, user: fallback };
     }
-    return { success: false, error: 'Invalid email or password. Try quick login buttons.' };
+    return { success: false, error: 'Invalid email, mobile or password.' };
+  };
+
+  const registerUser = (userData) => {
+    const id = `user-${Date.now()}`;
+    const newUser = {
+      id,
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+      ...userData,
+    };
+    setCurrentUser(newUser);
+    return { success: true, user: newUser };
+  };
+
+  const forgotPassword = (email) => {
+    return { success: true, message: `Password reset verification link sent to ${email}` };
+  };
+
+  const resetPassword = (email, newPassword) => {
+    return { success: true, message: 'Password has been successfully updated.' };
+  };
+
+  const changePassword = (currentPassword, newPassword) => {
+    return { success: true, message: 'Security password changed successfully.' };
+  };
+
+  const updateProfile = (updatedData) => {
+    setCurrentUser(prev => ({ ...prev, ...updatedData }));
   };
 
   const logout = () => {
@@ -83,6 +112,11 @@ export const AuthProvider = ({ children }) => {
         toggleTheme,
         loginWithRole,
         loginWithCredentials,
+        registerUser,
+        forgotPassword,
+        resetPassword,
+        changePassword,
+        updateProfile,
         logout,
         hasPermission,
         roleConfig: currentUser ? ROLE_PERMISSIONS[currentUser.role] : null,

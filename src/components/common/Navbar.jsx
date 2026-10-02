@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useSchoolData } from '../../context/SchoolDataContext';
 import { ROLES, ROLE_PERMISSIONS } from '../../data/mockData';
+import { NotificationDrawer } from './NotificationDrawer';
+import { Modal } from './Modal';
 import {
   GraduationCap,
   Sun,
@@ -11,184 +14,310 @@ import {
   Tablet,
   Monitor,
   Shield,
-  UserCheck,
   Check,
-  ChevronDown
+  ChevronDown,
+  Key,
+  User,
+  Save,
 } from 'lucide-react';
 
 export const Navbar = ({ deviceMode, setDeviceMode }) => {
-  const { currentUser, currentRole, toggleTheme, theme, loginWithRole, logout } = useAuth();
-  const [showRoleMenu, setShowRoleMenu] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
+  const { currentUser, currentRole, toggleTheme, theme, loginWithRole, logout, changePassword, updateProfile } = useAuth();
+  const { notifications } = useSchoolData();
 
+  const [showRoleMenu, setShowRoleMenu] = useState(false);
+  const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [currentPwd, setCurrentPwd] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [profileMsg, setProfileMsg] = useState('');
+
+  const unreadNotifCount = notifications.filter(n => !n.isRead).length;
   const roleConfig = currentRole ? ROLE_PERMISSIONS[currentRole] : null;
 
+  const handleChangePasswordSubmit = (e) => {
+    e.preventDefault();
+    if (!newPwd) return;
+    const res = changePassword(currentPwd, newPwd);
+    setProfileMsg(res.message);
+    setTimeout(() => setProfileMsg(''), 3000);
+    setCurrentPwd('');
+    setNewPwd('');
+  };
+
   return (
-    <header className="top-navbar">
-      {/* Brand & Logo */}
-      <div className="brand-logo-wrap">
-        <div className="brand-icon-box">
-          <GraduationCap size={24} />
-        </div>
-        <div>
-          <div style={{ lineHeight: 1.1 }}>EduSphere <span style={{ color: 'var(--primary)', fontSize: '0.85em' }}>360</span></div>
-          <div style={{ fontSize: '0.68rem', fontWeight: '500', color: 'var(--text-muted)' }}>
-            Cross-Platform SIS
+    <>
+      <header className="top-navbar">
+        {/* Brand & Logo */}
+        <div className="brand-logo-wrap">
+          <div className="brand-icon-box">
+            <GraduationCap size={24} />
+          </div>
+          <div>
+            <div style={{ lineHeight: 1.1 }}>EduSphere <span style={{ color: 'var(--primary)', fontSize: '0.85em' }}>360</span></div>
+            <div style={{ fontSize: '0.68rem', fontWeight: '500', color: 'var(--text-muted)' }}>
+              Enterprise SIS Platform
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Role Quick Switcher Pills */}
-      <div className="nav-actions-wrap">
-        {/* Device Switcher for Previewing Android, iOS, Desktop */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          background: 'var(--bg-input)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-full)',
-          padding: '3px',
-          gap: '2px'
-        }}>
-          <button
-            onClick={() => setDeviceMode('desktop')}
-            className={`role-switch-btn ${deviceMode === 'desktop' ? 'active' : ''}`}
-            title="Desktop / Web Fullscreen View"
-          >
-            <Monitor size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-            Web
-          </button>
-          <button
-            onClick={() => setDeviceMode('iphone')}
-            className={`role-switch-btn ${deviceMode === 'iphone' ? 'active' : ''}`}
-            title="iOS iPhone 16 Pro View"
-          >
-            <Smartphone size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-            iOS
-          </button>
-          <button
-            onClick={() => setDeviceMode('android')}
-            className={`role-switch-btn ${deviceMode === 'android' ? 'active' : ''}`}
-            title="Android Galaxy S24 View"
-          >
-            <Smartphone size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-            Android
-          </button>
-          <button
-            onClick={() => setDeviceMode('tablet')}
-            className={`role-switch-btn ${deviceMode === 'tablet' ? 'active' : ''}`}
-            title="Tablet / iPad View"
-          >
-            <Tablet size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-            iPad
-          </button>
-        </div>
+        {/* Action Controls */}
+        <div className="nav-actions-wrap">
+          {/* Device Switcher (iOS, Android, Tablet, Web) */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            background: 'var(--bg-input)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-full)',
+            padding: '3px',
+            gap: '2px'
+          }}>
+            <button
+              onClick={() => setDeviceMode('desktop')}
+              className={`role-switch-btn ${deviceMode === 'desktop' ? 'active' : ''}`}
+              title="Desktop Web Full View"
+            >
+              <Monitor size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
+              Web
+            </button>
+            <button
+              onClick={() => setDeviceMode('iphone')}
+              className={`role-switch-btn ${deviceMode === 'iphone' ? 'active' : ''}`}
+              title="iOS iPhone 16 Pro View"
+            >
+              <Smartphone size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
+              iOS
+            </button>
+            <button
+              onClick={() => setDeviceMode('android')}
+              className={`role-switch-btn ${deviceMode === 'android' ? 'active' : ''}`}
+              title="Android Galaxy S24 View"
+            >
+              <Smartphone size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
+              Android
+            </button>
+            <button
+              onClick={() => setDeviceMode('tablet')}
+              className={`role-switch-btn ${deviceMode === 'tablet' ? 'active' : ''}`}
+              title="Tablet / iPad View"
+            >
+              <Tablet size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
+              iPad
+            </button>
+          </div>
 
-        {/* Interactive Role Switcher */}
-        <div style={{ position: 'relative' }}>
-          <button
-            onClick={() => setShowRoleMenu(!showRoleMenu)}
-            className="role-badge-pill"
-            style={{
-              background: roleConfig?.bgLight || 'var(--primary-light)',
-              color: roleConfig?.badgeColor || 'var(--primary)',
-              border: `1px solid ${roleConfig?.badgeColor || 'var(--primary)'}33`,
-              cursor: 'pointer'
-            }}
-          >
-            <Shield size={14} />
-            <span>{currentRole}</span>
-            <ChevronDown size={14} />
-          </button>
-
-          {showRoleMenu && (
-            <div
-              className="card-elevated"
+          {/* Interactive Role Switcher Dropdown */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowRoleMenu(!showRoleMenu)}
+              className="role-badge-pill"
               style={{
-                position: 'absolute',
-                top: 'calc(100% + 8px)',
-                right: 0,
-                width: '260px',
-                padding: '0.5rem',
-                zIndex: 100,
-                background: 'var(--bg-card)',
-                boxShadow: 'var(--shadow-xl)',
+                background: roleConfig?.bgLight || 'var(--primary-light)',
+                color: roleConfig?.badgeColor || 'var(--primary)',
+                border: `1px solid ${roleConfig?.badgeColor || 'var(--primary)'}33`,
+                cursor: 'pointer'
               }}
             >
-              <div style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>
-                SWITCH ROLE (RBAC DEMO)
+              <Shield size={14} />
+              <span>{currentRole}</span>
+              <ChevronDown size={14} />
+            </button>
+
+            {showRoleMenu && (
+              <div
+                className="card-elevated"
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: 0,
+                  width: '260px',
+                  padding: '0.5rem',
+                  zIndex: 100,
+                  background: 'var(--bg-card)',
+                  boxShadow: 'var(--shadow-xl)',
+                }}
+              >
+                <div style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>
+                  SWITCH ROLE (RBAC DEMO)
+                </div>
+                {Object.values(ROLES).map((role) => (
+                  <button
+                    key={role}
+                    onClick={() => {
+                      loginWithRole(role);
+                      setShowRoleMenu(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.65rem 0.75rem',
+                      borderRadius: 'var(--radius-md)',
+                      fontSize: '0.85rem',
+                      fontWeight: currentRole === role ? '700' : '500',
+                      color: currentRole === role ? 'var(--primary)' : 'var(--text-primary)',
+                      background: currentRole === role ? 'var(--bg-input)' : 'transparent',
+                      marginTop: '2px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div
+                        style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          background: ROLE_PERMISSIONS[role].badgeColor,
+                        }}
+                      />
+                      <span>{ROLE_PERMISSIONS[role].title}</span>
+                    </div>
+                    {currentRole === role && <Check size={16} />}
+                  </button>
+                ))}
               </div>
-              {Object.values(ROLES).map((role) => (
-                <button
-                  key={role}
-                  onClick={() => {
-                    loginWithRole(role);
-                    setShowRoleMenu(false);
-                  }}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.65rem 0.75rem',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '0.85rem',
-                    fontWeight: currentRole === role ? '700' : '500',
-                    color: currentRole === role ? 'var(--primary)' : 'var(--text-primary)',
-                    background: currentRole === role ? 'var(--bg-input)' : 'transparent',
-                    marginTop: '2px',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div
-                      style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        background: ROLE_PERMISSIONS[role].badgeColor,
-                      }}
-                    />
-                    <span>{ROLE_PERMISSIONS[role].title}</span>
-                  </div>
-                  {currentRole === role && <Check size={16} />}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Dark/Light Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="icon-btn"
-          title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
-          aria-label="Toggle Theme"
-        >
-          {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-        </button>
-
-        {/* User profile avatar & Logout */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <img
-            src={currentUser?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'}
-            alt={currentUser?.name || 'User'}
-            className="avatar-img"
-          />
-          <div style={{ display: 'none', flexDirection: 'column' }} className="user-text-meta">
-            <span style={{ fontSize: '0.85rem', fontWeight: '700' }}>{currentUser?.name}</span>
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{currentUser?.email}</span>
+            )}
           </div>
+
+          {/* In-App Notifications Button with Unread Badge */}
           <button
-            onClick={logout}
+            onClick={() => setIsNotifDrawerOpen(true)}
             className="icon-btn"
-            title="Log Out"
-            style={{ color: '#ef4444' }}
-            aria-label="Log Out"
+            title="Open Notifications"
+            aria-label="Notifications"
           >
-            <LogOut size={18} />
+            <Bell size={18} />
+            {unreadNotifCount > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '6px',
+                  right: '6px',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: '#ef4444',
+                }}
+              />
+            )}
           </button>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="icon-btn"
+            title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+            aria-label="Toggle Theme"
+          >
+            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
+
+          {/* User Profile Avatar & Settings */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <img
+              src={currentUser?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'}
+              alt={currentUser?.name || 'User'}
+              className="avatar-img"
+              onClick={() => setIsProfileModalOpen(true)}
+              style={{ cursor: 'pointer' }}
+              title="Click to manage account settings"
+            />
+            <button
+              onClick={logout}
+              className="icon-btn"
+              title="Log Out"
+              style={{ color: '#ef4444' }}
+              aria-label="Log Out"
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Notifications Drawer */}
+      <NotificationDrawer
+        isOpen={isNotifDrawerOpen}
+        onClose={() => setIsNotifDrawerOpen(false)}
+      />
+
+      {/* Profile & Security Modal */}
+      {isProfileModalOpen && (
+        <Modal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          title="Account Profile & Security Settings"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <img
+                src={currentUser?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'}
+                alt={currentUser?.name}
+                style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--primary)' }}
+              />
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: '800' }}>{currentUser?.name}</h3>
+                <div style={{ fontSize: '0.82rem', color: 'var(--primary)', fontWeight: '700' }}>
+                  {currentUser?.email}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Role: {currentRole} • Status: Active
+                </div>
+              </div>
+            </div>
+
+            {profileMsg && (
+              <div style={{ padding: '0.75rem', background: '#dcfce7', color: '#15803d', borderRadius: 'var(--radius-md)', fontSize: '0.85rem', fontWeight: '700' }}>
+                {profileMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleChangePasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Key size={16} color="var(--primary)" />
+                <span>Change Password</span>
+              </h4>
+
+              <div>
+                <label style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '3px' }}>
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={currentPwd}
+                  onChange={(e) => setCurrentPwd(e.target.value)}
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '3px' }}>
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  placeholder="New password (min 8 chars)"
+                  value={newPwd}
+                  onChange={(e) => setNewPwd(e.target.value)}
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setIsProfileModalOpen(false)} className="btn-secondary">
+                  Close
+                </button>
+                <button type="submit" className="btn-primary">
+                  <Save size={15} />
+                  <span>Update Password</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </Modal>
+      )}
+    </>
   );
 };
