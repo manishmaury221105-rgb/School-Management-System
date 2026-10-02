@@ -6,7 +6,6 @@ import { RoleGuard } from './components/auth/RoleGuard';
 import { Navbar } from './components/common/Navbar';
 import { Sidebar } from './components/common/Sidebar';
 import { BottomNav } from './components/common/BottomNav';
-import { DeviceFrame } from './components/common/DeviceFrame';
 
 // Admin Components
 import { AdminDashboard } from './components/admin/AdminDashboard';
@@ -60,7 +59,6 @@ import { ParentEvents } from './components/parent/ParentEvents';
 export const App = () => {
   const { isAuthenticated, currentRole } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [deviceMode, setDeviceMode] = useState('desktop'); // 'desktop' | 'iphone' | 'android' | 'tablet'
 
   useEffect(() => {
     setActiveTab('dashboard');
@@ -192,27 +190,22 @@ export const App = () => {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-main)' }}>
       {/* Top Navbar */}
-      <Navbar deviceMode={deviceMode} setDeviceMode={setDeviceMode} />
+      <Navbar />
 
-      {/* Device Simulator Frame Wrap (iOS / Android / iPad / Desktop) */}
-      <DeviceFrame deviceMode={deviceMode}>
-        <div className="app-container">
-          {/* Desktop & Tablet Sidebar */}
-          {deviceMode === 'desktop' && (
-            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-          )}
+      <div className="app-container">
+        {/* Desktop & Tablet Sidebar */}
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-          {/* Main Content Workspace */}
-          <main className="main-content-area">
-            <RoleGuard tabId={activeTab} onGoHome={() => setActiveTab('dashboard')}>
-              {renderRoleContent()}
-            </RoleGuard>
-          </main>
+        {/* Main Content Workspace */}
+        <main className="main-content-area">
+          <RoleGuard tabId={activeTab} onGoHome={() => setActiveTab('dashboard')}>
+            {renderRoleContent()}
+          </RoleGuard>
+        </main>
 
-          {/* Mobile Bottom Navigation */}
-          <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
-        </div>
-      </DeviceFrame>
+        {/* Mobile Bottom Navigation */}
+        <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
     </div>
   );
 };

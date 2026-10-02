@@ -10,9 +10,6 @@ import {
   Moon,
   LogOut,
   Bell,
-  Smartphone,
-  Tablet,
-  Monitor,
   Shield,
   Check,
   ChevronDown,
@@ -21,7 +18,7 @@ import {
   Save,
 } from 'lucide-react';
 
-export const Navbar = ({ deviceMode, setDeviceMode }) => {
+export const Navbar = () => {
   const { currentUser, currentRole, toggleTheme, theme, loginWithRole, logout, changePassword, updateProfile } = useAuth();
   const { notifications } = useSchoolData();
 
@@ -63,50 +60,6 @@ export const Navbar = ({ deviceMode, setDeviceMode }) => {
 
         {/* Action Controls */}
         <div className="nav-actions-wrap">
-          {/* Device Switcher (iOS, Android, Tablet, Web) */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: 'var(--bg-input)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-full)',
-            padding: '3px',
-            gap: '2px'
-          }}>
-            <button
-              onClick={() => setDeviceMode('desktop')}
-              className={`role-switch-btn ${deviceMode === 'desktop' ? 'active' : ''}`}
-              title="Desktop Web Full View"
-            >
-              <Monitor size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-              Web
-            </button>
-            <button
-              onClick={() => setDeviceMode('iphone')}
-              className={`role-switch-btn ${deviceMode === 'iphone' ? 'active' : ''}`}
-              title="iOS iPhone 16 Pro View"
-            >
-              <Smartphone size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-              iOS
-            </button>
-            <button
-              onClick={() => setDeviceMode('android')}
-              className={`role-switch-btn ${deviceMode === 'android' ? 'active' : ''}`}
-              title="Android Galaxy S24 View"
-            >
-              <Smartphone size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-              Android
-            </button>
-            <button
-              onClick={() => setDeviceMode('tablet')}
-              className={`role-switch-btn ${deviceMode === 'tablet' ? 'active' : ''}`}
-              title="Tablet / iPad View"
-            >
-              <Tablet size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-              iPad
-            </button>
-          </div>
-
           {/* Interactive Role Switcher Dropdown */}
           <div style={{ position: 'relative' }}>
             <button
