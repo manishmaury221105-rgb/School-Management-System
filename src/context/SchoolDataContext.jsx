@@ -20,100 +20,40 @@ import {
   INITIAL_LEAVE_REQUESTS,
 } from '../data/mockData';
 
+const getSafeStorage = (key, fallback) => {
+  try {
+    const saved = localStorage.getItem(key);
+    if (!saved) return fallback;
+    const parsed = JSON.parse(saved);
+    return parsed ?? fallback;
+  } catch (err) {
+    console.warn(`Failed to parse localStorage key: ${key}`, err);
+    return fallback;
+  }
+};
+
 const SchoolDataContext = createContext(null);
 
 export const SchoolDataProvider = ({ children }) => {
-  // State initialization with LocalStorage backing
-  const [classes, setClasses] = useState(() => {
-    const saved = localStorage.getItem('edusphere_classes');
-    return saved ? JSON.parse(saved) : INITIAL_CLASSES;
-  });
-
-  const [subjects, setSubjects] = useState(() => {
-    const saved = localStorage.getItem('edusphere_subjects');
-    return saved ? JSON.parse(saved) : INITIAL_SUBJECTS;
-  });
-
-  const [parents, setParents] = useState(() => {
-    const saved = localStorage.getItem('edusphere_parents');
-    return saved ? JSON.parse(saved) : INITIAL_PARENTS_DIRECTORY;
-  });
-
-  const [students, setStudents] = useState(() => {
-    const saved = localStorage.getItem('edusphere_students');
-    return saved ? JSON.parse(saved) : INITIAL_STUDENTS_DIRECTORY;
-  });
-
-  const [teachers, setTeachers] = useState(() => {
-    const saved = localStorage.getItem('edusphere_teachers');
-    return saved ? JSON.parse(saved) : INITIAL_TEACHERS;
-  });
-
-  const [studyMaterials, setStudyMaterials] = useState(() => {
-    const saved = localStorage.getItem('edusphere_materials');
-    return saved ? JSON.parse(saved) : INITIAL_STUDY_MATERIALS;
-  });
-
-  const [books, setBooks] = useState(() => {
-    const saved = localStorage.getItem('edusphere_books');
-    return saved ? JSON.parse(saved) : INITIAL_LIBRARY_BOOKS;
-  });
-
-  const [libraryTransactions, setLibraryTransactions] = useState(() => {
-    const saved = localStorage.getItem('edusphere_lib_tx');
-    return saved ? JSON.parse(saved) : INITIAL_LIBRARY_TRANSACTIONS;
-  });
-
-  const [transportRoutes, setTransportRoutes] = useState(() => {
-    const saved = localStorage.getItem('edusphere_transport');
-    return saved ? JSON.parse(saved) : INITIAL_TRANSPORT_ROUTES;
-  });
-
-  const [events, setEvents] = useState(() => {
-    const saved = localStorage.getItem('edusphere_events');
-    return saved ? JSON.parse(saved) : INITIAL_EVENTS;
-  });
-
-  const [notifications, setNotifications] = useState(() => {
-    const saved = localStorage.getItem('edusphere_notifications');
-    return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
-  });
-
-  const [attendance, setAttendance] = useState(() => {
-    const saved = localStorage.getItem('edusphere_attendance');
-    return saved ? JSON.parse(saved) : INITIAL_ATTENDANCE_RECORDS;
-  });
-
-  const [homework, setHomework] = useState(() => {
-    const saved = localStorage.getItem('edusphere_homework');
-    return saved ? JSON.parse(saved) : INITIAL_HOMEWORK;
-  });
-
-  const [timetable, setTimetable] = useState(() => {
-    const saved = localStorage.getItem('edusphere_timetable');
-    return saved ? JSON.parse(saved) : INITIAL_TIMETABLE;
-  });
-
-  const [examsData, setExamsData] = useState(() => {
-    const saved = localStorage.getItem('edusphere_exams');
-    return saved ? JSON.parse(saved) : INITIAL_EXAMS_AND_RESULTS;
-  });
-
-  const [fees, setFees] = useState(() => {
-    const saved = localStorage.getItem('edusphere_fees');
-    return saved ? JSON.parse(saved) : INITIAL_FEES;
-  });
-
-  const [notices, setNotices] = useState(() => {
-    const saved = localStorage.getItem('edusphere_notices');
-    return saved ? JSON.parse(saved) : INITIAL_NOTICES;
-  });
-
-  const [leaveRequests, setLeaveRequests] = useState(() => {
-    const saved = localStorage.getItem('edusphere_leaves');
-    return saved ? JSON.parse(saved) : INITIAL_LEAVE_REQUESTS;
-  });
-
+  // State initialization with safe LocalStorage backing
+  const [classes, setClasses] = useState(() => getSafeStorage('edusphere_classes', INITIAL_CLASSES));
+  const [subjects, setSubjects] = useState(() => getSafeStorage('edusphere_subjects', INITIAL_SUBJECTS));
+  const [parents, setParents] = useState(() => getSafeStorage('edusphere_parents', INITIAL_PARENTS_DIRECTORY));
+  const [students, setStudents] = useState(() => getSafeStorage('edusphere_students', INITIAL_STUDENTS_DIRECTORY));
+  const [teachers, setTeachers] = useState(() => getSafeStorage('edusphere_teachers', INITIAL_TEACHERS));
+  const [studyMaterials, setStudyMaterials] = useState(() => getSafeStorage('edusphere_materials', INITIAL_STUDY_MATERIALS));
+  const [books, setBooks] = useState(() => getSafeStorage('edusphere_books', INITIAL_LIBRARY_BOOKS));
+  const [libraryTransactions, setLibraryTransactions] = useState(() => getSafeStorage('edusphere_lib_tx', INITIAL_LIBRARY_TRANSACTIONS));
+  const [transportRoutes, setTransportRoutes] = useState(() => getSafeStorage('edusphere_transport', INITIAL_TRANSPORT_ROUTES));
+  const [events, setEvents] = useState(() => getSafeStorage('edusphere_events', INITIAL_EVENTS));
+  const [notifications, setNotifications] = useState(() => getSafeStorage('edusphere_notifications', INITIAL_NOTIFICATIONS));
+  const [attendance, setAttendance] = useState(() => getSafeStorage('edusphere_attendance', INITIAL_ATTENDANCE_RECORDS));
+  const [homework, setHomework] = useState(() => getSafeStorage('edusphere_homework', INITIAL_HOMEWORK));
+  const [timetable, setTimetable] = useState(() => getSafeStorage('edusphere_timetable', INITIAL_TIMETABLE));
+  const [examsData, setExamsData] = useState(() => getSafeStorage('edusphere_exams', INITIAL_EXAMS_AND_RESULTS));
+  const [fees, setFees] = useState(() => getSafeStorage('edusphere_fees', INITIAL_FEES));
+  const [notices, setNotices] = useState(() => getSafeStorage('edusphere_notices', INITIAL_NOTICES));
+  const [leaveRequests, setLeaveRequests] = useState(() => getSafeStorage('edusphere_leaves', INITIAL_LEAVE_REQUESTS));
   const [selectedChildId, setSelectedChildId] = useState('user-student-1');
 
   // Sync to LocalStorage
