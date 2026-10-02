@@ -331,27 +331,95 @@ export const TeacherManagement = () => {
             </div>
           </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Class Teacher of (In-Charge) *
+              </label>
+              <select
+                value={formData.classTeacherOf}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData(prev => ({
+                    ...prev,
+                    classTeacherOf: val,
+                    assignedClasses: val !== 'None' && !prev.assignedClasses.includes(val)
+                      ? [...prev.assignedClasses, val]
+                      : prev.assignedClasses
+                  }));
+                }}
+                style={{ width: '100%', padding: '0.65rem 0.75rem', borderRadius: '8px', fontSize: '0.88rem' }}
+              >
+                <option value="None">None (Subject Teacher Only)</option>
+                {classes.map((c) => (
+                  <option key={c.id} value={c.name}>⭐ {c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Subject Specialization *
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Mathematics, Science"
+                value={formData.subject}
+                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+
+          {/* Assigned Teaching Classes Chips */}
           <div>
-            <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-              Subject Specialization *
+            <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '6px' }}>
+              Assigned Teaching Classes (Tap to toggle)
             </label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Chemistry & Organic Science"
-              value={formData.subject}
-              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-              style={{ width: '100%' }}
-            />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {classes.map((c) => {
+                const isSelected = (formData.assignedClasses || []).includes(c.name);
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => {
+                        const current = prev.assignedClasses || [];
+                        if (isSelected) {
+                          return { ...prev, assignedClasses: current.filter(item => item !== c.name) };
+                        } else {
+                          return { ...prev, assignedClasses: [...current, c.name] };
+                        }
+                      });
+                    }}
+                    style={{
+                      padding: '5px 11px',
+                      borderRadius: '8px',
+                      fontSize: '0.78rem',
+                      fontWeight: '600',
+                      border: isSelected ? '1.5px solid var(--primary)' : '1px solid var(--border)',
+                      background: isSelected ? 'var(--primary-light)' : 'var(--bg-input)',
+                      color: isSelected ? 'var(--primary)' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {isSelected ? '✓ ' : '+ '} {c.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div>
             <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-              Email Address
+              Email Address (Optional)
             </label>
             <input
               type="email"
-              placeholder="faculty@edusphere.edu"
+              placeholder="faculty@school.com"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               style={{ width: '100%' }}

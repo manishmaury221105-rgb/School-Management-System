@@ -140,9 +140,19 @@ export const SchoolDataProvider = ({ children }) => {
       avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
       status: 'Active',
       salary: 65000,
+      assignedClasses: ['Class 10-A'],
+      classTeacherOf: 'Class 10-A',
       ...newTeacher,
     };
     setTeachers(prev => [teacher, ...prev]);
+
+    // Update class teacher in classes list
+    if (teacher.classTeacherOf && teacher.classTeacherOf !== 'None') {
+      setClasses(prev => prev.map(c => 
+        c.name === teacher.classTeacherOf ? { ...c, classTeacher: teacher.name } : c
+      ));
+    }
+
     return teacher;
   };
 
