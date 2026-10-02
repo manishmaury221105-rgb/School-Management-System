@@ -634,14 +634,16 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  z-index: 100;
-  padding: 1rem;
+  z-index: 99999;
+  padding: calc(env(safe-area-inset-top, 16px) + 20px) 1rem calc(env(safe-area-inset-bottom, 16px) + 24px) 1rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-dialog {
@@ -650,10 +652,45 @@
   border-radius: var(--radius-xl);
   max-width: 620px;
   width: 100%;
-  max-height: 90vh;
+  max-height: calc(100vh - 4.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  animation: modalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-header {
+  padding: 1.15rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.modal-body {
+  padding: 1.25rem 1.4rem 1.5rem 1.4rem;
   overflow-y: auto;
-  box-shadow: var(--shadow-xl);
-  animation: fadeIn 0.25s ease-out;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
 }
 
 .receipt-sheet {
