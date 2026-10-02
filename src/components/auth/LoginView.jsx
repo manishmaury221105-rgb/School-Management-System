@@ -1,311 +1,421 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { ROLES, ROLE_PERMISSIONS, INITIAL_USERS } from '../../data/mockData';
+import { ROLES, INITIAL_USERS } from '../../data/mockData';
 import {
   GraduationCap,
   Shield,
   UserCheck,
   User,
   Users,
-  CheckCircle2,
+  Phone,
+  Calendar,
   Lock,
-  Mail,
   ArrowRight,
   Sparkles,
-  Smartphone
+  CheckCircle2,
+  Info,
 } from 'lucide-react';
 
 export const LoginView = () => {
-  const { loginWithRole, loginWithCredentials } = useAuth();
-  const [selectedRole, setSelectedRole] = useState(ROLES.STUDENT);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('password123');
+  const { loginWithCredentials, loginWithRole } = useAuth();
+  const [activeRoleTab, setActiveRoleTab] = useState(ROLES.ADMIN);
+  const [phoneInput, setPhoneInput] = useState('');
+  const [dobInput, setDobInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRoleQuickLogin = (role) => {
-    loginWithRole(role);
+  const roleDefinitions = {
+    [ROLES.ADMIN]: {
+      label: 'School Administrator',
+      subtitle: 'Institutional Governance & Faculty Management',
+      icon: Shield,
+      dotColor: '#EF4444', // Red dot as in screenshot
+      badgeBg: 'rgba(239, 68, 68, 0.1)',
+      borderColor: '#EF4444',
+      demoUser: INITIAL_USERS.find((u) => u.role === ROLES.ADMIN),
+      demoPhone: '9876543210',
+      demoDob: '1980-01-01',
+      dobFormatted: '01/01/1980 (01011980)',
+      scopeNote: 'Administrator adds and manages Faculty & Staff only.',
+    },
+    [ROLES.TEACHER]: {
+      label: 'Faculty Member',
+      subtitle: 'Class Incharge, Attendance & Student Registration',
+      icon: UserCheck,
+      dotColor: '#3B82F6', // Blue dot as in screenshot
+      badgeBg: 'rgba(59, 130, 246, 0.1)',
+      borderColor: '#3B82F6',
+      demoUser: INITIAL_USERS.find((u) => u.role === ROLES.TEACHER),
+      demoPhone: '9876543211',
+      demoDob: '1988-05-15',
+      dobFormatted: '15/05/1988 (15051988)',
+      scopeNote: 'Faculty adds and manages Students & Parents directly.',
+    },
+    [ROLES.STUDENT]: {
+      label: 'Enrolled Student',
+      subtitle: 'Digital ID, Timetable, Homework & Results',
+      icon: User,
+      dotColor: '#10B981', // Green dot as in screenshot
+      badgeBg: 'rgba(16, 185, 129, 0.1)',
+      borderColor: '#10B981',
+      demoUser: INITIAL_USERS.find((u) => u.role === ROLES.STUDENT),
+      demoPhone: '9876543212',
+      demoDob: '2010-04-14',
+      dobFormatted: '14/04/2010 (14042010)',
+      scopeNote: 'Log in with Registered Mobile Number & Date of Birth.',
+    },
+    [ROLES.PARENT]: {
+      label: 'Guardian / Parent',
+      subtitle: 'Multi-Child 360° Monitor, Fee Payments & Leave',
+      icon: Users,
+      dotColor: '#8B5CF6', // Purple dot as in screenshot
+      badgeBg: 'rgba(139, 92, 246, 0.1)',
+      borderColor: '#8B5CF6',
+      demoUser: INITIAL_USERS.find((u) => u.role === ROLES.PARENT),
+      demoPhone: '9876543213',
+      demoDob: '1985-04-12',
+      dobFormatted: '12/04/1985 (12041985)',
+      scopeNote: 'Monitor linked children, attendance & pay term fees.',
+    },
   };
 
-  const handleCustomSubmit = (e) => {
+  const currentRoleConfig = roleDefinitions[activeRoleTab];
+
+  // Auto-fill demo credentials on tab change or click
+  const handleTabSelect = (roleKey) => {
+    setActiveRoleTab(roleKey);
+    setErrorMsg('');
+    setPhoneInput(roleDefinitions[roleKey].demoPhone);
+    setDobInput(roleDefinitions[roleKey].demoDob);
+  };
+
+  const handleLoginSubmit = (e) => {
     e.preventDefault();
-    if (!email) {
-      setErrorMsg('Please enter your school email address.');
-      return;
-    }
-    const res = loginWithCredentials(email, password, selectedRole);
+    setErrorMsg('');
+    setIsLoading(true);
+
+    const targetPhone = phoneInput || currentRoleConfig.demoPhone;
+    const targetDob = dobInput || currentRoleConfig.demoDob;
+
+    const res = loginWithCredentials(targetPhone, targetDob, activeRoleTab);
+    setIsLoading(false);
+
     if (!res.success) {
       setErrorMsg(res.error);
     }
   };
 
-  const rolesList = [
-    {
-      role: ROLES.ADMIN,
-      title: 'Admin Portal',
-      user: INITIAL_USERS.find(u => u.role === ROLES.ADMIN),
-      icon: Shield,
-      color: '#ef4444',
-      bg: '#fef2f2',
-      badge: 'Full Governance',
-      features: ['Institution Analytics', 'Staff & Student Directory', 'Fee Collection Master', 'Global Circulars']
-    },
-    {
-      role: ROLES.TEACHER,
-      title: 'Teacher Hub',
-      user: INITIAL_USERS.find(u => u.role === ROLES.TEACHER),
-      icon: UserCheck,
-      color: '#3b82f6',
-      bg: '#eff6ff',
-      badge: 'Class 10-A Faculty',
-      features: ['Daily Attendance Register', 'Homework & Assignments', 'Exam Marks & Grading', 'Performance Tracker']
-    },
-    {
-      role: ROLES.STUDENT,
-      title: 'Student Desk',
-      user: INITIAL_USERS.find(u => u.role === ROLES.STUDENT),
-      icon: User,
-      color: '#10b981',
-      bg: '#ecfdf5',
-      badge: 'Grade 10-A',
-      features: ['Digital School ID Card', 'Subject-wise Attendance', 'Live Timetable', 'Instant Fee Pay Gateway']
-    },
-    {
-      role: ROLES.PARENT,
-      title: 'Parent Portal',
-      user: INITIAL_USERS.find(u => u.role === ROLES.PARENT),
-      icon: Users,
-      color: '#8b5cf6',
-      bg: '#f5f3ff',
-      badge: 'Multi-Child (2)',
-      features: ['Child Switcher (Rohan & Maya)', 'Live Attendance Alerts', 'Exam Report Cards', 'Online Fee Payment']
-    },
-  ];
+  const handleFastDemoLaunch = () => {
+    loginWithRole(activeRoleTab);
+  };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'radial-gradient(ellipse at top, rgba(79, 70, 229, 0.15), transparent 70%), var(--bg-main)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '2rem 1rem'
-    }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'radial-gradient(ellipse at top, rgba(79, 70, 229, 0.15), transparent 70%), var(--bg-main)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem 1rem',
+      }}
+    >
       {/* Brand Header */}
-      <div style={{ textAlign: 'center', marginBottom: '2rem', maxWidth: '650px' }}>
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-          padding: '0.5rem 1.25rem',
-          background: 'var(--bg-card)',
-          borderRadius: 'var(--radius-full)',
-          boxShadow: 'var(--shadow-sm)',
-          border: '1px solid var(--border)',
-          marginBottom: '1rem'
-        }}>
+      <div style={{ textAlign: 'center', marginBottom: '2rem', maxWidth: '600px' }}>
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.5rem 1.25rem',
+            background: 'var(--bg-card)',
+            borderRadius: 'var(--radius-full)',
+            boxShadow: 'var(--shadow-sm)',
+            border: '1px solid var(--border)',
+            marginBottom: '1rem',
+          }}
+        >
           <div className="brand-icon-box" style={{ width: '32px', height: '32px' }}>
             <GraduationCap size={18} />
           </div>
           <span style={{ fontWeight: '800', fontSize: '1.1rem', letterSpacing: '-0.02em' }}>
             EduSphere <span style={{ color: 'var(--primary)' }}>360</span>
           </span>
-          <span style={{
-            fontSize: '0.72rem',
-            fontWeight: '700',
-            background: 'linear-gradient(135deg, #10b981, #059669)',
-            color: 'white',
-            padding: '2px 8px',
-            borderRadius: '12px'
-          }}>
-            iOS • Android • Web
+          <span
+            style={{
+              fontSize: '0.72rem',
+              fontWeight: '700',
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              color: 'white',
+              padding: '2px 8px',
+              borderRadius: '12px',
+            }}
+          >
+            Portal Login
           </span>
         </div>
 
-        <h1 style={{ fontSize: '2.25rem', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1.2 }}>
-          Next-Gen School Management Platform
+        <h1 style={{ fontSize: '2.1rem', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+          School Management Sign In
         </h1>
-        <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '1rem' }}>
-          Select any user role below to enter with full Role-Based Access Control (RBAC).
+        <p style={{ color: 'var(--text-secondary)', marginTop: '0.4rem', fontSize: '0.95rem' }}>
+          Enter your registered <strong>Phone Number (ID)</strong> and <strong>Date of Birth (Password)</strong>.
         </p>
       </div>
 
-      {/* Role Cards Grid (1-Click Login) */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '1.25rem',
-        width: '100%',
-        maxWidth: '1200px',
-        marginBottom: '2rem'
-      }}>
-        {rolesList.map((item) => {
-          const Icon = item.icon;
-          const isSelected = selectedRole === item.role;
-          return (
-            <div
-              key={item.role}
-              className="card-elevated"
-              style={{
-                padding: '1.5rem',
-                border: isSelected ? `2px solid ${item.color}` : '1px solid var(--border)',
-                background: isSelected ? 'var(--bg-card)' : 'var(--bg-card-glass)',
-                position: 'relative',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                  <div style={{
-                    width: '46px',
-                    height: '46px',
-                    borderRadius: '14px',
-                    background: item.bg,
-                    color: item.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <Icon size={24} />
-                  </div>
-                  <span style={{
-                    fontSize: '0.72rem',
-                    fontWeight: '800',
-                    textTransform: 'uppercase',
-                    padding: '3px 9px',
-                    borderRadius: '12px',
-                    background: item.bg,
-                    color: item.color,
-                  }}>
-                    {item.badge}
-                  </span>
-                </div>
-
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-                  {item.title}
-                </h3>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.25rem 0 1rem 0' }}>
-                  Demo User: <strong>{item.user?.name}</strong>
-                </div>
-
-                <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '0.75rem', marginBottom: '1.25rem' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
-                    Allowed Features:
-                  </div>
-                  <ul style={{ listStyle: 'none', padding: 0 }}>
-                    {item.features.map((feat, idx) => (
-                      <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                        <CheckCircle2 size={13} color={item.color} />
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              <button
-                onClick={() => handleRoleQuickLogin(item.role)}
-                className="btn-primary"
-                style={{
-                  width: '100%',
-                  justifyContent: 'center',
-                  background: `linear-gradient(135deg, ${item.color}, ${item.color}dd)`,
-                  boxShadow: `0 4px 14px ${item.color}40`,
-                }}
-              >
-                <span>Launch as {item.role}</span>
-                <ArrowRight size={16} />
-              </button>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Direct Credentials Login Accordion / Box */}
+      {/* Main Login Card with Role Selector */}
       <div
         className="card-elevated"
         style={{
           width: '100%',
-          maxWidth: '520px',
-          padding: '1.75rem',
+          maxWidth: '560px',
           background: 'var(--bg-card)',
+          borderRadius: 'var(--radius-xl)',
+          border: '1px solid var(--border)',
+          boxShadow: 'var(--shadow-xl)',
+          overflow: 'hidden',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-          <Lock size={18} color="var(--primary)" />
-          <h4 style={{ fontSize: '1rem', fontWeight: '700' }}>Custom Account Login</h4>
+        {/* Role Selection Tabs (Matches screenshot colors & labels) */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '6px',
+            padding: '0.75rem',
+            background: 'var(--bg-input)',
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
+          {Object.entries(roleDefinitions).map(([key, config]) => {
+            const isSelected = activeRoleTab === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => handleTabSelect(key)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.65rem',
+                  padding: '0.75rem 0.9rem',
+                  borderRadius: 'var(--radius-md)',
+                  background: isSelected ? 'var(--bg-card)' : 'transparent',
+                  border: isSelected ? `2px solid ${config.dotColor}` : '1px solid transparent',
+                  boxShadow: isSelected ? 'var(--shadow-sm)' : 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all var(--transition-fast)',
+                }}
+              >
+                {/* Colored Dot Indicator */}
+                <div
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    borderRadius: '50%',
+                    background: config.dotColor,
+                    boxShadow: isSelected ? `0 0 10px ${config.dotColor}80` : 'none',
+                    flexShrink: 0,
+                  }}
+                />
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: isSelected ? '800' : '600',
+                      color: isSelected ? config.dotColor : 'var(--text-primary)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {config.label}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
-        {errorMsg && (
-          <div style={{
-            padding: '0.75rem',
-            background: '#fee2e2',
-            color: '#b91c1c',
-            borderRadius: 'var(--radius-md)',
-            fontSize: '0.85rem',
-            marginBottom: '1rem',
-          }}>
-            {errorMsg}
-          </div>
-        )}
-
-        <form onSubmit={handleCustomSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <label style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-              Select Role
-            </label>
-            <select
-              value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value)}
-              style={{ width: '100%' }}
+        {/* Selected Role Banner */}
+        <div
+          style={{
+            padding: '1rem 1.5rem',
+            background: currentRoleConfig.badgeBg,
+            borderBottom: `1px solid ${currentRoleConfig.dotColor}25`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div
+              style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '10px',
+                background: currentRoleConfig.dotColor,
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <option value={ROLES.ADMIN}>Admin (Dr. Arthur Vance)</option>
-              <option value={ROLES.TEACHER}>Teacher (Mrs. Sarah Jenkins)</option>
-              <option value={ROLES.STUDENT}>Student (Rohan Sharma)</option>
-              <option value={ROLES.PARENT}>Parent (Anita Sharma)</option>
-            </select>
-          </div>
-
-          <div>
-            <label style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-              Email Address
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                type="email"
-                placeholder="e.g. student.rohan@edusphere.edu"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ width: '100%', paddingLeft: '2.5rem' }}
-              />
-              <Mail size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '13px' }} />
+              <currentRoleConfig.icon size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                {currentRoleConfig.label}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                {currentRoleConfig.subtitle}
+              </div>
             </div>
           </div>
 
-          <div>
-            <label style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-              Password
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ width: '100%', paddingLeft: '2.5rem' }}
-              />
-              <Lock size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '13px' }} />
-            </div>
-          </div>
-
-          <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem' }}>
-            Sign In with Credentials
+          <button
+            type="button"
+            onClick={handleFastDemoLaunch}
+            className="btn-primary"
+            style={{
+              padding: '0.4rem 0.85rem',
+              fontSize: '0.78rem',
+              background: currentRoleConfig.dotColor,
+            }}
+          >
+            <Sparkles size={13} />
+            <span>1-Click Launch</span>
           </button>
-        </form>
+        </div>
+
+        {/* Login Form Body */}
+        <div style={{ padding: '1.75rem' }}>
+          {errorMsg && (
+            <div
+              style={{
+                padding: '0.75rem 1rem',
+                background: '#fee2e2',
+                color: '#b91c1c',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.85rem',
+                fontWeight: '600',
+                marginBottom: '1.25rem',
+                border: '1px solid #fca5a5',
+              }}
+            >
+              {errorMsg}
+            </div>
+          )}
+
+          <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Phone Number Field (Login ID) */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                  Phone Number (User ID)
+                </label>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Demo: <strong>{currentRoleConfig.demoPhone}</strong>
+                </span>
+              </div>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="tel"
+                  placeholder={`e.g. ${currentRoleConfig.demoPhone}`}
+                  value={phoneInput}
+                  onChange={(e) => setPhoneInput(e.target.value)}
+                  style={{ width: '100%', paddingLeft: '2.5rem' }}
+                />
+                <Phone
+                  size={16}
+                  color={currentRoleConfig.dotColor}
+                  style={{ position: 'absolute', left: '12px', top: '13px' }}
+                />
+              </div>
+            </div>
+
+            {/* Date of Birth Field (Login Password) */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                  Date of Birth (Password)
+                </label>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Demo DOB: <strong>{currentRoleConfig.demoDob}</strong>
+                </span>
+              </div>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  placeholder={`YYYY-MM-DD or DDMMYYYY (e.g. ${currentRoleConfig.demoDob})`}
+                  value={dobInput}
+                  onChange={(e) => setDobInput(e.target.value)}
+                  style={{ width: '100%', paddingLeft: '2.5rem' }}
+                />
+                <Calendar
+                  size={16}
+                  color={currentRoleConfig.dotColor}
+                  style={{ position: 'absolute', left: '12px', top: '13px' }}
+                />
+              </div>
+              <div
+                style={{
+                  fontSize: '0.74rem',
+                  color: 'var(--text-muted)',
+                  marginTop: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <Info size={12} />
+                <span>Format: DDMMYYYY or YYYY-MM-DD (e.g. {currentRoleConfig.dobFormatted})</span>
+              </div>
+            </div>
+
+            {/* Scope Information Note */}
+            <div
+              style={{
+                padding: '0.75rem',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--bg-input)',
+                border: '1px solid var(--border)',
+                fontSize: '0.78rem',
+                color: 'var(--text-secondary)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <CheckCircle2 size={16} color={currentRoleConfig.dotColor} style={{ flexShrink: 0 }} />
+              <span>{currentRoleConfig.scopeNote}</span>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={isLoading}
+              style={{
+                width: '100%',
+                justifyContent: 'center',
+                padding: '0.85rem',
+                fontSize: '0.95rem',
+                background: `linear-gradient(135deg, ${currentRoleConfig.dotColor}, ${currentRoleConfig.dotColor}dd)`,
+                boxShadow: `0 4px 14px ${currentRoleConfig.dotColor}40`,
+                marginTop: '0.5rem',
+              }}
+            >
+              <span>{isLoading ? 'Authenticating...' : `Log In as ${currentRoleConfig.label}`}</span>
+              <ArrowRight size={16} />
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
 };
+
+export default LoginView;

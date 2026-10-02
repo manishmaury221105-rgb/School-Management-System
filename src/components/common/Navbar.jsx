@@ -69,11 +69,21 @@ export const Navbar = () => {
                 background: roleConfig?.bgLight || 'var(--primary-light)',
                 color: roleConfig?.badgeColor || 'var(--primary)',
                 border: `1px solid ${roleConfig?.badgeColor || 'var(--primary)'}33`,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
               }}
             >
-              <Shield size={14} />
-              <span>{currentRole}</span>
+              <div
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: roleConfig?.badgeColor || 'var(--primary)',
+                }}
+              />
+              <span>{roleConfig?.title || currentRole}</span>
               <ChevronDown size={14} />
             </button>
 

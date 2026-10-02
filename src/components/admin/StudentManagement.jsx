@@ -27,6 +27,8 @@ export const StudentManagement = () => {
     name: '',
     class: 'Class 10-A',
     rollNo: '',
+    phone: '',
+    dob: '2010-05-15',
     email: '',
     parentName: '',
     parentContact: '',
@@ -38,6 +40,7 @@ export const StudentManagement = () => {
     const matchesSearch =
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.phone && s.phone.includes(searchTerm)) ||
       s.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesClass = selectedClass === 'ALL' || s.class === selectedClass;
     return matchesSearch && matchesClass;
@@ -45,13 +48,15 @@ export const StudentManagement = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.rollNo) return;
+    if (!formData.name || !formData.rollNo || !formData.phone) return;
     addStudent(formData);
     setIsModalOpen(false);
     setFormData({
       name: '',
       class: 'Class 10-A',
       rollNo: '',
+      phone: '',
+      dob: '2010-05-15',
       email: '',
       parentName: '',
       parentContact: '',
@@ -288,6 +293,46 @@ export const StudentManagement = () => {
                 placeholder="e.g. 24"
                 value={formData.rollNo}
                 onChange={(e) => setFormData({ ...formData, rollNo: e.target.value })}
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+
+          {/* Credentials Notice */}
+          <div style={{
+            padding: '0.65rem 0.85rem',
+            background: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.25)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '0.78rem',
+            color: 'var(--text-primary)',
+          }}>
+            🔑 <strong>Login Credentials:</strong> Student Phone Number is User ID & Date of Birth is Password (DDMMYYYY).
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Phone Number (Login ID) *
+              </label>
+              <input
+                type="tel"
+                required
+                placeholder="e.g. 9876543299"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Date of Birth (Login Password) *
+              </label>
+              <input
+                type="date"
+                required
+                value={formData.dob}
+                onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
                 style={{ width: '100%' }}
               />
             </div>

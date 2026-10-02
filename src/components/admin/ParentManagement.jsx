@@ -22,6 +22,7 @@ export const ParentManagement = () => {
     name: '',
     email: '',
     phone: '',
+    dob: '1985-06-15',
     occupation: '',
     relationship: 'Father',
     address: '',
@@ -31,12 +32,12 @@ export const ParentManagement = () => {
   const filteredParents = parents.filter((p) =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.phone.includes(searchTerm)
+    (p.phone && p.phone.includes(searchTerm))
   );
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.email) return;
+    if (!formData.name || !formData.phone) return;
     addParent({
       ...formData,
       children: [formData.linkedChildName],
@@ -46,6 +47,7 @@ export const ParentManagement = () => {
       name: '',
       email: '',
       phone: '',
+      dob: '1985-06-15',
       occupation: '',
       relationship: 'Father',
       address: '',
@@ -192,14 +194,53 @@ export const ParentManagement = () => {
             />
           </div>
 
+          {/* Credentials Notice */}
+          <div style={{
+            padding: '0.65rem 0.85rem',
+            background: 'rgba(139, 92, 246, 0.1)',
+            border: '1px solid rgba(139, 92, 246, 0.25)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '0.78rem',
+            color: 'var(--text-primary)',
+          }}>
+            🔑 <strong>Login Credentials:</strong> Parent Phone Number is User ID & Date of Birth is Password (DDMMYYYY).
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div>
               <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-                Email Address *
+                Phone Number (Login ID) *
+              </label>
+              <input
+                type="tel"
+                required
+                placeholder="e.g. 9876543213"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Date of Birth (Login Password) *
+              </label>
+              <input
+                type="date"
+                required
+                value={formData.dob}
+                onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Email Address
               </label>
               <input
                 type="email"
-                required
                 placeholder="parent@gmail.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -208,14 +249,13 @@ export const ParentManagement = () => {
             </div>
             <div>
               <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-                Phone Number *
+                Occupation
               </label>
               <input
-                type="tel"
-                required
-                placeholder="+1 (555) 000-0000"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                type="text"
+                placeholder="e.g. Architect"
+                value={formData.occupation}
+                onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
                 style={{ width: '100%' }}
               />
             </div>

@@ -24,18 +24,20 @@ export const TeacherManagement = () => {
     assignedClasses: ['Class 10-A'],
     classTeacherOf: 'Class 10-A',
     phone: '',
+    dob: '1988-05-15',
     experience: '5 Years',
   });
 
   const filteredTeachers = teachers.filter((t) =>
     t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (t.phone && t.phone.includes(searchTerm)) ||
     t.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.subject) return;
+    if (!formData.name || !formData.subject || !formData.phone) return;
     addTeacher(formData);
     setIsModalOpen(false);
     setFormData({
@@ -45,6 +47,7 @@ export const TeacherManagement = () => {
       assignedClasses: ['Class 10-A'],
       classTeacherOf: 'Class 10-A',
       phone: '',
+      dob: '1988-05-15',
       experience: '5 Years',
     });
   };
@@ -180,6 +183,46 @@ export const TeacherManagement = () => {
             />
           </div>
 
+          {/* Credentials Notice */}
+          <div style={{
+            padding: '0.65rem 0.85rem',
+            background: 'rgba(59, 130, 246, 0.1)',
+            border: '1px solid rgba(59, 130, 246, 0.25)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '0.78rem',
+            color: 'var(--text-primary)',
+          }}>
+            🔑 <strong>Faculty Login Credentials:</strong> Phone Number is User ID & Date of Birth is Password (DDMMYYYY).
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Phone Number (Login ID) *
+              </label>
+              <input
+                type="tel"
+                required
+                placeholder="e.g. 9876543211"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Date of Birth (Login Password) *
+              </label>
+              <input
+                type="date"
+                required
+                value={formData.dob}
+                onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+
           <div>
             <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
               Subject Specialization *
@@ -194,31 +237,17 @@ export const TeacherManagement = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div>
-              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-                Email Address
-              </label>
-              <input
-                type="email"
-                placeholder="faculty@edusphere.edu"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                style={{ width: '100%' }}
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                placeholder="+1 (555) 000-0000"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                style={{ width: '100%' }}
-              />
-            </div>
+          <div>
+            <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+              Email Address
+            </label>
+            <input
+              type="email"
+              placeholder="faculty@edusphere.edu"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              style={{ width: '100%' }}
+            />
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>

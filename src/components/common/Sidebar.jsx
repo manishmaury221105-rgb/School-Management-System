@@ -36,15 +36,11 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       case ROLES.ADMIN:
         return [
           { id: 'dashboard', label: 'Executive Overview', icon: LayoutDashboard },
-          { id: 'students', label: 'Student Directory', icon: Users },
-          { id: 'parents', label: 'Parent Directory', icon: HeartHandshake },
-          { id: 'teachers', label: 'Faculty & Staff', icon: UserCheck },
+          { id: 'teachers', label: 'Faculty & Staff (Onboarding)', icon: UserCheck },
           { id: 'classes', label: 'Classes & Sections', icon: School },
           { id: 'subjects', label: 'Subjects Master', icon: Layers },
           { id: 'timetable', label: 'Master Timetable', icon: Calendar },
-          { id: 'attendance', label: 'Attendance Hub', icon: CalendarCheck },
           { id: 'fees', label: 'Fees & Invoicing', icon: CreditCard },
-          { id: 'study-material', label: 'Study Materials', icon: UploadCloud },
           { id: 'library', label: 'Library Catalog', icon: Book },
           { id: 'transport', label: 'Transport Logistics', icon: Bus },
           { id: 'events', label: 'School Events', icon: Calendar },
@@ -56,6 +52,8 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       case ROLES.TEACHER:
         return [
           { id: 'dashboard', label: 'Faculty Dashboard', icon: LayoutDashboard },
+          { id: 'students', label: 'Student Directory & Add', icon: Users },
+          { id: 'parents', label: 'Parent Directory & Link', icon: HeartHandshake },
           { id: 'attendance', label: 'Mark Attendance', icon: UserCheck },
           { id: 'timetable', label: 'My Timetable', icon: Clock },
           { id: 'homework', label: 'Homework & Tasks', icon: BookOpen },

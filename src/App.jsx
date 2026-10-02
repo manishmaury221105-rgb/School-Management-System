@@ -114,6 +114,10 @@ export const App = () => {
         switch (activeTab) {
           case 'dashboard':
             return <TeacherDashboard setActiveTab={setActiveTab} />;
+          case 'students':
+            return <StudentManagement />;
+          case 'parents':
+            return <ParentManagement />;
           case 'attendance':
             return <AttendanceMarker />;
           case 'timetable':

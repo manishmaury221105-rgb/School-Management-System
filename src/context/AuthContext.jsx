@@ -46,22 +46,63 @@ export const AuthProvider = ({ children }) => {
     return false;
   };
 
-  const loginWithCredentials = (identifier, password, role) => {
-    const cleanId = identifier.trim().toLowerCase();
-    const user = INITIAL_USERS.find(
-      u => u.email.toLowerCase() === cleanId || (u.phone && u.phone.includes(cleanId))
-    );
+  const loginWithCredentials = (identifier, passwordOrDob, role) => {
+    const rawId = (identifier || '').trim();
+    const cleanDigits = rawId.replace(/\D/g, '');
+    const cleanEmail = rawId.toLowerCase();
 
-    if (user && (!role || user.role === role)) {
-      setCurrentUser(user);
-      return { success: true, user };
+    // Find in seed users and dynamic rosters
+    const user = INITIAL_USERS.find(u => {
+      const uPhoneDigits = (u.phone || '').replace(/\D/g, '');
+      const phoneMatch = cleanDigits.length >= 4 && uPhoneDigits.length >= 4 && (uPhoneDigits === cleanDigits || uPhoneDigits.endsWith(cleanDigits) || cleanDigits.endsWith(uPhoneDigits));
+      const emailMatch = u.email && u.email.toLowerCase() === cleanEmail;
+      const roleMatch = !role || u.role === role;
+      return (phoneMatch || emailMatch) && roleMatch;
+    });
+
+    if (user) {
+      const rawInput = (passwordOrDob || '').trim();
+      const inputPass = rawInput.replace(/[\s\-\/]/g, '');
+      const userDobClean = (user.dob || '').replace(/[\s\-\/]/g, '');
+      let dobDDMMYYYY = '';
+      if (user.dob && user.dob.includes('-')) {
+        const parts = user.dob.split('-');
+        if (parts.length === 3) {
+          dobDDMMYYYY = `${parts[2]}${parts[1]}${parts[0]}`; // DDMMYYYY
+        }
+      }
+
+      const passMatches =
+        !rawInput ||
+        rawInput === 'password123' ||
+        rawInput === 'Admin@123' ||
+        rawInput === 'Teacher@123' ||
+        rawInput === 'Student@123' ||
+        rawInput === 'Parent@123' ||
+        inputPass === userDobClean ||
+        inputPass === dobDDMMYYYY ||
+        rawInput === user.dob;
+
+      if (passMatches) {
+        setCurrentUser(user);
+        return { success: true, user };
+      } else {
+        return {
+          success: false,
+          error: `Incorrect Date of Birth / Password. (Demo DOB is ${user.dob || 'YYYY-MM-DD'})`,
+        };
+      }
     }
+
     if (role) {
       const fallback = INITIAL_USERS.find(u => u.role === role);
-      setCurrentUser(fallback);
-      return { success: true, user: fallback };
+      if (fallback) {
+        setCurrentUser(fallback);
+        return { success: true, user: fallback };
+      }
     }
-    return { success: false, error: 'Invalid email, mobile or password.' };
+
+    return { success: false, error: 'No account found with this Phone number or Email for the selected role.' };
   };
 
   const registerUser = (userData) => {
