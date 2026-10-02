@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export const StudentManagement = () => {
-  const { students, addStudent, deleteStudent, classes } = useSchoolData();
+  const { students, addStudent, deleteStudent, clearAllStudents, classes } = useSchoolData();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,6 +56,12 @@ export const StudentManagement = () => {
         setFormData(prev => ({ ...prev, avatar: reader.result }));
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDeleteAll = () => {
+    if (window.confirm('Are you sure you want to delete all students from the directory?')) {
+      clearAllStudents();
     }
   };
 
@@ -119,6 +125,17 @@ export const StudentManagement = () => {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          {students.length > 0 && (
+            <button
+              onClick={handleDeleteAll}
+              className="btn-secondary"
+              style={{ color: '#ef4444', borderColor: '#fca5a5' }}
+              title="Delete all enrolled students"
+            >
+              <Trash2 size={16} />
+              <span>Delete All Students</span>
+            </button>
+          )}
           <button onClick={exportCSV} className="btn-secondary">
             <Download size={16} />
             <span>Export CSV</span>
@@ -182,8 +199,30 @@ export const StudentManagement = () => {
             <tbody>
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
-                    No student records found matching your filters.
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '3.5rem 1.5rem', color: 'var(--text-muted)' }}>
+                    <div style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      background: 'var(--bg-input)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 1rem auto',
+                      color: 'var(--primary)'
+                    }}>
+                      <Users size={32} />
+                    </div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '4px' }}>
+                      No Students Enrolled
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', maxWidth: '400px', margin: '0 auto 1.25rem auto' }}>
+                      The student directory is empty. Faculty members can enroll students with interactive photo upload, Phone ID, and Date of Birth password.
+                    </p>
+                    <button onClick={() => setIsModalOpen(true)} className="btn-primary" style={{ margin: '0 auto' }}>
+                      <Plus size={16} />
+                      <span>Enroll First Student</span>
+                    </button>
                   </td>
                 </tr>
               ) : (

@@ -106,6 +106,11 @@ export const SchoolDataProvider = ({ children }) => {
     setStudents(prev => prev.filter(s => s.id !== id));
   };
 
+  const clearAllStudents = () => {
+    setStudents([]);
+    localStorage.setItem('edusphere_students', JSON.stringify([]));
+  };
+
   // Parents CRUD
   const addParent = (newParent) => {
     const id = `parent-${Date.now()}`;
@@ -496,6 +501,7 @@ export const SchoolDataProvider = ({ children }) => {
         addStudent,
         updateStudent,
         deleteStudent,
+        clearAllStudents,
         addParent,
         deleteParent,
         addTeacher,
