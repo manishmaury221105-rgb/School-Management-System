@@ -4,17 +4,8 @@ import { ROLES, INITIAL_USERS, ROLE_PERMISSIONS } from '../data/mockData';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('edusphere_current_user');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse saved user', e);
-      }
-    }
-    return null; // App opens on Login Page by default
-  });
+  // Always start directly on the Login Page
+  const [currentUser, setCurrentUser] = useState(null);
 
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('edusphere_theme') || 'light';
