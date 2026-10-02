@@ -10,19 +10,14 @@ import {
   Moon,
   LogOut,
   Bell,
-  Shield,
-  Check,
-  ChevronDown,
   Key,
-  User,
   Save,
 } from 'lucide-react';
 
 export const Navbar = () => {
-  const { currentUser, currentRole, toggleTheme, theme, loginWithRole, logout, changePassword, updateProfile } = useAuth();
+  const { currentUser, currentRole, toggleTheme, theme, logout, changePassword, updateProfile } = useAuth();
   const { notifications } = useSchoolData();
 
-  const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [currentPwd, setCurrentPwd] = useState('');
@@ -60,89 +55,6 @@ export const Navbar = () => {
 
         {/* Action Controls */}
         <div className="nav-actions-wrap">
-          {/* Interactive Role Switcher Dropdown */}
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => setShowRoleMenu(!showRoleMenu)}
-              className="role-badge-pill"
-              style={{
-                background: roleConfig?.bgLight || 'var(--primary-light)',
-                color: roleConfig?.badgeColor || 'var(--primary)',
-                border: `1px solid ${roleConfig?.badgeColor || 'var(--primary)'}33`,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-              }}
-            >
-              <div
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: roleConfig?.badgeColor || 'var(--primary)',
-                }}
-              />
-              <span>{roleConfig?.title || currentRole}</span>
-              <ChevronDown size={14} />
-            </button>
-
-            {showRoleMenu && (
-              <div
-                className="card-elevated"
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 8px)',
-                  right: 0,
-                  width: '260px',
-                  padding: '0.5rem',
-                  zIndex: 100,
-                  background: 'var(--bg-card)',
-                  boxShadow: 'var(--shadow-xl)',
-                }}
-              >
-                <div style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>
-                  SWITCH ROLE (RBAC DEMO)
-                </div>
-                {Object.values(ROLES).map((role) => (
-                  <button
-                    key={role}
-                    onClick={() => {
-                      loginWithRole(role);
-                      setShowRoleMenu(false);
-                    }}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0.65rem 0.75rem',
-                      borderRadius: 'var(--radius-md)',
-                      fontSize: '0.85rem',
-                      fontWeight: currentRole === role ? '700' : '500',
-                      color: currentRole === role ? 'var(--primary)' : 'var(--text-primary)',
-                      background: currentRole === role ? 'var(--bg-input)' : 'transparent',
-                      marginTop: '2px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div
-                        style={{
-                          width: '8px',
-                          height: '8px',
-                          borderRadius: '50%',
-                          background: ROLE_PERMISSIONS[role].badgeColor,
-                        }}
-                      />
-                      <span>{ROLE_PERMISSIONS[role].title}</span>
-                    </div>
-                    {currentRole === role && <Check size={16} />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* In-App Notifications Button with Unread Badge */}
           <button
             onClick={() => setIsNotifDrawerOpen(true)}
