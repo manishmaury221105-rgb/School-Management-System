@@ -43,10 +43,10 @@ export const StudentManagement = ({ setActiveTab }) => {
     return filtered.length > 0 ? filtered : (classes.length > 0 ? [classes[0]] : [{ id: 'c1', name: 'Class 10-A' }]);
   }, [isAdmin, classes, activeTeacher]);
 
-  const defaultAssignedClass = allowedClasses[0]?.name || 'Class 10-A';
+  const defaultAssignedClass = activeTeacher?.classTeacherOf || (Array.isArray(activeTeacher?.assignedClasses) && activeTeacher.assignedClasses[0]) || classes[0]?.name || 'Class 10-A';
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedClass, setSelectedClass] = useState(isAdmin ? 'ALL' : defaultAssignedClass);
+  const [selectedClass, setSelectedClass] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isFeeModalOpen, setIsFeeModalOpen] = useState(false);
@@ -168,14 +168,13 @@ export const StudentManagement = ({ setActiveTab }) => {
   };
 
   const filteredStudents = students.filter((s) => {
-    const isAllowedForRole = isAdmin || allowedClasses.some(c => c.name === s.class);
-    if (!isAllowedForRole) return false;
-
     const matchesSearch =
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.name && s.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (s.studentId && s.studentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (s.phone && s.phone.includes(searchTerm)) ||
-      (s.email && s.email.toLowerCase().includes(searchTerm.toLowerCase()));
+      (s.email && s.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (s.rollNo && String(s.rollNo).includes(searchTerm)) ||
+      (s.parentName && s.parentName.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesClass = selectedClass === 'ALL' || s.class === selectedClass;
     return matchesSearch && matchesClass;
   });
@@ -183,11 +182,7 @@ export const StudentManagement = ({ setActiveTab }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name || !formData.rollNo || !formData.phone) return;
-    const targetClass = (!isAdmin && !allowedClasses.some(c => c.name === formData.class))
-      ? defaultAssignedClass
-      : formData.class;
-
-    addStudent({ ...formData, class: targetClass });
+    addStudent({ ...formData, class: formData.class || defaultAssignedClass });
     setIsModalOpen(false);
     setFormData({
       name: '',
@@ -259,7 +254,7 @@ export const StudentManagement = ({ setActiveTab }) => {
               <Search size={16} color="var(--text-muted)" />
               <input
                 type="text"
-                placeholder="Search by student name, ID or email..."
+                placeholder="Search by student name, roll no, ID or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -272,14 +267,16 @@ export const StudentManagement = ({ setActiveTab }) => {
                 onChange={(e) => setSelectedClass(e.target.value)}
                 style={{ padding: '8px 12px', fontSize: '0.88rem' }}
               >
-                {isAdmin ? (
-                  <option value="ALL">All Classes & Sections</option>
-                ) : (
-                  allowedClasses.length > 1 && <option value="ALL">All My Assigned Classes</option>
-                )}
-                {allowedClasses.map((c) => (
-                  <option key={c.id || c.name} value={c.name}>{c.name}</option>
-                ))}
+                <option value="ALL">All Classes & Sections ({students.length})</option>
+                {classes.map((c) => {
+                  const count = students.filter(s => s.class === c.name).length;
+                  const isAssigned = !isAdmin && (activeTeacher?.classTeacherOf === c.name || (Array.isArray(activeTeacher?.assignedClasses) && activeTeacher.assignedClasses.includes(c.name)));
+                  return (
+                    <option key={c.id || c.name} value={c.name}>
+                      {c.name} ({count}) {isAssigned ? (activeTeacher?.classTeacherOf === c.name ? '★ Class Teacher' : '• My Class') : ''}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>
@@ -1032,62 +1029,142 @@ export const StudentManagement = ({ setActiveTab }) => {
         <Modal
           isOpen={!!selectedStudentForView}
           onClose={() => setSelectedStudentForView(null)}
-          title="Student Profile Overview"
+          title="Official Student Profile & Academic Dossier"
+          maxWidth="640px"
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1.25rem',
+              padding: '1rem',
+              background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(16, 185, 129, 0.06))',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border)'
+            }}>
               <img
                 src={selectedStudentForView.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'}
                 alt={selectedStudentForView.name}
-                style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--primary)' }}
+                style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--primary)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
               />
-              <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '800' }}>{selectedStudentForView.name}</h3>
-                <div style={{ color: 'var(--primary)', fontWeight: '700', fontFamily: 'monospace' }}>
-                  {selectedStudentForView.studentId}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <h3 style={{ fontSize: '1.3rem', fontWeight: '900', margin: 0 }}>{selectedStudentForView.name}</h3>
+                  <span className="badge-status badge-active" style={{ fontSize: '0.72rem' }}>
+                    {selectedStudentForView.status || 'Active'}
+                  </span>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  {selectedStudentForView.class} • Roll #{selectedStudentForView.rollNo} • House: {selectedStudentForView.house || 'Emerald Dragons'}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                  <span style={{ color: 'var(--primary)', fontWeight: '800', fontFamily: 'monospace', fontSize: '0.9rem' }}>
+                    {selectedStudentForView.studentId}
+                  </span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>•</span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                    {selectedStudentForView.class} • Roll #{selectedStudentForView.rollNo}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  House: <strong>{selectedStudentForView.house || 'Emerald Dragons'}</strong> • Admission: <strong>{selectedStudentForView.admissionNo || 'ADM-2026'}</strong>
                 </div>
               </div>
             </div>
 
+            {/* Profile Grid */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0.75rem',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '0.85rem',
               background: 'var(--bg-input)',
-              padding: '1rem',
-              borderRadius: 'var(--radius-md)'
+              padding: '1.25rem',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border)'
             }}>
               <div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>GUARDIAN</div>
-                <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>{selectedStudentForView.parentName}</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>PHONE (LOGIN USER ID)</div>
+                <div style={{ fontWeight: '800', fontSize: '0.92rem', color: 'var(--text-primary)', marginTop: '2px' }}>
+                  {selectedStudentForView.phone || 'N/A'}
+                </div>
               </div>
               <div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>CONTACT</div>
-                <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>{selectedStudentForView.parentContact}</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>DATE OF BIRTH (PASSWORD)</div>
+                <div style={{ fontWeight: '800', fontSize: '0.92rem', color: 'var(--text-primary)', marginTop: '2px' }}>
+                  {selectedStudentForView.dob || 'N/A'}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>GUARDIAN / PARENT</div>
+                <div style={{ fontWeight: '800', fontSize: '0.92rem', color: 'var(--text-primary)', marginTop: '2px' }}>
+                  {selectedStudentForView.parentName || 'Guardian'}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>PARENT CONTACT</div>
+                <div style={{ fontWeight: '800', fontSize: '0.92rem', color: 'var(--text-primary)', marginTop: '2px' }}>
+                  {selectedStudentForView.parentContact || 'N/A'}
+                </div>
               </div>
               <div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>BLOOD GROUP</div>
-                <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>{selectedStudentForView.bloodGroup || 'O+'}</div>
+                <div style={{ fontWeight: '800', fontSize: '0.92rem', color: 'var(--primary)', marginTop: '2px' }}>
+                  {selectedStudentForView.bloodGroup || 'O+'}
+                </div>
               </div>
               <div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>ATTENDANCE RATE</div>
-                <div style={{ fontWeight: '700', fontSize: '0.9rem', color: '#10b981' }}>{selectedStudentForView.attendancePercent}%</div>
-              </div>
-              {isAdmin && (
-                <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>FEE STATUS</div>
-                  <div style={{ fontWeight: '700', fontSize: '0.9rem', color: selectedStudentForView.feeStatus === 'Paid' ? '#10b981' : '#f59e0b' }}>
-                    {selectedStudentForView.feeStatus || 'Pending'}
-                  </div>
+                <div style={{ fontWeight: '800', fontSize: '0.92rem', color: '#10b981', marginTop: '2px' }}>
+                  {selectedStudentForView.attendancePercent || 95}%
                 </div>
-              )}
+              </div>
+              <div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>ACADEMIC GPA</div>
+                <div style={{ fontWeight: '800', fontSize: '0.92rem', color: 'var(--text-primary)', marginTop: '2px' }}>
+                  {selectedStudentForView.gpa || 3.8} / 4.0
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>FEE STATUS</div>
+                <div style={{
+                  fontWeight: '800',
+                  fontSize: '0.85rem',
+                  marginTop: '2px',
+                  color: selectedStudentForView.feeStatus === 'Paid' ? '#10b981' : '#f59e0b'
+                }}>
+                  ● {selectedStudentForView.feeStatus || 'Pending'}
+                </div>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setSelectedStudentForView(null)} className="btn-secondary">
+            {selectedStudentForView.address && (
+              <div style={{
+                padding: '0.75rem 1rem',
+                background: 'var(--bg-card)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border)',
+                fontSize: '0.82rem',
+                color: 'var(--text-secondary)'
+              }}>
+                📍 <strong>Residential Address:</strong> {selectedStudentForView.address}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const target = selectedStudentForView;
+                  setSelectedStudentForView(null);
+                  handleOpenEditModal(target);
+                }}
+                className="btn-primary"
+              >
+                <Pencil size={15} />
+                <span>Edit Student</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedStudentForView(null)}
+                className="btn-secondary"
+              >
                 Close
               </button>
             </div>

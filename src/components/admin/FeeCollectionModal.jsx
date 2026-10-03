@@ -21,6 +21,7 @@ import {
   downloadReceiptPdf,
   printReceiptPdf,
   shareReceiptPdf,
+  sharePdfToWhatsApp,
   shareDirectToWhatsApp,
 } from '../../utils/pdfReceiptGenerator';
 
@@ -284,9 +285,9 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
     shareReceiptPdf({ ...generatedReceipt, phone: generatedReceipt.phone || formData.phone });
   };
 
-  const handleWhatsAppShare = () => {
+  const handleWhatsAppShare = async () => {
     if (!generatedReceipt) return;
-    shareDirectToWhatsApp({
+    await sharePdfToWhatsApp({
       ...generatedReceipt,
       phone: generatedReceipt.phone || formData.phone,
       feeMonth: generatedReceipt.feeMonth || formData.feeMonth,
@@ -487,7 +488,7 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
               }}
             >
               <WhatsAppIcon size={16} />
-              <span>WhatsApp</span>
+              <span>WhatsApp (PDF)</span>
             </button>
 
             <button

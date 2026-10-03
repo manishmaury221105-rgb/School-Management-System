@@ -361,37 +361,28 @@ export function printReceiptPdf(receipt) {
 }
 
 /**
- * Directly opens WhatsApp targeting the student's mobile number with formatted official receipt message
+ * Directly formats an official WhatsApp message for the receipt
  */
-export function shareDirectToWhatsApp(receipt) {
-  try {
-    const phoneNum = receipt.phone || receipt.parentContact || '';
-    let cleanDigits = phoneNum.replace(/[^0-9]/g, '');
-    if (cleanDigits.startsWith('0')) {
-      cleanDigits = cleanDigits.substring(1);
-    }
-    let target = cleanDigits;
-    if (target.length === 10) {
-      target = '91' + target;
-    }
+export function buildWhatsAppReceiptMessage(receipt, fileName) {
+  const studentName = receipt.studentName || receipt.name || 'Student';
+  const rollNo = receipt.rollNo || 'N/A';
+  const className = receipt.class || 'Class 10-A';
+  const fatherName = receipt.fatherName || receipt.parentName || 'Guardian';
+  const feeType = receipt.feeType || 'Tuition Fee';
+  const feeMonth = receipt.feeMonth || 'Academic Year 2026-27';
+  const receiptNo = receipt.receiptNo || 'REC-2026-0001';
+  const paidDate = receipt.paidDate || new Date().toISOString().split('T')[0];
+  const paymentMethod = receipt.paymentMethod || 'Online Payment';
+  const amount = Number(receipt.amount || 25000).toLocaleString('en-IN');
 
-    const studentName = receipt.studentName || receipt.name || 'Student';
-    const rollNo = receipt.rollNo || 'N/A';
-    const className = receipt.class || 'Class 10-A';
-    const fatherName = receipt.fatherName || receipt.parentName || 'Guardian';
-    const feeType = receipt.feeType || 'Tuition Fee';
-    const feeMonth = receipt.feeMonth || 'Academic Year 2026-27';
-    const receiptNo = receipt.receiptNo || 'REC-2026-0001';
-    const paidDate = receipt.paidDate || new Date().toISOString().split('T')[0];
-    const paymentMethod = receipt.paymentMethod || 'Online Payment';
-    const amount = Number(receipt.amount || 25000).toLocaleString('en-IN');
+  const periodLine = receipt.monthsCount && receipt.monthsCount > 1
+    ? `🗓️ *Period / Month:* ${feeMonth} (${receipt.monthsCount} Mos @ ₹${(receipt.monthlyRate || Math.round(Number(receipt.amount || 25000) / receipt.monthsCount)).toLocaleString('en-IN')}/mo)`
+    : `🗓️ *Period / Month:* ${feeMonth}`;
 
-    const periodLine = receipt.monthsCount && receipt.monthsCount > 1
-      ? `🗓️ *Period / Month:* ${feeMonth} (${receipt.monthsCount} Mos @ ₹${(receipt.monthlyRate || Math.round(Number(receipt.amount || 25000) / receipt.monthsCount)).toLocaleString('en-IN')}/mo)`
-      : `🗓️ *Period / Month:* ${feeMonth}`;
+  const pdfFileName = fileName || `Fee_Receipt_${receiptNo}_${studentName.replace(/\s+/g, '_')}.pdf`;
 
-    const text = `🏫 *EDUSPHERE INTERNATIONAL ACADEMY*
-🧾 *OFFICIAL FEE PAYMENT RECEIPT*
+  return `🏫 *EDUSPHERE INTERNATIONAL ACADEMY*
+🧾 *OFFICIAL FEE PAYMENT RECEIPT (PDF)*
 ━━━━━━━━━━━━━━━━━━━━
 📄 *Receipt No:* ${receiptNo}
 📅 *Date:* ${paidDate}
@@ -404,24 +395,87 @@ ${periodLine}
 💰 *Amount Paid:* ₹${amount}.00
 💳 *Payment Mode:* ${paymentMethod}
 ✅ *Status:* PAID & VERIFIED
+📎 *Official PDF File:* ${pdfFileName}
 ━━━━━━━━━━━━━━━━━━━━
-Thank you for your payment! Official receipt has been registered in the school ledger.`;
+Official Fee Receipt PDF generated & verified by EduSphere Accounts. Retain for student records and tax exemption (Sec 80C).`;
+}
 
-    const encoded = encodeURIComponent(text);
+/**
+ * Shares the PDF Receipt to WhatsApp:
+ * 1. On Mobile / Safari / Web Share Level 2 supported devices:
+ *    Invokes navigator.share with the actual PDF File so the user can choose WhatsApp
+ *    and the PDF document will be directly sent in WhatsApp!
+ * 2. On Desktop / Browsers without native file share:
+ *    - Automatically downloads the PDF file to user's device.
+ *    - Opens WhatsApp Web / App targeting student/parent phone number with formatted receipt metadata.
+ *    - Returns clear status so UI can prompt user to attach the downloaded PDF in the chat.
+ */
+export async function sharePdfToWhatsApp(receipt) {
+  try {
+    const studentName = (receipt.studentName || receipt.name || 'Student').replace(/\s+/g, '_');
+    const receiptNo = receipt.receiptNo || 'REC-2026-0001';
+    const fileName = `Fee_Receipt_${receiptNo}_${studentName}.pdf`;
+    const doc = createReceiptPdfDoc(receipt);
+    const pdfBlob = doc.output('blob');
+    const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+    const phoneNum = receipt.phone || receipt.parentContact || '';
+    let cleanDigits = String(phoneNum).replace(/[^0-9]/g, '');
+    if (cleanDigits.startsWith('0')) {
+      cleanDigits = cleanDigits.substring(1);
+    }
+    let target = cleanDigits;
+    if (target.length === 10) {
+      target = '91' + target;
+    }
+
+    const shareText = buildWhatsAppReceiptMessage(receipt, fileName);
+
+    // 1. Try Native Web Share API with actual PDF File
+    if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          title: `Official Fee Receipt - ${receipt.studentName || receipt.name || 'Student'}`,
+          text: shareText,
+          files: [file],
+        });
+        return { success: true, method: 'native_file', fileName };
+      } catch (err) {
+        if (err && err.name === 'AbortError') {
+          return { cancelled: true };
+        }
+        console.warn('Native share failed, proceeding with download + WhatsApp link:', err);
+      }
+    }
+
+    // 2. Fallback for Desktop / Browsers without native file share:
+    // A. Auto-download the PDF file
+    doc.save(fileName);
+
+    // B. Open WhatsApp targeting phone number with prefilled receipt details
+    const encoded = encodeURIComponent(shareText);
     const whatsappUrl = target && target.length >= 10
       ? `https://api.whatsapp.com/send?phone=${target}&text=${encoded}`
       : `https://api.whatsapp.com/send?text=${encoded}`;
 
     window.open(whatsappUrl, '_blank');
-    return true;
+
+    return { success: true, method: 'download_and_whatsapp', fileName };
   } catch (err) {
-    console.error('WhatsApp share error:', err);
-    return false;
+    console.error('WhatsApp PDF Share failed:', err);
+    return { success: false, error: err };
   }
 }
 
 /**
- * Shares the receipt PDF via Web Share API Level 2 (with PDF file blob) or falls back to WhatsApp
+ * Direct WhatsApp Share helper (delegates to sharePdfToWhatsApp)
+ */
+export function shareDirectToWhatsApp(receipt) {
+  return sharePdfToWhatsApp(receipt);
+}
+
+/**
+ * Shares the receipt PDF via Web Share API Level 2 (with PDF file blob) or falls back to WhatsApp PDF
  */
 export async function shareReceiptPdf(receipt) {
   try {
@@ -431,36 +485,24 @@ export async function shareReceiptPdf(receipt) {
     const pdfBlob = doc.output('blob');
     const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
-    // 1. Try sharing actual PDF File if Web Share Level 2 is supported (iOS Safari, Android Chrome, MacOS Safari, Edge)
+    // 1. Try sharing actual PDF File if Web Share Level 2 is supported
     if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({
         title: `Fee Receipt - ${receipt.studentName || receipt.name || 'Student'}`,
         text: `Official Fee Payment Receipt (${receipt.receiptNo || ''}) for ${receipt.studentName || receipt.name || 'Student'} - Amount: ₹${Number(receipt.amount || 0).toLocaleString('en-IN')}`,
         files: [file],
       });
-      return { success: true, type: 'file' };
+      return { success: true, type: 'file', fileName };
     }
 
-    // 2. Fallback to Web Share text if files aren't supported
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      await navigator.share({
-        title: `Fee Receipt - ${receipt.studentName || receipt.name || 'Student'}`,
-        text: `Official Fee Receipt (${receipt.receiptNo || ''}) for ${receipt.studentName || receipt.name || 'Student'}\nAmount: ₹${Number(receipt.amount || 0).toLocaleString('en-IN')}\nStatus: PAID & VERIFIED`,
-      });
-      return { success: true, type: 'text' };
-    }
-
-    // 3. Fallback to direct WhatsApp
-    shareDirectToWhatsApp(receipt);
-    return { success: true, type: 'whatsapp' };
+    // 2. Fallback to WhatsApp PDF share flow
+    return await sharePdfToWhatsApp(receipt);
   } catch (err) {
     if (err && err.name === 'AbortError') {
-      // User cancelled native share sheet
       return { cancelled: true };
     }
-    console.warn('Native share failed, falling back to WhatsApp:', err);
-    shareDirectToWhatsApp(receipt);
-    return { success: true, type: 'whatsapp' };
+    console.warn('Native share failed, falling back to WhatsApp PDF:', err);
+    return await sharePdfToWhatsApp(receipt);
   }
 }
 

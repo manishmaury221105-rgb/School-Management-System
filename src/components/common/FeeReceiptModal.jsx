@@ -17,6 +17,7 @@ import {
   downloadReceiptPdf,
   printReceiptPdf,
   shareReceiptPdf,
+  sharePdfToWhatsApp,
   shareDirectToWhatsApp,
   copyReceiptTextToClipboard,
 } from '../../utils/pdfReceiptGenerator';
@@ -76,7 +77,7 @@ export const FeeReceiptModal = ({
 
   const showToast = (msg) => {
     setFeedbackMsg(msg);
-    setTimeout(() => setFeedbackMsg(''), 3500);
+    setTimeout(() => setFeedbackMsg(''), 4000);
   };
 
   const handleDownload = () => {
@@ -95,23 +96,36 @@ export const FeeReceiptModal = ({
 
   const handleShareFile = async () => {
     setSharing(true);
-    showToast('Opening share options...');
+    showToast('Preparing PDF and opening share options...');
     const res = await shareReceiptPdf(receipt);
     setSharing(false);
     if (res && res.cancelled) {
-      // User dismissed native sheet
       return;
     }
     if (res && res.type === 'file') {
-      showToast('✓ PDF File Shared!');
-    } else if (res && res.type === 'whatsapp') {
-      showToast('✓ Opening WhatsApp with Receipt...');
+      showToast('✓ PDF File Shared Successfully!');
+    } else if (res && res.method === 'native_file') {
+      showToast('✓ PDF Receipt sent to Share Sheet!');
+    } else if (res && res.method === 'download_and_whatsapp') {
+      showToast('✓ PDF Receipt downloaded & WhatsApp opened!');
     }
   };
 
-  const handleWhatsAppShare = () => {
-    showToast('Opening WhatsApp with Receipt Details...');
-    shareDirectToWhatsApp(receipt);
+  const handleWhatsAppShare = async () => {
+    setSharing(true);
+    showToast('Generating PDF receipt & preparing WhatsApp share...');
+    const res = await sharePdfToWhatsApp(receipt);
+    setSharing(false);
+    if (res && res.cancelled) {
+      return;
+    }
+    if (res && res.method === 'native_file') {
+      showToast('✓ PDF Receipt shared to WhatsApp / Share Sheet!');
+    } else if (res && res.method === 'download_and_whatsapp') {
+      showToast('✓ PDF Downloaded! Opening WhatsApp chat...');
+    } else {
+      showToast('✓ Opening WhatsApp with Receipt...');
+    }
   };
 
   const handlePrint = () => {
@@ -250,10 +264,11 @@ export const FeeReceiptModal = ({
             <span>{sharing ? 'Sharing...' : 'Share PDF'}</span>
           </button>
 
-          {/* WhatsApp Direct Share Button */}
+          {/* WhatsApp Direct PDF Share Button */}
           <button
             type="button"
             onClick={handleWhatsAppShare}
+            disabled={sharing}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -269,10 +284,11 @@ export const FeeReceiptModal = ({
               cursor: 'pointer',
               boxShadow: '0 4px 14px rgba(37, 211, 102, 0.3)',
               transition: 'transform 0.15s ease',
+              opacity: sharing ? 0.7 : 1,
             }}
           >
             <WhatsAppIcon size={16} color="white" />
-            <span>WhatsApp</span>
+            <span>{sharing ? 'Sharing PDF...' : 'WhatsApp (PDF)'}</span>
           </button>
 
           {/* Print PDF Button */}
