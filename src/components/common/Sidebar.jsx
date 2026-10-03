@@ -23,6 +23,7 @@ import {
   FileSpreadsheet,
   UploadCloud,
   Layers,
+  Users,
 } from 'lucide-react';
 
 export const Sidebar = ({ activeTab, setActiveTab }) => {
@@ -34,6 +35,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       case ROLES.ADMIN:
         return [
           { id: 'dashboard', label: 'Executive Overview', icon: LayoutDashboard },
+          { id: 'students', label: 'Student Directory', icon: Users },
           { id: 'teachers', label: 'Faculty & Staff (Onboarding)', icon: UserCheck },
           { id: 'classes', label: 'Classes & Sections', icon: School },
           { id: 'subjects', label: 'Subjects Master', icon: Layers },
@@ -50,7 +52,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       case ROLES.TEACHER:
         return [
           { id: 'dashboard', label: 'Faculty Dashboard', icon: LayoutDashboard },
-          { id: 'teachers', label: 'Faculty Directory', icon: UserCheck },
+          { id: 'students', label: 'Students / Add Student', icon: Users },
           { id: 'attendance', label: 'Mark Attendance', icon: UserCheck },
           { id: 'timetable', label: 'My Timetable', icon: Clock },
           { id: 'homework', label: 'Homework & Tasks', icon: BookOpen },

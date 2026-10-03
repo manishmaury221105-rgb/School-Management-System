@@ -11,6 +11,7 @@ import {
   Clock,
   Wallet,
   School,
+  Users,
 } from 'lucide-react';
 
 export const BottomNav = ({ activeTab, setActiveTab }) => {
@@ -29,7 +30,7 @@ export const BottomNav = ({ activeTab, setActiveTab }) => {
       case ROLES.TEACHER:
         return [
           { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
-          { id: 'teachers', label: 'Faculty', icon: UserCheck },
+          { id: 'students', label: 'Students', icon: Users },
           { id: 'attendance', label: 'Attendance', icon: UserCheck },
           { id: 'timetable', label: 'Schedule', icon: Clock },
           { id: 'homework', label: 'Homework', icon: BookOpen },

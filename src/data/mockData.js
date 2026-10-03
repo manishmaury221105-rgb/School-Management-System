@@ -40,11 +40,9 @@ export const ROLE_PERMISSIONS = {
     title: 'Faculty Member',
     badgeColor: '#3B82F6',
     bgLight: '#EFF6FF',
-    description: 'Assigned classrooms, student & parent onboarding, daily attendance, homework grading & exam marks.',
+    description: 'Assigned classrooms, student onboarding & admissions, daily attendance, homework grading & exam marks.',
     allowedTabs: [
       'dashboard',
-      'teachers',
-      'faculty',
       'students',
       'parents',
       'attendance',

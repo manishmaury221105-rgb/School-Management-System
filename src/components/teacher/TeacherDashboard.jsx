@@ -12,6 +12,8 @@ import {
   AlertCircle,
   ArrowRight,
   Sparkles,
+  Users,
+  UserPlus,
 } from 'lucide-react';
 
 export const TeacherDashboard = ({ setActiveTab }) => {
@@ -39,7 +41,11 @@ export const TeacherDashboard = ({ setActiveTab }) => {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button onClick={() => setActiveTab('attendance')} className="btn-primary">
+          <button onClick={() => setActiveTab('students')} className="btn-primary">
+            <UserPlus size={16} />
+            <span>Add / Enroll Student</span>
+          </button>
+          <button onClick={() => setActiveTab('attendance')} className="btn-secondary">
             <UserCheck size={16} />
             <span>Mark Today's Attendance</span>
           </button>
@@ -219,6 +225,13 @@ export const TeacherDashboard = ({ setActiveTab }) => {
                   32 Students Enrolled • 94.5% Term Attendance • Room 304
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => setActiveTab('students')}
+                    className="btn-primary"
+                    style={{ padding: '4px 10px', fontSize: '0.78rem', flex: 1, justifyContent: 'center' }}
+                  >
+                    Students
+                  </button>
                   <button
                     onClick={() => setActiveTab('attendance')}
                     className="btn-secondary"

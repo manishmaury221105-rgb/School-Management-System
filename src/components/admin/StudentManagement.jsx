@@ -246,7 +246,7 @@ export const StudentManagement = ({ setActiveTab }) => {
           </button>
           <button onClick={handleOpenAddModal} className="btn-primary">
             <Plus size={16} />
-            <span>Enroll New Student</span>
+            <span>Add Student</span>
           </button>
         </div>
       </div>
@@ -469,11 +469,11 @@ export const StudentManagement = ({ setActiveTab }) => {
         </div>
       </div>
 
-      {/* Enroll Student Modal */}
+      {/* Add / Enroll Student Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Enroll New Student"
+        title="Add New Student (Admission)"
       >
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {/* Student Photo Upload & Preview Section */}
