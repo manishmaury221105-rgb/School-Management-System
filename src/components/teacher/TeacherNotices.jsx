@@ -11,18 +11,24 @@ import {
   Clock,
   User,
   MessageSquare,
+  Sparkles,
+  Users,
+  Radio,
+  Tag,
 } from 'lucide-react';
 
 export const TeacherNotices = () => {
   const { notices, addNotice, leaveRequests, updateLeaveStatus } = useSchoolData();
   const { currentUser } = useAuth();
-  const [activeSubTab, setActiveSubTab] = useState('leaves');
+  const [activeSubTab, setActiveSubTab] = useState('notices');
+  const [filterCategory, setFilterCategory] = useState('ALL');
   const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false);
 
   const [noticeForm, setNoticeForm] = useState({
     title: '',
     category: 'Academic',
     priority: 'High',
+    target: 'STUDENT',
     content: '',
   });
 
@@ -31,7 +37,6 @@ export const TeacherNotices = () => {
     if (!noticeForm.title || !noticeForm.content) return;
     addNotice({
       ...noticeForm,
-      target: 'STUDENT',
       author: `${currentUser?.name || 'Mrs. Sarah Jenkins'} (Class Teacher 10-A)`,
     });
     setIsNoticeModalOpen(false);
@@ -39,6 +44,7 @@ export const TeacherNotices = () => {
       title: '',
       category: 'Academic',
       priority: 'High',
+      target: 'STUDENT',
       content: '',
     });
   };
@@ -48,16 +54,39 @@ export const TeacherNotices = () => {
     updateLeaveStatus(leaveId, newStatus, remarks);
   };
 
+  // Filter notices for Teacher View
+  const filteredNotices = notices.filter((n) => {
+    if (filterCategory === 'FACULTY') {
+      const tgt = (n.target || '').toUpperCase();
+      return tgt === 'TEACHER' || tgt === 'ALL';
+    }
+    if (filterCategory === 'STUDENTS') {
+      const tgt = (n.target || '').toUpperCase();
+      return tgt === 'STUDENT' || tgt === 'ALL' || tgt === 'STUDENTS';
+    }
+    if (filterCategory === 'URGENT') {
+      return n.priority === 'Urgent' || n.priority === 'High';
+    }
+    return true;
+  });
+
   return (
     <div className="animate-fade-in">
       <div className="page-header-wrap">
         <div>
-          <h1 className="page-title">Class Communications & Leave Approvals</h1>
+          <h1 className="page-title">Class Notices & School Circulars</h1>
           <p className="page-subtitle">
-            Review parent leave applications and broadcast classroom notices.
+            Broadcast classroom bulletins, review institutional circulars and manage parent leave requests.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setActiveSubTab('notices')}
+            className={activeSubTab === 'notices' ? 'btn-primary' : 'btn-secondary'}
+          >
+            <BellRing size={16} />
+            <span>Notice Board ({notices.length})</span>
+          </button>
           <button
             onClick={() => setActiveSubTab('leaves')}
             className={activeSubTab === 'leaves' ? 'btn-primary' : 'btn-secondary'}
@@ -65,17 +94,132 @@ export const TeacherNotices = () => {
             <FileText size={16} />
             <span>Leave Requests ({leaveRequests.filter(l => l.status === 'Pending').length})</span>
           </button>
-          <button
-            onClick={() => setActiveSubTab('notices')}
-            className={activeSubTab === 'notices' ? 'btn-primary' : 'btn-secondary'}
-          >
-            <BellRing size={16} />
-            <span>Class Notices</span>
-          </button>
         </div>
       </div>
 
-      {activeSubTab === 'leaves' ? (
+      {activeSubTab === 'notices' ? (
+        /* Notices Board Section */
+        <div>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1.25rem',
+            flexWrap: 'wrap',
+            gap: '0.75rem'
+          }}>
+            {/* Filter Pills */}
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setFilterCategory('ALL')}
+                className={filterCategory === 'ALL' ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+              >
+                All Circulars ({notices.length})
+              </button>
+              <button
+                onClick={() => setFilterCategory('FACULTY')}
+                className={filterCategory === 'FACULTY' ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+              >
+                Faculty Circulars
+              </button>
+              <button
+                onClick={() => setFilterCategory('STUDENTS')}
+                className={filterCategory === 'STUDENTS' ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+              >
+                Class & Student Bulletins
+              </button>
+              <button
+                onClick={() => setFilterCategory('URGENT')}
+                className={filterCategory === 'URGENT' ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+              >
+                Urgent / High Priority
+              </button>
+            </div>
+
+            <button onClick={() => setIsNoticeModalOpen(true)} className="btn-primary">
+              <Plus size={16} />
+              <span>Broadcast Notice to Class</span>
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.25rem' }}>
+            {filteredNotices.map((n) => {
+              const isUrgent = n.priority === 'Urgent';
+              const isHigh = n.priority === 'High';
+              return (
+                <div
+                  key={n.id}
+                  className="card-elevated"
+                  style={{
+                    padding: '1.5rem',
+                    border: isUrgent ? '1.5px solid #ef4444' : '1px solid var(--border)',
+                    background: 'var(--bg-card)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className={`badge-status ${isUrgent ? 'badge-urgent' : isHigh ? 'badge-late' : 'badge-active'}`}>
+                          {n.priority || 'Normal'}
+                        </span>
+                        <span style={{
+                          fontSize: '0.72rem',
+                          fontWeight: '700',
+                          padding: '2px 8px',
+                          borderRadius: '8px',
+                          background: 'var(--bg-input)',
+                          color: 'var(--text-secondary)'
+                        }}>
+                          {n.category || 'General'}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{n.date}</span>
+                    </div>
+
+                    <h3 style={{ fontSize: '1.12rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+                      {n.title}
+                    </h3>
+
+                    <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1rem' }}>
+                      {n.content}
+                    </p>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingTop: '0.75rem',
+                    borderTop: '1px solid var(--border)',
+                    fontSize: '0.78rem',
+                  }}>
+                    <div style={{ color: 'var(--primary)', fontWeight: '700' }}>
+                      By: {n.author || 'School Administration'}
+                    </div>
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontWeight: '800',
+                      color: 'var(--text-muted)',
+                      background: 'var(--bg-input)',
+                      padding: '2px 8px',
+                      borderRadius: '6px'
+                    }}>
+                      Target: {n.target || 'ALL'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
         /* Parent Leave Requests Section */
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {leaveRequests.map((leave) => (
@@ -147,82 +291,86 @@ export const TeacherNotices = () => {
             </div>
           ))}
         </div>
-      ) : (
-        /* Class Notices Section */
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-            <button onClick={() => setIsNoticeModalOpen(true)} className="btn-primary">
-              <Plus size={16} />
-              <span>Post Notice to Class 10-A</span>
-            </button>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.25rem' }}>
-            {notices.map((n) => (
-              <div key={n.id} className="card-elevated" style={{ padding: '1.25rem', border: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span className={`badge-status ${n.priority === 'Urgent' ? 'badge-urgent' : 'badge-active'}`}>
-                    {n.priority}
-                  </span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{n.date}</span>
-                </div>
-                <h4 style={{ fontSize: '1.05rem', fontWeight: '800', marginTop: '4px' }}>{n.title}</h4>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.4 }}>
-                  {n.content}
-                </p>
-                <div style={{ fontSize: '0.72rem', color: 'var(--primary)', marginTop: '8px', fontWeight: '600' }}>
-                  By: {n.author}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       )}
 
       {/* Post Notice Modal */}
       <Modal
         isOpen={isNoticeModalOpen}
         onClose={() => setIsNoticeModalOpen(false)}
-        title="Post Notice for Class 10-A"
+        title="Broadcast Notice / Circular"
       >
         <form onSubmit={handleCreateNotice} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
             <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-              Notice Subject *
+              Notice Subject / Title *
             </label>
             <input
               type="text"
               required
-              placeholder="e.g. Mathematics Formula Sheet Revision"
+              placeholder="e.g. Mathematics Formula Sheet Revision & Test"
               value={noticeForm.title}
               onChange={(e) => setNoticeForm({ ...noticeForm, title: e.target.value })}
               style={{ width: '100%' }}
             />
           </div>
 
-          <div>
-            <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-              Priority Level
-            </label>
-            <select
-              value={noticeForm.priority}
-              onChange={(e) => setNoticeForm({ ...noticeForm, priority: e.target.value })}
-              style={{ width: '100%' }}
-            >
-              <option value="Normal">Normal</option>
-              <option value="High">High</option>
-              <option value="Urgent">Urgent</option>
-            </select>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Category
+              </label>
+              <select
+                value={noticeForm.category}
+                onChange={(e) => setNoticeForm({ ...noticeForm, category: e.target.value })}
+                style={{ width: '100%' }}
+              >
+                <option value="Academic">Academic</option>
+                <option value="Exams">Exams</option>
+                <option value="Homework">Homework</option>
+                <option value="General">General</option>
+                <option value="Holiday">Holiday</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Priority Level
+              </label>
+              <select
+                value={noticeForm.priority}
+                onChange={(e) => setNoticeForm({ ...noticeForm, priority: e.target.value })}
+                style={{ width: '100%' }}
+              >
+                <option value="Normal">Normal</option>
+                <option value="High">High</option>
+                <option value="Urgent">Urgent</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Target Audience
+              </label>
+              <select
+                value={noticeForm.target}
+                onChange={(e) => setNoticeForm({ ...noticeForm, target: e.target.value })}
+                style={{ width: '100%' }}
+              >
+                <option value="STUDENT">Students Only</option>
+                <option value="ALL">Everyone (All)</option>
+                <option value="TEACHER">Faculty Only</option>
+              </select>
+            </div>
           </div>
 
           <div>
             <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-              Notice Message *
+              Notice Content *
             </label>
             <textarea
               required
               rows={4}
-              placeholder="Write the announcement for your students..."
+              placeholder="Write the full announcement message..."
               value={noticeForm.content}
               onChange={(e) => setNoticeForm({ ...noticeForm, content: e.target.value })}
               style={{ width: '100%' }}
@@ -234,7 +382,7 @@ export const TeacherNotices = () => {
               Cancel
             </button>
             <button type="submit" className="btn-primary">
-              Post to Students
+              Broadcast Immediately
             </button>
           </div>
         </form>

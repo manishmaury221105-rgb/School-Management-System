@@ -14,11 +14,13 @@ import {
   Sparkles,
   Users,
   UserPlus,
+  BellRing,
+  Plus,
 } from 'lucide-react';
 
 export const TeacherDashboard = ({ setActiveTab }) => {
   const { currentUser } = useAuth();
-  const { homework, leaveRequests, attendance } = useSchoolData();
+  const { homework, leaveRequests, attendance, notices } = useSchoolData();
 
   const assignedClasses = currentUser?.assignedClasses || ['Class 10-A', 'Class 9-B'];
   const todayDate = new Date().toISOString().split('T')[0];
@@ -26,6 +28,11 @@ export const TeacherDashboard = ({ setActiveTab }) => {
   const isAttendanceMarkedToday = Object.keys(todayAttendance).length > 0;
 
   const pendingLeavesCount = leaveRequests.filter(l => l.status === 'Pending').length;
+
+  const teacherCirculars = notices.filter(n => {
+    const tgt = (n.target || 'ALL').toUpperCase();
+    return tgt === 'TEACHER' || tgt === 'ALL';
+  });
 
   return (
     <div className="animate-fade-in">
@@ -37,13 +44,17 @@ export const TeacherDashboard = ({ setActiveTab }) => {
           </div>
           <h1 className="page-title">Faculty Workspace</h1>
           <p className="page-subtitle">
-            Class 10-A Class Teacher • Mathematics & Physics Department
+            Class 10-A Class Teacher • Mathematics & Physics Department • Broadcast Center
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button onClick={() => setActiveTab('students')} className="btn-primary">
             <UserPlus size={16} />
             <span>Add / Enroll Student</span>
+          </button>
+          <button onClick={() => setActiveTab('notices')} className="btn-secondary">
+            <BellRing size={16} />
+            <span>Notice Broadcaster</span>
           </button>
           <button onClick={() => setActiveTab('attendance')} className="btn-secondary">
             <UserCheck size={16} />
@@ -79,14 +90,14 @@ export const TeacherDashboard = ({ setActiveTab }) => {
           onClick={() => setActiveTab('homework')}
         />
         <StatCard
-          label="Class Gradebook"
-          value="3.84 GPA"
-          icon={Award}
-          trend="View Marks"
+          label="Broadcast Notices"
+          value={`${teacherCirculars.length} Active`}
+          icon={BellRing}
+          trend="Institutional Circulars"
           trendPositive={true}
           accentColor="#8b5cf6"
           lightBg="#f5f3ff"
-          onClick={() => setActiveTab('gradebook')}
+          onClick={() => setActiveTab('notices')}
         />
         <StatCard
           label="Parent Leave Requests"
@@ -100,8 +111,8 @@ export const TeacherDashboard = ({ setActiveTab }) => {
         />
       </div>
 
-      {/* Two Column Section: Today's Schedule & Quick Action Tasks */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem' }}>
+      {/* Two Column Section: Today's Schedule & Active Broadcast Circulars */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
         {/* Today's Teaching Schedule */}
         <div className="card-elevated" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
@@ -191,72 +202,129 @@ export const TeacherDashboard = ({ setActiveTab }) => {
           </div>
         </div>
 
-        {/* Assigned Classes Quick Summary */}
+        {/* Institutional Broadcast Circulars Widget */}
         <div className="card-elevated" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '800' }}>Assigned Class Roster</h3>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '800' }}>📢 Broadcast Circulars</h3>
             <button
-              onClick={() => setActiveTab('gradebook')}
+              onClick={() => setActiveTab('notices')}
               style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}
             >
-              Gradebook <ArrowRight size={14} />
+              All Notices ({notices.length}) <ArrowRight size={14} />
             </button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {assignedClasses.map((clsName, idx) => (
-              <div
-                key={idx}
-                style={{
-                  padding: '1rem',
-                  borderRadius: 'var(--radius-md)',
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border)',
-                  boxShadow: 'var(--shadow-xs)'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <div style={{ fontSize: '1.05rem', fontWeight: '800' }}>{clsName}</div>
-                  <span className="badge-status badge-active">
-                    {clsName === 'Class 10-A' ? 'Class Teacher' : 'Subject Faculty'}
-                  </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            {teacherCirculars.slice(0, 3).map((n) => {
+              const isUrgent = n.priority === 'Urgent';
+              return (
+                <div
+                  key={n.id}
+                  onClick={() => setActiveTab('notices')}
+                  style={{
+                    padding: '0.9rem',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'var(--bg-input)',
+                    border: isUrgent ? '1.5px solid #ef4444' : '1px solid var(--border)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span className={`badge-status ${isUrgent ? 'badge-urgent' : n.priority === 'High' ? 'badge-late' : 'badge-active'}`}>
+                        {n.priority || 'Normal'}
+                      </span>
+                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-muted)' }}>
+                        {n.category || 'Academic'}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{n.date}</span>
+                  </div>
+
+                  <div style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px' }}>
+                    {n.title}
+                  </div>
+
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {n.content}
+                  </div>
+
+                  <div style={{ fontSize: '0.72rem', color: 'var(--primary)', marginTop: '6px', fontWeight: '600' }}>
+                    By: {n.author}
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                  32 Students Enrolled • 94.5% Term Attendance • Room 304
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button
-                    onClick={() => setActiveTab('students')}
-                    className="btn-primary"
-                    style={{ padding: '4px 10px', fontSize: '0.78rem', flex: 1, justifyContent: 'center' }}
-                  >
-                    Students
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('attendance')}
-                    className="btn-secondary"
-                    style={{ padding: '4px 10px', fontSize: '0.78rem', flex: 1, justifyContent: 'center' }}
-                  >
-                    Attendance
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('homework')}
-                    className="btn-secondary"
-                    style={{ padding: '4px 10px', fontSize: '0.78rem', flex: 1, justifyContent: 'center' }}
-                  >
-                    Assignments
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('gradebook')}
-                    className="btn-secondary"
-                    style={{ padding: '4px 10px', fontSize: '0.78rem', flex: 1, justifyContent: 'center' }}
-                  >
-                    Marks
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+        </div>
+      </div>
+
+      {/* Assigned Classes Quick Summary */}
+      <div className="card-elevated" style={{ padding: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: '800' }}>Assigned Class Roster</h3>
+          <button
+            onClick={() => setActiveTab('gradebook')}
+            style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
+            Gradebook <ArrowRight size={14} />
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+          {assignedClasses.map((clsName, idx) => (
+            <div
+              key={idx}
+              style={{
+                padding: '1rem',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--bg-input)',
+                border: '1px solid var(--border)',
+                boxShadow: 'var(--shadow-xs)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <div style={{ fontSize: '1.05rem', fontWeight: '800' }}>{clsName}</div>
+                <span className="badge-status badge-active">
+                  {clsName === 'Class 10-A' ? 'Class Teacher' : 'Subject Faculty'}
+                </span>
+              </div>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                32 Students Enrolled • 94.5% Term Attendance • Room 304
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => setActiveTab('students')}
+                  className="btn-primary"
+                  style={{ padding: '4px 10px', fontSize: '0.78rem', flex: 1, justifyContent: 'center' }}
+                >
+                  Students
+                </button>
+                <button
+                  onClick={() => setActiveTab('attendance')}
+                  className="btn-secondary"
+                  style={{ padding: '4px 10px', fontSize: '0.78rem', flex: 1, justifyContent: 'center' }}
+                >
+                  Attendance
+                </button>
+                <button
+                  onClick={() => setActiveTab('homework')}
+                  className="btn-secondary"
+                  style={{ padding: '4px 10px', fontSize: '0.78rem', flex: 1, justifyContent: 'center' }}
+                >
+                  Assignments
+                </button>
+                <button
+                  onClick={() => setActiveTab('gradebook')}
+                  className="btn-secondary"
+                  style={{ padding: '4px 10px', fontSize: '0.78rem', flex: 1, justifyContent: 'center' }}
+                >
+                  Marks
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

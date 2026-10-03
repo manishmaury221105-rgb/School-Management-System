@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
 import { StatCard } from '../common/StatCard';
-import { Modal } from '../common/Modal';
+import { FeeReceiptModal } from '../common/FeeReceiptModal';
 import { FeeCollectionModal } from './FeeCollectionModal';
 import {
   downloadReceiptPdf,
@@ -20,6 +20,7 @@ import {
   Printer,
   Check,
   Plus,
+  Share2,
 } from 'lucide-react';
 
 export const FeeManagement = () => {
@@ -27,6 +28,7 @@ export const FeeManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [isNewPayment, setIsNewPayment] = useState(false);
   const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
 
   const totalCollected = fees
@@ -50,14 +52,21 @@ export const FeeManagement = () => {
     const res = payFee(feeId, 'Admin Manual / Cash Counter');
     const fee = fees.find(f => f.id === feeId);
     if (fee) {
-      setSelectedReceipt({
+      const rec = {
         ...fee,
         status: 'Paid',
         receiptNo: res.receiptNo,
         paidDate: res.paidDate,
         paymentMethod: 'Admin Manual / Cash Counter',
-      });
+      };
+      setIsNewPayment(true);
+      setSelectedReceipt(rec);
     }
+  };
+
+  const handleOpenReceipt = (fee) => {
+    setIsNewPayment(false);
+    setSelectedReceipt(fee);
   };
 
   return (
@@ -66,7 +75,7 @@ export const FeeManagement = () => {
         <div>
           <h1 className="page-title">Fee & Revenue Governance</h1>
           <p className="page-subtitle">
-            Track tuition fee payments, overdue accounts, issue receipts and reconcile collections.
+            Track tuition fee payments, overdue accounts, issue receipts, download PDFs and share with students/parents.
           </p>
         </div>
         <button onClick={() => setIsCollectModalOpen(true)} className="btn-primary">
@@ -78,7 +87,7 @@ export const FeeManagement = () => {
       <div className="stats-grid-4">
         <StatCard
           label="Total Collected Revenue"
-          value={`₹${totalCollected.toLocaleString()}`}
+          value={`₹${totalCollected.toLocaleString('en-IN')}`}
           icon={CheckCircle2}
           trend={`${fees.filter(f => f.status === 'Paid').length} Paid Invoices`}
           trendPositive={totalCollected > 0}
@@ -87,7 +96,7 @@ export const FeeManagement = () => {
         />
         <StatCard
           label="Pending Outstanding Dues"
-          value={`₹${totalPending.toLocaleString()}`}
+          value={`₹${totalPending.toLocaleString('en-IN')}`}
           icon={Clock}
           trend={`${fees.filter(f => f.status === 'Pending').length} Pending Invoices`}
           trendPositive={false}
@@ -158,126 +167,106 @@ export const FeeManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredFees.map((fee) => (
-                <tr key={fee.id}>
-                  <td>
-                    <div style={{ fontWeight: '700' }}>{fee.studentName}</div>
-                  </td>
-                  <td>{fee.class}</td>
-                  <td>
-                    <div style={{ fontWeight: '600' }}>{fee.feeType}</div>
-                    {fee.receiptNo && (
-                      <span style={{ fontSize: '0.72rem', color: 'var(--primary)', fontFamily: 'monospace' }}>
-                        {fee.receiptNo}
+              {filteredFees.map((fee) => {
+                const isPaid = fee.status === 'Paid';
+                return (
+                  <tr key={fee.id}>
+                    <td>
+                      <div style={{ fontWeight: '700' }}>{fee.studentName}</div>
+                      {fee.rollNo && (
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Roll #{fee.rollNo}</div>
+                      )}
+                    </td>
+                    <td>{fee.class}</td>
+                    <td>
+                      <div style={{ fontWeight: '600' }}>{fee.feeType}</div>
+                      {fee.receiptNo ? (
+                        <span style={{ fontSize: '0.72rem', color: 'var(--primary)', fontFamily: 'monospace' }}>
+                          {fee.receiptNo}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                          {fee.feeMonth || 'Term 1'}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      <span style={{ fontWeight: '800', fontSize: '1rem' }}>₹{Number(fee.amount || 0).toLocaleString('en-IN')}</span>
+                    </td>
+                    <td>
+                      <span style={{ fontSize: '0.85rem', color: fee.status === 'Pending' ? '#b91c1c' : 'var(--text-muted)' }}>
+                        {fee.dueDate}
                       </span>
-                    )}
-                  </td>
-                  <td>
-                    <span style={{ fontWeight: '800', fontSize: '1rem' }}>₹{fee.amount}</span>
-                  </td>
-                  <td>
-                    <span style={{ fontSize: '0.85rem', color: fee.status === 'Pending' ? '#b91c1c' : 'var(--text-muted)' }}>
-                      {fee.dueDate}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge-status ${fee.status === 'Paid' ? 'badge-paid' : 'badge-pending'}`}>
-                      {fee.status}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      {fee.paymentMethod || '—'}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    {fee.status === 'Pending' ? (
-                      <button
-                        onClick={() => handleManualMarkPaid(fee.id)}
-                        className="btn-success"
-                        style={{ padding: '4px 10px', fontSize: '0.78rem' }}
-                      >
-                        <Check size={14} />
-                        <span>Mark Paid</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setSelectedReceipt(fee)}
-                        className="btn-secondary"
-                        style={{ padding: '4px 10px', fontSize: '0.78rem' }}
-                      >
-                        <Receipt size={14} />
-                        <span>Receipt</span>
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td>
+                      <span className={`badge-status ${isPaid ? 'badge-paid' : 'badge-pending'}`}>
+                        {fee.status}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                        {fee.paymentMethod || '—'}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      {isPaid ? (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenReceipt(fee)}
+                            className="btn-secondary"
+                            style={{ padding: '4px 10px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                            title="View Official Receipt"
+                          >
+                            <Receipt size={14} />
+                            <span>Receipt</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => downloadReceiptPdf(fee)}
+                            className="icon-btn"
+                            style={{ width: '30px', height: '30px', borderRadius: '6px' }}
+                            title="Direct Download PDF"
+                          >
+                            <Download size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => shareReceiptPdf(fee)}
+                            className="icon-btn"
+                            style={{ width: '30px', height: '30px', borderRadius: '6px' }}
+                            title="Share PDF Receipt"
+                          >
+                            <Share2 size={13} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleManualMarkPaid(fee.id)}
+                          className="btn-success"
+                          style={{ padding: '4px 10px', fontSize: '0.78rem' }}
+                        >
+                          <Check size={14} />
+                          <span>Mark Paid</span>
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Printable Receipt Modal */}
-      {selectedReceipt && (
-        <Modal
-          isOpen={!!selectedReceipt}
-          onClose={() => setSelectedReceipt(null)}
-          title="Official Fee Receipt"
-        >
-          <div className="receipt-sheet">
-            <div style={{ textAlign: 'center', borderBottom: '2px dashed #000', paddingBottom: '1rem', marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>ST. XAVIER ACADEMY</h2>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Affiliated to CBSE / State Board • ISO 9001:2015</div>
-              <div style={{ fontSize: '0.85rem', fontWeight: '700', marginTop: '6px' }}>
-                RECEIPT NO: {selectedReceipt.receiptNo || 'REC-2026-9901'}
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.85rem', marginBottom: '1rem' }}>
-              <div><strong>Student:</strong> {selectedReceipt.studentName}</div>
-              <div><strong>Class:</strong> {selectedReceipt.class}</div>
-              <div><strong>Payment Date:</strong> {selectedReceipt.paidDate || '2026-10-02'}</div>
-              <div><strong>Method:</strong> {selectedReceipt.paymentMethod || 'Online Transfer'}</div>
-            </div>
-
-            <div style={{ borderTop: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', padding: '0.75rem 0', margin: '1rem 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', fontSize: '0.9rem' }}>
-                <span>{selectedReceipt.feeType}</span>
-                <span>₹{selectedReceipt.amount}.00</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: '800', marginTop: '0.5rem' }}>
-              <span>Total Paid:</span>
-              <span style={{ color: '#15803d' }}>₹{selectedReceipt.amount}.00</span>
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.75rem', color: '#64748b' }}>
-              ✓ Status: PAID IN FULL • Computer Generated Digital Receipt
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1.5rem' }}>
-              <button
-                onClick={() => printReceiptPdf(selectedReceipt)}
-                className="btn-primary"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '0.65rem 1rem' }}
-              >
-                <Printer size={16} />
-                <span>Print PDF</span>
-              </button>
-              <button
-                onClick={() => downloadReceiptPdf(selectedReceipt)}
-                className="btn-secondary"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '0.65rem 1rem' }}
-              >
-                <Download size={16} />
-                <span>Download PDF</span>
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      {/* Official PDF Receipt Modal */}
+      <FeeReceiptModal
+        isOpen={!!selectedReceipt}
+        onClose={() => setSelectedReceipt(null)}
+        receipt={selectedReceipt}
+        isNewPayment={isNewPayment}
+      />
 
       {/* Fee Collection Form Modal */}
       <FeeCollectionModal

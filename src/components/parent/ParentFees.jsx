@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
 import { Modal } from '../common/Modal';
+import { FeeReceiptModal } from '../common/FeeReceiptModal';
+import {
+  downloadReceiptPdf,
+  shareReceiptPdf,
+  shareDirectToWhatsApp,
+} from '../../utils/pdfReceiptGenerator';
 import confetti from 'canvas-confetti';
 import {
   Wallet,
@@ -11,13 +17,59 @@ import {
   Download,
   Smartphone,
   ShieldCheck,
+  Share2,
+  Calendar,
+  Check,
 } from 'lucide-react';
+
+const ACADEMIC_MONTHS = [
+  { label: 'Apr', name: 'April', full: 'April 2026' },
+  { label: 'May', name: 'May', full: 'May 2026' },
+  { label: 'Jun', name: 'June', full: 'June 2026' },
+  { label: 'Jul', name: 'July', full: 'July 2026' },
+  { label: 'Aug', name: 'August', full: 'August 2026' },
+  { label: 'Sep', name: 'September', full: 'September 2026' },
+  { label: 'Oct', name: 'October', full: 'October 2026' },
+  { label: 'Nov', name: 'November', full: 'November 2026' },
+  { label: 'Dec', name: 'December', full: 'December 2026' },
+  { label: 'Jan', name: 'January', full: 'January 2027' },
+  { label: 'Feb', name: 'February', full: 'February 2027' },
+  { label: 'Mar', name: 'March', full: 'March 2027' },
+];
+
+function formatMonthsSummary(monthsList) {
+  if (!monthsList || monthsList.length === 0) return 'October 2026';
+  if (monthsList.length === 1) return monthsList[0];
+  if (monthsList.length === 12) return 'Full Academic Year (All 12 Months)';
+  const names = monthsList.map(m => m.split(' ')[0]);
+  return `${names.join(', ')} (${monthsList.length} Months)`;
+}
 
 export const ParentFees = () => {
   const { students, fees, payFee, selectedChildId } = useSchoolData();
   const [selectedFeeToPay, setSelectedFeeToPay] = useState(null);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [isNewPayment, setIsNewPayment] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('UPI');
+  const [selectedMonths, setSelectedMonths] = useState(['October 2026']);
+  const BASE_MONTHLY_RATE = 2500;
+
+  const toggleMonth = (monthFull) => {
+    setSelectedMonths(prev => {
+      let next;
+      if (prev.includes(monthFull)) {
+        if (prev.length === 1) return prev;
+        next = prev.filter(m => m !== monthFull);
+      } else {
+        next = [...prev, monthFull];
+      }
+      return ACADEMIC_MONTHS.filter(m => next.includes(m.full)).map(m => m.full);
+    });
+  };
+
+  const applyMonthPreset = (monthsArray) => {
+    setSelectedMonths(ACADEMIC_MONTHS.filter(m => monthsArray.includes(m.full)).map(m => m.full));
+  };
 
   const child = students.find(s => s.id === selectedChildId) || students[0];
   const childFees = fees.filter(f => f.studentId === child?.id);
@@ -34,26 +86,52 @@ export const ParentFees = () => {
     e.preventDefault();
     if (!selectedFeeToPay) return;
 
-    const res = payFee(selectedFeeToPay.id, paymentMethod === 'UPI' ? 'Parent UPI (anita@upi)' : 'Credit Card (**** 4242)');
-    const feeItem = selectedFeeToPay;
+    const calculatedAmount = BASE_MONTHLY_RATE * selectedMonths.length;
+    const monthsSummary = formatMonthsSummary(selectedMonths);
+
+    const feeItem = {
+      ...selectedFeeToPay,
+      amount: calculatedAmount,
+      feeMonth: monthsSummary,
+      monthlyRate: BASE_MONTHLY_RATE,
+      monthsCount: selectedMonths.length,
+      selectedMonthsList: selectedMonths,
+    };
+
+    const chosenMethod = paymentMethod === 'UPI' ? 'Parent UPI (anita@upi)' : 'Credit Card (**** 4242)';
+    const res = payFee(selectedFeeToPay.id, chosenMethod, feeItem);
     setSelectedFeeToPay(null);
 
-    try {
-      confetti({
-        particleCount: 100,
-        spread: 80,
-        origin: { y: 0.6 }
-      });
-    } catch (err) {
-      console.log('Confetti', err);
-    }
-
-    setSelectedReceipt({
+    const completeReceipt = {
       ...feeItem,
       status: 'Paid',
       receiptNo: res.receiptNo,
       paidDate: res.paidDate,
-      paymentMethod: paymentMethod === 'UPI' ? 'Parent UPI (anita@upi)' : 'Credit Card (**** 4242)',
+      paymentMethod: chosenMethod,
+      amount: calculatedAmount,
+      feeMonth: monthsSummary,
+      monthlyRate: BASE_MONTHLY_RATE,
+      monthsCount: selectedMonths.length,
+      studentName: child?.name || feeItem.studentName,
+      rollNo: child?.rollNo || feeItem.rollNo,
+      class: child?.class || feeItem.class,
+      phone: child?.phone || child?.parentContact || feeItem.phone,
+      fatherName: child?.parentName || child?.fatherName || feeItem.fatherName,
+    };
+
+    setIsNewPayment(true);
+    setSelectedReceipt(completeReceipt);
+  };
+
+  const handleOpenReceipt = (fee) => {
+    setIsNewPayment(false);
+    setSelectedReceipt({
+      ...fee,
+      studentName: child?.name || fee.studentName,
+      rollNo: child?.rollNo || fee.rollNo,
+      class: child?.class || fee.class,
+      phone: child?.phone || child?.parentContact || fee.phone,
+      fatherName: child?.parentName || child?.fatherName || fee.fatherName,
     });
   };
 
@@ -63,7 +141,7 @@ export const ParentFees = () => {
         <div>
           <h1 className="page-title">Pay Fees for {child?.name}</h1>
           <p className="page-subtitle">
-            Direct institutional fee settlement, quarterly invoices & instant downloadable receipts.
+            Direct institutional fee settlement, quarterly invoices, instant PDF receipts & WhatsApp sharing.
           </p>
         </div>
       </div>
@@ -72,20 +150,20 @@ export const ParentFees = () => {
         <div className="card-elevated" style={{ padding: '1.5rem', borderLeft: '4px solid #10b981' }}>
           <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)' }}>FEES PAID (TERM 1)</div>
           <div style={{ fontSize: '1.85rem', fontWeight: '800', color: '#15803d', marginTop: '4px' }}>
-            ₹{totalPaid.toLocaleString()}
+            ₹{totalPaid.toLocaleString('en-IN')}
           </div>
           <div style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: '700', marginTop: '4px' }}>
-            ✓ Verified Official Receipts
+            ✓ Verified Official Receipts (PDF Ready)
           </div>
         </div>
 
         <div className="card-elevated" style={{ padding: '1.5rem', borderLeft: '4px solid #ef4444' }}>
           <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)' }}>OUTSTANDING DUES</div>
           <div style={{ fontSize: '1.85rem', fontWeight: '800', color: '#b91c1c', marginTop: '4px' }}>
-            ₹{totalPending.toLocaleString()}
+            ₹{totalPending.toLocaleString('en-IN')}
           </div>
           <div style={{ fontSize: '0.78rem', color: totalPending > 0 ? '#b91c1c' : '#10b981', fontWeight: '700', marginTop: '4px' }}>
-            {totalPending > 0 ? 'Due by October 15, 2026' : 'All Clear'}
+            {totalPending > 0 ? 'Due by October 15, 2026' : 'All Clear • No Dues Pending'}
           </div>
         </div>
       </div>
@@ -94,7 +172,7 @@ export const ParentFees = () => {
       <div className="table-container">
         <div className="table-toolbar">
           <div style={{ fontWeight: '800', fontSize: '1.05rem' }}>Fee Schedule for {child?.name}</div>
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Class: {child?.class}</div>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Class: {child?.class} • Roll #{child?.rollNo}</div>
         </div>
 
         <div style={{ overflowX: 'auto' }}>
@@ -110,59 +188,95 @@ export const ParentFees = () => {
               </tr>
             </thead>
             <tbody>
-              {childFees.map((fee) => (
-                <tr key={fee.id}>
-                  <td>
-                    <div style={{ fontWeight: '700' }}>{fee.feeType}</div>
-                  </td>
-                  <td>
-                    <span style={{ fontSize: '1.1rem', fontWeight: '800' }}>₹{fee.amount}</span>
-                  </td>
-                  <td>
-                    <span style={{ color: fee.status === 'Pending' ? '#b91c1c' : 'var(--text-muted)', fontWeight: '600' }}>
-                      {fee.dueDate}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge-status ${fee.status === 'Paid' ? 'badge-paid' : 'badge-pending'}`}>
-                      {fee.status}
-                    </span>
-                  </td>
-                  <td>
-                    {fee.receiptNo ? (
-                      <div>
-                        <span style={{ fontFamily: 'monospace', fontSize: '0.8rem', fontWeight: '700', color: 'var(--primary)' }}>
-                          {fee.receiptNo}
-                        </span>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{fee.paymentMethod}</div>
-                      </div>
-                    ) : (
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Unpaid</span>
-                    )}
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    {fee.status === 'Pending' ? (
-                      <button
-                        onClick={() => setSelectedFeeToPay(fee)}
-                        className="btn-primary"
-                        style={{ padding: '6px 14px', fontSize: '0.82rem' }}
-                      >
-                        <CreditCard size={14} />
-                        <span>Pay Online</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setSelectedReceipt(fee)}
-                        className="btn-secondary"
-                        style={{ padding: '6px 14px', fontSize: '0.82rem' }}
-                      >
-                        <Receipt size={14} />
-                        <span>Receipt</span>
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {childFees.map((fee) => {
+                const isPaid = fee.status === 'Paid';
+                const formattedFee = {
+                  ...fee,
+                  studentName: child?.name || fee.studentName,
+                  rollNo: child?.rollNo || fee.rollNo,
+                  class: child?.class || fee.class,
+                  phone: child?.phone || child?.parentContact || fee.phone,
+                  fatherName: child?.parentName || child?.fatherName || fee.fatherName,
+                };
+
+                return (
+                  <tr key={fee.id}>
+                    <td>
+                      <div style={{ fontWeight: '700' }}>{fee.feeType}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{fee.feeMonth || 'Academic Year 2026-27'}</div>
+                    </td>
+                    <td>
+                      <span style={{ fontSize: '1.1rem', fontWeight: '800' }}>₹{Number(fee.amount || 0).toLocaleString('en-IN')}</span>
+                    </td>
+                    <td>
+                      <span style={{ color: fee.status === 'Pending' ? '#b91c1c' : 'var(--text-muted)', fontWeight: '600' }}>
+                        {fee.dueDate}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge-status ${isPaid ? 'badge-paid' : 'badge-pending'}`}>
+                        {fee.status}
+                      </span>
+                    </td>
+                    <td>
+                      {fee.receiptNo ? (
+                        <div>
+                          <span style={{ fontFamily: 'monospace', fontSize: '0.8rem', fontWeight: '700', color: 'var(--primary)' }}>
+                            {fee.receiptNo}
+                          </span>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{fee.paymentMethod}</div>
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Unpaid</span>
+                      )}
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      {isPaid ? (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenReceipt(fee)}
+                            className="btn-secondary"
+                            style={{ padding: '6px 12px', fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                            title="View Official Receipt"
+                          >
+                            <Receipt size={14} />
+                            <span>Receipt (PDF)</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => downloadReceiptPdf(formattedFee)}
+                            className="icon-btn"
+                            style={{ width: '32px', height: '32px', borderRadius: '8px' }}
+                            title="Direct Download PDF"
+                          >
+                            <Download size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => shareReceiptPdf(formattedFee)}
+                            className="icon-btn"
+                            style={{ width: '32px', height: '32px', borderRadius: '8px' }}
+                            title="Share PDF Receipt"
+                          >
+                            <Share2 size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedFeeToPay(fee)}
+                          className="btn-primary"
+                          style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+                        >
+                          <CreditCard size={14} />
+                          <span>Pay Online</span>
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -175,9 +289,9 @@ export const ParentFees = () => {
           onClose={() => setSelectedFeeToPay(null)}
           title={`Pay Tuition Fee for ${child?.name}`}
         >
-          <form onSubmit={handlePay} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <form onSubmit={handlePay} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
             <div style={{
-              padding: '1.25rem',
+              padding: '1.15rem',
               background: 'var(--primary-light)',
               borderRadius: 'var(--radius-lg)',
               border: '1px solid var(--primary)'
@@ -186,10 +300,160 @@ export const ParentFees = () => {
               <div style={{ fontSize: '1.15rem', fontWeight: '800', marginTop: '2px' }}>
                 {child?.name} ({child?.class}) — {selectedFeeToPay.feeType}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(79, 70, 229, 0.2)' }}>
-                <span style={{ fontWeight: '700' }}>Amount:</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.65rem', paddingTop: '0.65rem', borderTop: '1px solid rgba(79, 70, 229, 0.2)' }}>
+                <span style={{ fontWeight: '700' }}>Calculated Total:</span>
                 <span style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--primary)' }}>
-                  ₹{selectedFeeToPay.amount}.00
+                  ₹{(BASE_MONTHLY_RATE * selectedMonths.length).toLocaleString('en-IN')}.00
+                </span>
+              </div>
+            </div>
+
+            {/* Interactive Multi-Month Selector with Multiplier */}
+            <div style={{
+              padding: '0.85rem',
+              background: 'var(--bg-input)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.6rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: '800', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Calendar size={14} style={{ color: 'var(--primary)' }} />
+                  <span>Select Fee Months to Pay:</span>
+                </label>
+                <span style={{
+                  fontSize: '0.75rem',
+                  fontWeight: '800',
+                  color: 'white',
+                  background: 'var(--primary)',
+                  padding: '2px 8px',
+                  borderRadius: '12px'
+                }}>
+                  {selectedMonths.length} {selectedMonths.length === 1 ? 'Month' : 'Months'} Selected (×{selectedMonths.length})
+                </span>
+              </div>
+
+              {/* Quick Presets */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => applyMonthPreset(['October 2026'])}
+                  style={{
+                    fontSize: '0.7rem',
+                    padding: '3px 7px',
+                    borderRadius: '4px',
+                    background: selectedMonths.length === 1 ? 'var(--primary-light)' : 'var(--bg-card)',
+                    border: '1px solid var(--border)',
+                    color: selectedMonths.length === 1 ? 'var(--primary)' : 'var(--text-secondary)',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  1 Mo (₹{(BASE_MONTHLY_RATE * 1).toLocaleString('en-IN')})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyMonthPreset(['October 2026', 'November 2026', 'December 2026'])}
+                  style={{
+                    fontSize: '0.7rem',
+                    padding: '3px 7px',
+                    borderRadius: '4px',
+                    background: selectedMonths.length === 3 ? 'var(--primary-light)' : 'var(--bg-card)',
+                    border: '1px solid var(--border)',
+                    color: selectedMonths.length === 3 ? 'var(--primary)' : 'var(--text-secondary)',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  3 Mos (₹{(BASE_MONTHLY_RATE * 3).toLocaleString('en-IN')})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyMonthPreset(['October 2026', 'November 2026', 'December 2026', 'January 2027', 'February 2027', 'March 2027'])}
+                  style={{
+                    fontSize: '0.7rem',
+                    padding: '3px 7px',
+                    borderRadius: '4px',
+                    background: selectedMonths.length === 6 ? 'var(--primary-light)' : 'var(--bg-card)',
+                    border: '1px solid var(--border)',
+                    color: selectedMonths.length === 6 ? 'var(--primary)' : 'var(--text-secondary)',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  6 Mos (₹{(BASE_MONTHLY_RATE * 6).toLocaleString('en-IN')})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyMonthPreset(ACADEMIC_MONTHS.map(m => m.full))}
+                  style={{
+                    fontSize: '0.7rem',
+                    padding: '3px 7px',
+                    borderRadius: '4px',
+                    background: selectedMonths.length === 12 ? 'var(--primary)' : 'var(--bg-card)',
+                    border: '1px solid var(--border)',
+                    color: selectedMonths.length === 12 ? '#ffffff' : 'var(--text-secondary)',
+                    fontWeight: '800',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Full Year (₹{(BASE_MONTHLY_RATE * 12).toLocaleString('en-IN')})
+                </button>
+              </div>
+
+              {/* 12-Month Grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(6, 1fr)',
+                gap: '4px',
+              }}>
+                {ACADEMIC_MONTHS.map((m) => {
+                  const isSelected = selectedMonths.includes(m.full);
+                  return (
+                    <button
+                      key={m.label}
+                      type="button"
+                      onClick={() => toggleMonth(m.full)}
+                      style={{
+                        padding: '5px 2px',
+                        fontSize: '0.74rem',
+                        fontWeight: isSelected ? '800' : '600',
+                        borderRadius: '5px',
+                        border: isSelected ? '1.5px solid var(--primary)' : '1px solid var(--border)',
+                        background: isSelected ? 'var(--primary)' : 'var(--bg-card)',
+                        color: isSelected ? '#ffffff' : 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '2px',
+                      }}
+                    >
+                      {isSelected && <Check size={10} style={{ strokeWidth: 3 }} />}
+                      <span>{m.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Real-time Math Badge */}
+              <div style={{
+                padding: '0.45rem 0.65rem',
+                background: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: '6px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '0.78rem',
+              }}>
+                <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>
+                  🧮 ₹{BASE_MONTHLY_RATE.toLocaleString('en-IN')} / mo × <strong style={{ color: 'var(--primary)' }}>{selectedMonths.length} Months</strong>
+                </span>
+                <span style={{ fontWeight: '800', color: '#10b981', fontSize: '0.9rem' }}>
+                  = ₹{(BASE_MONTHLY_RATE * selectedMonths.length).toLocaleString('en-IN')}.00
                 </span>
               </div>
             </div>
@@ -202,7 +466,7 @@ export const ParentFees = () => {
                 <div
                   onClick={() => setPaymentMethod('UPI')}
                   style={{
-                    padding: '1rem',
+                    padding: '0.85rem',
                     borderRadius: 'var(--radius-md)',
                     border: paymentMethod === 'UPI' ? '2px solid var(--primary)' : '1px solid var(--border)',
                     background: paymentMethod === 'UPI' ? 'var(--bg-input)' : 'transparent',
@@ -210,15 +474,15 @@ export const ParentFees = () => {
                     textAlign: 'center',
                   }}
                 >
-                  <Smartphone size={22} color="var(--primary)" style={{ margin: '0 auto 4px auto' }} />
-                  <div style={{ fontWeight: '700', fontSize: '0.88rem' }}>UPI / Google Pay</div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>0% Surcharge</div>
+                  <Smartphone size={20} color="var(--primary)" style={{ margin: '0 auto 4px auto' }} />
+                  <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>UPI / Google Pay</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>0% Surcharge • Instant Receipt</div>
                 </div>
 
                 <div
                   onClick={() => setPaymentMethod('CARD')}
                   style={{
-                    padding: '1rem',
+                    padding: '0.85rem',
                     borderRadius: 'var(--radius-md)',
                     border: paymentMethod === 'CARD' ? '2px solid var(--primary)' : '1px solid var(--border)',
                     background: paymentMethod === 'CARD' ? 'var(--bg-input)' : 'transparent',
@@ -226,73 +490,37 @@ export const ParentFees = () => {
                     textAlign: 'center',
                   }}
                 >
-                  <CreditCard size={22} color="var(--primary)" style={{ margin: '0 auto 4px auto' }} />
-                  <div style={{ fontWeight: '700', fontSize: '0.88rem' }}>Credit / Debit Card</div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Instant Clearance</div>
+                  <CreditCard size={20} color="var(--primary)" style={{ margin: '0 auto 4px auto' }} />
+                  <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>Credit / Debit Card</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Instant Clearance</div>
                 </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.76rem', color: '#15803d' }}>
+              <ShieldCheck size={15} />
+              <span>256-Bit SSL Encrypted Simulated Bank Gateway • Generates Tax-Deductible Receipt</span>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.25rem' }}>
               <button type="button" onClick={() => setSelectedFeeToPay(null)} className="btn-secondary">
                 Cancel
               </button>
-              <button type="submit" className="btn-primary" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
-                <span>Authorize & Pay ₹{selectedFeeToPay.amount}.00</span>
+              <button type="submit" className="btn-primary" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', padding: '0.65rem 1.25rem' }}>
+                <span>Authorize & Pay ₹{(BASE_MONTHLY_RATE * selectedMonths.length).toLocaleString('en-IN')}.00</span>
               </button>
             </div>
           </form>
         </Modal>
       )}
 
-      {/* Receipt Modal */}
-      {selectedReceipt && (
-        <Modal
-          isOpen={!!selectedReceipt}
-          onClose={() => setSelectedReceipt(null)}
-          title="Digital Fee Payment Receipt"
-        >
-          <div className="receipt-sheet">
-            <div style={{ textAlign: 'center', borderBottom: '2px dashed #000', paddingBottom: '1rem', marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>ST. XAVIER ACADEMY</h2>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>450 University Blvd • School Code: SXA-1029</div>
-              <div style={{ fontSize: '0.85rem', fontWeight: '800', color: '#4f46e5', marginTop: '6px' }}>
-                RECEIPT NO: {selectedReceipt.receiptNo}
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.85rem', marginBottom: '1rem' }}>
-              <div><strong>Student:</strong> {child?.name}</div>
-              <div><strong>Class:</strong> {child?.class}</div>
-              <div><strong>Date:</strong> {selectedReceipt.paidDate}</div>
-              <div><strong>Mode:</strong> {selectedReceipt.paymentMethod}</div>
-            </div>
-
-            <div style={{ borderTop: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', padding: '0.75rem 0', margin: '1rem 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', fontSize: '0.9rem' }}>
-                <span>{selectedReceipt.feeType}</span>
-                <span>₹{selectedReceipt.amount}.00</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.15rem', fontWeight: '800' }}>
-              <span>Total Settled:</span>
-              <span style={{ color: '#15803d' }}>₹{selectedReceipt.amount}.00</span>
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.75rem', color: '#15803d', fontWeight: '700' }}>
-              ✓ Status: PAID IN FULL • Computer Generated Digital Receipt
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5rem' }}>
-              <button onClick={() => window.print()} className="btn-primary">
-                <Download size={15} />
-                <span>Print Official Receipt</span>
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      {/* Official Reusable PDF Receipt Modal with Download & Share */}
+      <FeeReceiptModal
+        isOpen={!!selectedReceipt}
+        onClose={() => setSelectedReceipt(null)}
+        receipt={selectedReceipt}
+        isNewPayment={isNewPayment}
+      />
     </div>
   );
 };

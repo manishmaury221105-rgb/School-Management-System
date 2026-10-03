@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
+import { useAuth } from '../../context/AuthContext';
+import { ROLES } from '../../data/mockData';
+import { TeacherProfile } from '../teacher/TeacherProfile';
 import { Modal } from '../common/Modal';
 import {
   UserCheck,
@@ -17,7 +20,14 @@ import {
 } from 'lucide-react';
 
 export const TeacherManagement = () => {
+  const { currentUser } = useAuth();
   const { teachers, addTeacher, updateTeacher, deleteTeacher, classes } = useSchoolData();
+
+  // Strict Privacy Guard: If a logged-in teacher somehow renders this component, immediately route to their personal isolated profile
+  if (currentUser?.role === ROLES.TEACHER) {
+    return <TeacherProfile />;
+  }
+
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

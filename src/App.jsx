@@ -27,6 +27,7 @@ import { SchoolSettings } from './components/admin/SchoolSettings';
 
 // Teacher Components
 import { TeacherDashboard } from './components/teacher/TeacherDashboard';
+import { TeacherProfile } from './components/teacher/TeacherProfile';
 import { AttendanceMarker } from './components/teacher/AttendanceMarker';
 import { HomeworkManager } from './components/teacher/HomeworkManager';
 import { GradebookManager } from './components/teacher/GradebookManager';
@@ -105,6 +106,10 @@ export const App = () => {
         switch (activeTab) {
           case 'dashboard':
             return <TeacherDashboard setActiveTab={setActiveTab} />;
+          case 'profile':
+          case 'teachers':
+          case 'faculty':
+            return <TeacherProfile />;
           case 'students':
             return <StudentManagement setActiveTab={setActiveTab} />;
           case 'parents':

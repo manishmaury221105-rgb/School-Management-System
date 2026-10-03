@@ -205,5 +205,56 @@ export const INITIAL_EXAMS_AND_RESULTS = {
   results: {},
 };
 export const INITIAL_FEES = [];
-export const INITIAL_NOTICES = [];
+export const INITIAL_NOTICES = [
+  {
+    id: 'not-101',
+    title: 'Half-Yearly Examination Schedule & Admit Card Distribution',
+    category: 'Exams',
+    priority: 'Urgent',
+    target: 'ALL',
+    date: '2026-10-02',
+    author: 'Principal Office',
+    content: 'The Term 1 Half-Yearly examinations commence from October 20, 2026. Digital admit cards and subject-wise syllabus guidelines are now accessible in the student portal.',
+  },
+  {
+    id: 'not-102',
+    title: 'Mandatory Faculty Academic & Curriculum Review Meeting',
+    category: 'Academic',
+    priority: 'High',
+    target: 'TEACHER',
+    date: '2026-10-01',
+    author: 'Dr. Alok Verma (Academic Director)',
+    content: 'All faculty members are requested to attend the quarterly syllabus review and modern AI evaluation session this Friday at 03:30 PM in Conference Hall A.',
+  },
+  {
+    id: 'not-103',
+    title: 'Inter-School Science, Robotics & AI Innovators Expo 2026',
+    category: 'General',
+    priority: 'Normal',
+    target: 'STUDENT',
+    date: '2026-09-28',
+    author: 'Science Department (Mr. Rajesh Sen)',
+    content: 'Students from Classes 8 through 12 are invited to register working science models, IoT devices, and robotics projects. Submit project synopsis by October 10.',
+  },
+  {
+    id: 'not-104',
+    title: 'Parent-Teacher Conference (PTM) & Gradebook Consultation',
+    category: 'PTM',
+    priority: 'High',
+    target: 'ALL',
+    date: '2026-09-25',
+    author: 'Dean of Student Affairs',
+    content: 'The mid-term Parent-Teacher Consultation will be conducted on Saturday, October 18, 2026, from 09:00 AM to 01:30 PM. One-on-one progress discussions will be held.',
+  },
+  {
+    id: 'not-105',
+    title: 'Annual Sports Day Track & Field Trials',
+    category: 'Sports',
+    priority: 'Normal',
+    target: 'STUDENT',
+    date: '2026-09-22',
+    author: 'Physical Education Dept',
+    content: 'House-wise selections for 100m, 400m relay, high jump and football tournament will take place on the school sports arena every afternoon from 04:00 PM.',
+  },
+];
 export const INITIAL_LEAVE_REQUESTS = [];

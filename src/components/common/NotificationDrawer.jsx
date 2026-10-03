@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
-import { Bell, Check, X, CreditCard, Calendar, Award, BookOpen } from 'lucide-react';
+import { Bell, BellRing, Check, X, CreditCard, Calendar, Award, BookOpen } from 'lucide-react';
 
 export const NotificationDrawer = ({ isOpen, onClose }) => {
   const { notifications, markNotificationRead } = useSchoolData();
@@ -15,6 +15,8 @@ export const NotificationDrawer = ({ isOpen, onClose }) => {
         return <Award size={18} color="#4f46e5" />;
       case 'ATTENDANCE':
         return <Calendar size={18} color="#10b981" />;
+      case 'NOTICE':
+        return <BellRing size={18} color="#8b5cf6" />;
       default:
         return <Bell size={18} color="var(--primary)" />;
     }

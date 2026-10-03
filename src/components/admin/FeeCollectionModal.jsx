@@ -66,6 +66,7 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
 
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [selectedMonths, setSelectedMonths] = useState(['October 2026']);
+  const [monthlyRate, setMonthlyRate] = useState(2500);
   const [formData, setFormData] = useState({
     studentName: '',
     rollNo: '',
@@ -74,7 +75,7 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
     studentId: '',
     phone: '',
     feeMonth: 'October 2026',
-    amount: '25000',
+    amount: '2500',
     feeType: 'Tuition Fee',
     paymentMethod: 'Cash Counter',
     paymentDate: new Date().toISOString().split('T')[0],
@@ -122,9 +123,12 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
   };
 
   useEffect(() => {
+    const baseRate = 2500;
+    setMonthlyRate(baseRate);
     if (initialStudent) {
       setSelectedStudentId(initialStudent.id || '');
-      setSelectedMonths(['October 2026']);
+      const initialMonths = ['October 2026'];
+      setSelectedMonths(initialMonths);
       setMatchedStudentInfo(initialStudent);
       setFormData({
         studentName: initialStudent.name || '',
@@ -134,7 +138,7 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
         studentId: initialStudent.studentId || '',
         phone: initialStudent.phone || initialStudent.parentContact || '',
         feeMonth: 'October 2026',
-        amount: '25000',
+        amount: String(baseRate * initialMonths.length),
         feeType: 'Tuition Fee',
         paymentMethod: 'Cash Counter',
         paymentDate: new Date().toISOString().split('T')[0],
@@ -142,7 +146,8 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
       });
     } else {
       setSelectedStudentId('');
-      setSelectedMonths(['October 2026']);
+      const initialMonths = ['October 2026'];
+      setSelectedMonths(initialMonths);
       setMatchedStudentInfo(null);
       setFormData({
         studentName: '',
@@ -152,7 +157,7 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
         studentId: '',
         phone: '',
         feeMonth: 'October 2026',
-        amount: '25000',
+        amount: String(baseRate * initialMonths.length),
         feeType: 'Tuition Fee',
         paymentMethod: 'Cash Counter',
         paymentDate: new Date().toISOString().split('T')[0],
@@ -220,7 +225,17 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
     });
   };
 
-  // Multi-Month Selection Toggle
+  // Change monthly rate & recalculate total
+  const handleMonthlyRateChange = (newRate) => {
+    const rateNum = Math.max(0, Number(newRate) || 0);
+    setMonthlyRate(rateNum);
+    setFormData(f => ({
+      ...f,
+      amount: String(rateNum * selectedMonths.length),
+    }));
+  };
+
+  // Multi-Month Selection Toggle with Automatic Multiplication
   const toggleMonth = (monthFull) => {
     setSelectedMonths(prev => {
       let next;
@@ -233,9 +248,25 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
       // Keep sorted by academic order
       const sorted = ACADEMIC_MONTHS.filter(m => next.includes(m.full)).map(m => m.full);
       const summary = formatMonthsSummary(sorted);
-      setFormData(f => ({ ...f, feeMonth: summary }));
+      setFormData(f => ({
+        ...f,
+        feeMonth: summary,
+        amount: String(monthlyRate * sorted.length),
+      }));
       return sorted;
     });
+  };
+
+  // Quick Preset Selection (Multiplies automatically by month count)
+  const applyMonthPreset = (monthsArray) => {
+    const sorted = ACADEMIC_MONTHS.filter(m => monthsArray.includes(m.full)).map(m => m.full);
+    setSelectedMonths(sorted);
+    const summary = formatMonthsSummary(sorted);
+    setFormData(f => ({
+      ...f,
+      feeMonth: summary,
+      amount: String(monthlyRate * sorted.length),
+    }));
   };
 
   const handlePrintPdf = () => {
@@ -248,21 +279,25 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
     downloadReceiptPdf({ ...generatedReceipt, phone: generatedReceipt.phone || formData.phone });
   };
 
-  const handleShareAndClose = () => {
-    // Directly open WhatsApp on the student's phone number with official receipt and close
-    if (generatedReceipt) {
-      shareDirectToWhatsApp({
-        ...generatedReceipt,
-        phone: generatedReceipt.phone || formData.phone,
-        feeMonth: generatedReceipt.feeMonth || formData.feeMonth,
-      });
-    }
-    handleClose();
+  const handleSharePdfFile = () => {
+    if (!generatedReceipt) return;
+    shareReceiptPdf({ ...generatedReceipt, phone: generatedReceipt.phone || formData.phone });
+  };
+
+  const handleWhatsAppShare = () => {
+    if (!generatedReceipt) return;
+    shareDirectToWhatsApp({
+      ...generatedReceipt,
+      phone: generatedReceipt.phone || formData.phone,
+      feeMonth: generatedReceipt.feeMonth || formData.feeMonth,
+    });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.studentName || !formData.amount) return;
+
+    const totalCalculated = Number(formData.amount) || (monthlyRate * selectedMonths.length);
 
     const record = collectFee({
       studentName: formData.studentName,
@@ -272,7 +307,10 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
       studentId: formData.studentId,
       phone: formData.phone,
       feeMonth: formData.feeMonth,
-      amount: Number(formData.amount),
+      monthlyRate: Number(monthlyRate) || 2500,
+      monthsCount: selectedMonths.length,
+      selectedMonthsList: selectedMonths,
+      amount: totalCalculated,
       feeType: formData.feeType,
       paymentMethod: formData.paymentMethod,
       dueDate: formData.paymentDate,
@@ -393,8 +431,65 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
             </div>
           </div>
 
-          {/* Action Buttons: Print PDF, Download PDF, and Share & Close */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: '0.65rem', marginTop: '0.5rem' }}>
+          {/* Action Buttons: Download PDF, Share PDF, WhatsApp, and Print PDF */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.65rem', marginTop: '0.5rem' }}>
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              className="btn-primary"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '0.7rem 0.85rem',
+                fontWeight: '800',
+                background: 'linear-gradient(135deg, #4f46e5, #4338ca)',
+              }}
+            >
+              <Download size={16} />
+              <span>Download PDF</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSharePdfFile}
+              className="btn-primary"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '0.7rem 0.85rem',
+                fontWeight: '800',
+                background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+              }}
+            >
+              <Share2 size={16} />
+              <span>Share PDF</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleWhatsAppShare}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '0.7rem 0.85rem',
+                fontWeight: '800',
+                background: 'linear-gradient(135deg, #25D366, #128C7E)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 'var(--radius-md)',
+                cursor: 'pointer',
+              }}
+            >
+              <WhatsAppIcon size={16} />
+              <span>WhatsApp</span>
+            </button>
+
             <button
               type="button"
               onClick={handlePrintPdf}
@@ -404,46 +499,23 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '6px',
-                padding: '0.65rem 0.75rem',
+                padding: '0.7rem 0.85rem',
                 fontWeight: '700',
               }}
             >
               <Printer size={16} />
-              <span>Print PDF</span>
+              <span>Print</span>
             </button>
+          </div>
 
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
             <button
               type="button"
-              onClick={handleDownloadPdf}
+              onClick={handleClose}
               className="btn-secondary"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                padding: '0.65rem 0.75rem',
-                fontWeight: '700',
-              }}
+              style={{ padding: '0.6rem 1.5rem', fontWeight: '700' }}
             >
-              <Download size={16} />
-              <span>Download PDF</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleShareAndClose}
-              className="btn-primary"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                padding: '0.65rem 0.75rem',
-                fontWeight: '700',
-              }}
-            >
-              <Share2 size={16} />
-              <span>Share & Close</span>
+              Done / Close
             </button>
           </div>
         </div>
@@ -546,7 +618,7 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
 
           {/* Multi-Select Fee Month / Period */}
           <div style={{
-            padding: '0.85rem',
+            padding: '0.9rem',
             background: 'var(--bg-input)',
             borderRadius: 'var(--radius-md)',
             border: '1px solid var(--border)',
@@ -559,16 +631,134 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
                 <Calendar size={14} style={{ color: 'var(--primary)' }} />
                 <span>Select Fee Months (Multi-Select):</span>
               </label>
-              <span style={{
-                fontSize: '0.75rem',
-                fontWeight: '800',
-                color: 'white',
-                background: 'var(--primary)',
-                padding: '2px 8px',
-                borderRadius: '12px'
-              }}>
-                {selectedMonths.length} {selectedMonths.length === 1 ? 'Month' : 'Months'} Selected
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{
+                  fontSize: '0.75rem',
+                  fontWeight: '800',
+                  color: 'white',
+                  background: 'var(--primary)',
+                  padding: '2px 9px',
+                  borderRadius: '12px'
+                }}>
+                  {selectedMonths.length} {selectedMonths.length === 1 ? 'Month' : 'Months'} Selected (×{selectedMonths.length})
+                </span>
+              </div>
+            </div>
+
+            {/* Quick Month Presets */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+              <button
+                type="button"
+                onClick={() => applyMonthPreset(['October 2026'])}
+                style={{
+                  fontSize: '0.7rem',
+                  padding: '3px 7px',
+                  borderRadius: '4px',
+                  background: selectedMonths.length === 1 ? 'var(--primary-light)' : 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  color: selectedMonths.length === 1 ? 'var(--primary)' : 'var(--text-secondary)',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                1 Month
+              </button>
+              <button
+                type="button"
+                onClick={() => applyMonthPreset(['April 2026', 'May 2026', 'June 2026'])}
+                style={{
+                  fontSize: '0.7rem',
+                  padding: '3px 7px',
+                  borderRadius: '4px',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-secondary)',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                Q1 (Apr-Jun)
+              </button>
+              <button
+                type="button"
+                onClick={() => applyMonthPreset(['July 2026', 'August 2026', 'September 2026'])}
+                style={{
+                  fontSize: '0.7rem',
+                  padding: '3px 7px',
+                  borderRadius: '4px',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-secondary)',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                Q2 (Jul-Sep)
+              </button>
+              <button
+                type="button"
+                onClick={() => applyMonthPreset(['October 2026', 'November 2026', 'December 2026'])}
+                style={{
+                  fontSize: '0.7rem',
+                  padding: '3px 7px',
+                  borderRadius: '4px',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-secondary)',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                Q3 (Oct-Dec)
+              </button>
+              <button
+                type="button"
+                onClick={() => applyMonthPreset(['January 2027', 'February 2027', 'March 2027'])}
+                style={{
+                  fontSize: '0.7rem',
+                  padding: '3px 7px',
+                  borderRadius: '4px',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-secondary)',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                Q4 (Jan-Mar)
+              </button>
+              <button
+                type="button"
+                onClick={() => applyMonthPreset(['April 2026', 'May 2026', 'June 2026', 'July 2026', 'August 2026', 'September 2026'])}
+                style={{
+                  fontSize: '0.7rem',
+                  padding: '3px 7px',
+                  borderRadius: '4px',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-secondary)',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                6 Mos (Half-Year)
+              </button>
+              <button
+                type="button"
+                onClick={() => applyMonthPreset(ACADEMIC_MONTHS.map(m => m.full))}
+                style={{
+                  fontSize: '0.7rem',
+                  padding: '3px 7px',
+                  borderRadius: '4px',
+                  background: selectedMonths.length === 12 ? 'var(--primary)' : 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  color: selectedMonths.length === 12 ? '#ffffff' : 'var(--text-secondary)',
+                  fontWeight: '800',
+                  cursor: 'pointer'
+                }}
+              >
+                All 12 Months (Full Year)
+              </button>
             </div>
 
             {/* 12-Month Multi-Select Interactive Grid */}
@@ -608,17 +798,38 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
               })}
             </div>
 
+            {/* Dynamic Real-Time Multiplier Breakdown Pill */}
+            <div style={{
+              padding: '0.55rem 0.75rem',
+              background: 'rgba(16, 185, 129, 0.08)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              borderRadius: '6px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '4px',
+              fontSize: '0.78rem',
+            }}>
+              <div style={{ color: 'var(--text-primary)', fontWeight: '600' }}>
+                🧮 <strong>Auto-Multiply Calculation:</strong> ₹{monthlyRate.toLocaleString('en-IN')} / mo × <span style={{ color: 'var(--primary)', fontWeight: '800' }}>{selectedMonths.length} Month{selectedMonths.length > 1 ? 's' : ''}</span>
+              </div>
+              <div style={{ fontWeight: '800', color: '#10b981', fontSize: '0.92rem' }}>
+                = ₹{(monthlyRate * selectedMonths.length).toLocaleString('en-IN')}.00
+              </div>
+            </div>
+
             {/* Selected Months Summary Text */}
-            <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
-              Selected Period: <strong style={{ color: 'var(--primary)' }}>{formData.feeMonth}</strong>
+            <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
+              Period: <strong style={{ color: 'var(--primary)' }}>{formData.feeMonth}</strong>
             </div>
           </div>
 
-          {/* Fee Category & Amount */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '1rem' }}>
+          {/* Fee Category, Monthly Rate & Total Amount */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 0.9fr 1.1fr', gap: '0.75rem' }}>
             <div>
               <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-                Fee Category / Head
+                Fee Category
               </label>
               <select
                 value={formData.feeType}
@@ -635,16 +846,31 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
             </div>
             <div>
               <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-                Amount (₹) *
+                Rate (₹/Month)
+              </label>
+              <input
+                type="number"
+                min="0"
+                placeholder="2500"
+                value={monthlyRate}
+                onChange={(e) => handleMonthlyRateChange(e.target.value)}
+                style={{ width: '100%', fontWeight: '700' }}
+                title="Base monthly tuition fee"
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Total Amount (₹) *
               </label>
               <input
                 type="number"
                 required
                 min="0"
-                placeholder="25000"
+                placeholder="2500"
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                style={{ width: '100%', fontWeight: '800', color: '#10b981' }}
+                style={{ width: '100%', fontWeight: '800', color: '#10b981', fontSize: '1rem' }}
+                title="Total payable (Monthly Rate × Selected Months)"
               />
             </div>
           </div>

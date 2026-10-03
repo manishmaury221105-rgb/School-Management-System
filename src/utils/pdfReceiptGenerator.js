@@ -31,6 +31,18 @@ export function createReceiptPdfDoc(receipt) {
     format: 'a4',
   });
 
+  const studentName = receipt.studentName || receipt.name || 'Student';
+  const rollNo = receipt.rollNo || 'N/A';
+  const className = receipt.class || 'Class 10-A';
+  const fatherName = receipt.fatherName || receipt.parentName || 'Guardian';
+  const phone = receipt.phone || receipt.parentContact || 'Available on file';
+  const feeType = receipt.feeType || 'Tuition Fee';
+  const feeMonth = receipt.feeMonth || 'Academic Year 2026-27';
+  const receiptNo = receipt.receiptNo || 'REC-2026-0001';
+  const paidDate = receipt.paidDate || new Date().toISOString().split('T')[0];
+  const paymentMethod = receipt.paymentMethod || 'Online Payment';
+  const amount = Number(receipt.amount || 25000);
+
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 14;
@@ -44,7 +56,7 @@ export function createReceiptPdfDoc(receipt) {
   // Top Header Banner
   doc.setFillColor(79, 70, 229);
   doc.roundedRect(margin, margin, contentWidth, 26, 4, 4, 'F');
-  // Fill the bottom corners to make it square at the bottom
+  // Fill bottom corners of header
   doc.rect(margin, margin + 18, contentWidth, 8, 'F');
 
   // School Header Text (White)
@@ -80,7 +92,7 @@ export function createReceiptPdfDoc(receipt) {
   doc.text('RECEIPT NO:', margin + 6, y);
   doc.setTextColor(79, 70, 229);
   doc.setFont('helvetica', 'bold');
-  doc.text(receipt.receiptNo || 'REC-2026-0001', margin + 34, y);
+  doc.text(receiptNo, margin + 34, y);
 
   doc.setTextColor(107, 114, 128);
   doc.text('ACADEMIC YEAR:', margin + 6, y + 6);
@@ -89,12 +101,12 @@ export function createReceiptPdfDoc(receipt) {
 
   // Right Meta
   doc.setTextColor(107, 114, 128);
-  doc.text('PAYMENT DATE:', pageWidth - margin - 52, y);
+  doc.text('PAYMENT DATE:', pageWidth - margin - 56, y);
   doc.setTextColor(31, 41, 55);
-  doc.text(receipt.paidDate || new Date().toISOString().split('T')[0], pageWidth - margin - 22, y);
+  doc.text(paidDate, pageWidth - margin - 22, y);
 
   doc.setTextColor(107, 114, 128);
-  doc.text('PAYMENT STATUS:', pageWidth - margin - 52, y + 6);
+  doc.text('PAYMENT STATUS:', pageWidth - margin - 56, y + 6);
   doc.setTextColor(16, 185, 129); // Green
   doc.setFont('helvetica', 'bold');
   doc.text('PAID (VERIFIED)', pageWidth - margin - 22, y + 6);
@@ -124,36 +136,36 @@ export function createReceiptPdfDoc(receipt) {
   doc.setTextColor(107, 114, 128);
   doc.text('Student Name:', col1, infoY);
   doc.setTextColor(17, 24, 39);
-  doc.text(receipt.studentName || 'N/A', col1 + 26, infoY);
+  doc.text(studentName, col1 + 26, infoY);
 
   doc.setTextColor(107, 114, 128);
   doc.text('Roll Number:', col2, infoY);
   doc.setTextColor(17, 24, 39);
-  doc.text(String(receipt.rollNo || 'N/A'), col2 + 24, infoY);
+  doc.text(String(rollNo), col2 + 24, infoY);
 
   // Row 2
   infoY += 7;
   doc.setTextColor(107, 114, 128);
   doc.text('Class & Section:', col1, infoY);
   doc.setTextColor(17, 24, 39);
-  doc.text(receipt.class || 'Class 10-A', col1 + 26, infoY);
+  doc.text(className, col1 + 26, infoY);
 
   doc.setTextColor(107, 114, 128);
   doc.text('Father / Guardian:', col2, infoY);
   doc.setTextColor(17, 24, 39);
-  doc.text(receipt.fatherName || 'Guardian', col2 + 28, infoY);
+  doc.text(fatherName, col2 + 28, infoY);
 
   // Row 3
   infoY += 7;
   doc.setTextColor(107, 114, 128);
   doc.text('WhatsApp / Phone:', col1, infoY);
   doc.setTextColor(17, 24, 39);
-  doc.text(receipt.phone || 'Available on file', col1 + 30, infoY);
+  doc.text(phone, col1 + 30, infoY);
 
   doc.setTextColor(107, 114, 128);
   doc.text('Payment Mode:', col2, infoY);
   doc.setTextColor(17, 24, 39);
-  doc.text(receipt.paymentMethod || 'Cash Counter', col2 + 26, infoY);
+  doc.text(paymentMethod, col2 + 26, infoY);
 
   // Fee Particulars Table
   y += 42;
@@ -176,7 +188,6 @@ export function createReceiptPdfDoc(receipt) {
   doc.setDrawColor(229, 231, 235);
   doc.rect(margin + 4, tableY + 8, contentWidth - 8, tableHeight - 8);
 
-  const amount = Number(receipt.amount || 25000);
   let rowY = tableY + 16;
 
   doc.setTextColor(31, 41, 55);
@@ -184,9 +195,12 @@ export function createReceiptPdfDoc(receipt) {
   doc.setFontSize(8.5);
   doc.text('1.', margin + 9, rowY);
   doc.setFont('helvetica', 'bold');
-  doc.text(receipt.feeType || 'Tuition Fee', margin + 26, rowY);
+  const feeTitle = receipt.monthsCount && receipt.monthsCount > 1
+    ? `${feeType} (${receipt.monthsCount} Mos @ INR ${receipt.monthlyRate || Math.round(amount / receipt.monthsCount)}/mo)`
+    : feeType;
+  doc.text(feeTitle, margin + 26, rowY);
   doc.setFont('helvetica', 'normal');
-  doc.text(receipt.feeMonth || 'October 2026', margin + 105, rowY);
+  doc.text(feeMonth, margin + 105, rowY);
   doc.setFont('helvetica', 'bold');
   doc.text(`INR ${amount.toLocaleString('en-IN')}.00`, pageWidth - margin - 12, rowY, { align: 'right' });
 
@@ -298,7 +312,8 @@ export function createReceiptPdfDoc(receipt) {
 export function downloadReceiptPdf(receipt) {
   try {
     const doc = createReceiptPdfDoc(receipt);
-    const fileName = `Fee_Receipt_${receipt.receiptNo || 'REC'}_${receipt.studentName ? receipt.studentName.replace(/\s+/g, '_') : 'Student'}.pdf`;
+    const studentName = (receipt.studentName || receipt.name || 'Student').replace(/\s+/g, '_');
+    const fileName = `Fee_Receipt_${receipt.receiptNo || 'REC'}_${studentName}.pdf`;
     doc.save(fileName);
     return true;
   } catch (err) {
@@ -350,7 +365,7 @@ export function printReceiptPdf(receipt) {
  */
 export function shareDirectToWhatsApp(receipt) {
   try {
-    const phoneNum = receipt.phone || '';
+    const phoneNum = receipt.phone || receipt.parentContact || '';
     let cleanDigits = phoneNum.replace(/[^0-9]/g, '');
     if (cleanDigits.startsWith('0')) {
       cleanDigits = cleanDigits.substring(1);
@@ -360,25 +375,40 @@ export function shareDirectToWhatsApp(receipt) {
       target = '91' + target;
     }
 
-    const text = `🏫 *EDUSPHERE PUBLIC SCHOOL*
-🧾 *Official Fee Payment Receipt*
+    const studentName = receipt.studentName || receipt.name || 'Student';
+    const rollNo = receipt.rollNo || 'N/A';
+    const className = receipt.class || 'Class 10-A';
+    const fatherName = receipt.fatherName || receipt.parentName || 'Guardian';
+    const feeType = receipt.feeType || 'Tuition Fee';
+    const feeMonth = receipt.feeMonth || 'Academic Year 2026-27';
+    const receiptNo = receipt.receiptNo || 'REC-2026-0001';
+    const paidDate = receipt.paidDate || new Date().toISOString().split('T')[0];
+    const paymentMethod = receipt.paymentMethod || 'Online Payment';
+    const amount = Number(receipt.amount || 25000).toLocaleString('en-IN');
+
+    const periodLine = receipt.monthsCount && receipt.monthsCount > 1
+      ? `🗓️ *Period / Month:* ${feeMonth} (${receipt.monthsCount} Mos @ ₹${(receipt.monthlyRate || Math.round(Number(receipt.amount || 25000) / receipt.monthsCount)).toLocaleString('en-IN')}/mo)`
+      : `🗓️ *Period / Month:* ${feeMonth}`;
+
+    const text = `🏫 *EDUSPHERE INTERNATIONAL ACADEMY*
+🧾 *OFFICIAL FEE PAYMENT RECEIPT*
 ━━━━━━━━━━━━━━━━━━━━
-📄 *Receipt No:* ${receipt.receiptNo || 'REC-2026-0001'}
-📅 *Date:* ${receipt.paidDate || new Date().toISOString().split('T')[0]}
-👤 *Student Name:* ${receipt.studentName}
-🔢 *Roll No:* ${receipt.rollNo}
-🏫 *Class:* ${receipt.class}
-👨‍👦 *Father / Guardian:* ${receipt.fatherName || 'Guardian'}
-📂 *Fee Category:* ${receipt.feeType || 'Tuition Fee'}
-🗓️ *Fee Month / Period:* ${receipt.feeMonth || 'October 2026'}
-💰 *Amount Paid:* ₹${Number(receipt.amount || 0).toLocaleString('en-IN')}
-💳 *Payment Mode:* ${receipt.paymentMethod || 'Cash Counter'}
+📄 *Receipt No:* ${receiptNo}
+📅 *Date:* ${paidDate}
+👤 *Student Name:* ${studentName}
+🔢 *Roll No:* ${rollNo}
+🏫 *Class & Section:* ${className}
+👨‍👦 *Father / Guardian:* ${fatherName}
+📂 *Fee Head:* ${feeType}
+${periodLine}
+💰 *Amount Paid:* ₹${amount}.00
+💳 *Payment Mode:* ${paymentMethod}
 ✅ *Status:* PAID & VERIFIED
 ━━━━━━━━━━━━━━━━━━━━
-Thank you for your payment! Official receipt has been registered in the school records.`;
+Thank you for your payment! Official receipt has been registered in the school ledger.`;
 
     const encoded = encodeURIComponent(text);
-    const whatsappUrl = target
+    const whatsappUrl = target && target.length >= 10
       ? `https://api.whatsapp.com/send?phone=${target}&text=${encoded}`
       : `https://api.whatsapp.com/send?text=${encoded}`;
 
@@ -391,15 +421,82 @@ Thank you for your payment! Official receipt has been registered in the school r
 }
 
 /**
- * Shares the receipt PDF via Web Share API (with PDF file blob) or WhatsApp
+ * Shares the receipt PDF via Web Share API Level 2 (with PDF file blob) or falls back to WhatsApp
  */
 export async function shareReceiptPdf(receipt) {
   try {
+    const studentName = (receipt.studentName || receipt.name || 'Student').replace(/\s+/g, '_');
+    const fileName = `Fee_Receipt_${receipt.receiptNo || 'REC'}_${studentName}.pdf`;
+    const doc = createReceiptPdfDoc(receipt);
+    const pdfBlob = doc.output('blob');
+    const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+    // 1. Try sharing actual PDF File if Web Share Level 2 is supported (iOS Safari, Android Chrome, MacOS Safari, Edge)
+    if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: `Fee Receipt - ${receipt.studentName || receipt.name || 'Student'}`,
+        text: `Official Fee Payment Receipt (${receipt.receiptNo || ''}) for ${receipt.studentName || receipt.name || 'Student'} - Amount: ₹${Number(receipt.amount || 0).toLocaleString('en-IN')}`,
+        files: [file],
+      });
+      return { success: true, type: 'file' };
+    }
+
+    // 2. Fallback to Web Share text if files aren't supported
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      await navigator.share({
+        title: `Fee Receipt - ${receipt.studentName || receipt.name || 'Student'}`,
+        text: `Official Fee Receipt (${receipt.receiptNo || ''}) for ${receipt.studentName || receipt.name || 'Student'}\nAmount: ₹${Number(receipt.amount || 0).toLocaleString('en-IN')}\nStatus: PAID & VERIFIED`,
+      });
+      return { success: true, type: 'text' };
+    }
+
+    // 3. Fallback to direct WhatsApp
     shareDirectToWhatsApp(receipt);
-    return true;
+    return { success: true, type: 'whatsapp' };
   } catch (err) {
-    console.error('Share error:', err);
-    return false;
+    if (err && err.name === 'AbortError') {
+      // User cancelled native share sheet
+      return { cancelled: true };
+    }
+    console.warn('Native share failed, falling back to WhatsApp:', err);
+    shareDirectToWhatsApp(receipt);
+    return { success: true, type: 'whatsapp' };
   }
 }
 
+/**
+ * Copies the receipt text to clipboard
+ */
+export async function copyReceiptTextToClipboard(receipt) {
+  try {
+    const studentName = receipt.studentName || receipt.name || 'Student';
+    const rollNo = receipt.rollNo || 'N/A';
+    const className = receipt.class || 'Class 10-A';
+    const fatherName = receipt.fatherName || receipt.parentName || 'Guardian';
+    const feeType = receipt.feeType || 'Tuition Fee';
+    const feeMonth = receipt.feeMonth || 'Academic Year 2026-27';
+    const receiptNo = receipt.receiptNo || 'REC-2026-0001';
+    const paidDate = receipt.paidDate || new Date().toISOString().split('T')[0];
+    const paymentMethod = receipt.paymentMethod || 'Online Payment';
+    const amount = Number(receipt.amount || 25000).toLocaleString('en-IN');
+
+    const text = `EDUSPHERE INTERNATIONAL ACADEMY - FEE RECEIPT
+Receipt No: ${receiptNo}
+Date: ${paidDate}
+Student: ${studentName} (Roll #${rollNo}, ${className})
+Guardian: ${fatherName}
+Particulars: ${feeType} (${feeMonth})
+Amount: ₹${amount}.00
+Payment Mode: ${paymentMethod}
+Status: PAID & VERIFIED`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.error('Copy clipboard error:', err);
+    return false;
+  }
+}

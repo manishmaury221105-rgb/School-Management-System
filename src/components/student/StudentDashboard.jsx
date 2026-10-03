@@ -13,6 +13,7 @@ import {
   Sparkles,
   CheckCircle2,
   AlertCircle,
+  BellRing,
 } from 'lucide-react';
 
 export const StudentDashboard = ({ setActiveTab }) => {
@@ -47,6 +48,21 @@ export const StudentDashboard = ({ setActiveTab }) => {
 
   const studentResult = examsData.results[currentUser?.id || 'user-student-1'] || examsData.results['user-student-1'];
 
+  // Match broadcast notices for student
+  const myNotices = notices.filter((n) => {
+    if (!n) return false;
+    const tgt = String(n.target || 'ALL').trim().toUpperCase();
+    const userClass = String(currentUser?.class || '').trim().toUpperCase();
+    return (
+      tgt === 'ALL' ||
+      tgt === 'EVERYONE' ||
+      tgt === 'STUDENT' ||
+      tgt === 'STUDENTS' ||
+      tgt === 'STUDENTS & TEACHERS' ||
+      (userClass && tgt === userClass)
+    );
+  });
+
   return (
     <div className="animate-fade-in">
       {/* Student Welcome Banner */}
@@ -75,6 +91,24 @@ export const StudentDashboard = ({ setActiveTab }) => {
           </div>
 
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setActiveTab('notices')}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                color: 'white',
+                border: '1px solid rgba(255,255,255,0.3)',
+                padding: '8px 16px',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.85rem',
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <BellRing size={16} />
+              <span>Notice Board ({myNotices.length})</span>
+            </button>
             <button
               onClick={() => setActiveTab('profile')}
               style={{
@@ -137,14 +171,14 @@ export const StudentDashboard = ({ setActiveTab }) => {
           onClick={() => setActiveTab('homework')}
         />
         <StatCard
-          label="Current Term GPA"
-          value={studentResult?.gpa ? `${studentResult.gpa} / 4.0` : '3.92'}
-          icon={Award}
-          trend={`Rank #${studentResult?.rank || 2} in Class`}
+          label="Broadcast Notices"
+          value={`${myNotices.length} Alerts`}
+          icon={BellRing}
+          trend="Exam & School Circulars"
           trendPositive={true}
-          accentColor="#4f46e5"
-          lightBg="#e0e7ff"
-          onClick={() => setActiveTab('exams')}
+          accentColor="#8b5cf6"
+          lightBg="#f5f3ff"
+          onClick={() => setActiveTab('notices')}
         />
         <StatCard
           label="Fee Dues"
@@ -247,7 +281,7 @@ export const StudentDashboard = ({ setActiveTab }) => {
         {/* Pending Homework & Upcoming Exams */}
         <div className="card-elevated" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '800' }}>Pending Homework & Exams</h3>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '800' }}>Pending Homework</h3>
             <button
               onClick={() => setActiveTab('homework')}
               style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -291,6 +325,61 @@ export const StudentDashboard = ({ setActiveTab }) => {
               );
             })}
           </div>
+        </div>
+      </div>
+
+      {/* Broadcast Notices Banner on Student Dashboard */}
+      <div className="card-elevated" style={{ padding: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <BellRing size={18} color="var(--primary)" />
+            <span>Official School Circulars & Notice Board</span>
+          </h3>
+          <button
+            onClick={() => setActiveTab('notices')}
+            style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
+            View All ({myNotices.length}) <ArrowRight size={14} />
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+          {myNotices.slice(0, 3).map((notice) => {
+            const isUrgent = notice.priority === 'Urgent';
+            return (
+              <div
+                key={notice.id}
+                onClick={() => setActiveTab('notices')}
+                style={{
+                  padding: '1rem',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'var(--bg-input)',
+                  border: isUrgent ? '1.5px solid #ef4444' : '1px solid var(--border)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span className={`badge-status ${isUrgent ? 'badge-urgent' : notice.priority === 'High' ? 'badge-late' : 'badge-active'}`}>
+                    {notice.priority || 'Normal'}
+                  </span>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{notice.date}</span>
+                </div>
+
+                <div style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--text-primary)', marginTop: '4px' }}>
+                  {notice.title}
+                </div>
+
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {notice.content}
+                </div>
+
+                <div style={{ fontSize: '0.72rem', color: 'var(--primary)', marginTop: '8px', fontWeight: '700' }}>
+                  By: {notice.author}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

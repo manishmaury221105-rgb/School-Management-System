@@ -28,6 +28,9 @@ const getSafeStorage = (key, fallback) => {
     const saved = localStorage.getItem(versionedKey);
     if (!saved) return fallback;
     const parsed = JSON.parse(saved);
+    if (Array.isArray(fallback) && Array.isArray(parsed) && parsed.length === 0 && fallback.length > 0) {
+      return fallback;
+    }
     return parsed ?? fallback;
   } catch (err) {
     console.warn(`Failed to parse localStorage key: ${key}`, err);
@@ -510,12 +513,31 @@ export const SchoolDataProvider = ({ children }) => {
   // Notices
   const addNotice = (newNotice) => {
     const id = `not-${Date.now()}`;
+    const date = new Date().toISOString().split('T')[0];
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const notice = {
       id,
-      date: new Date().toISOString().split('T')[0],
+      date,
+      time,
+      priority: newNotice.priority || 'Normal',
+      category: newNotice.category || 'General',
+      target: newNotice.target || 'ALL',
       ...newNotice,
     };
     setNotices(prev => [notice, ...prev]);
+
+    // Push real-time in-app notification
+    const notif = {
+      id: `notif-${Date.now()}`,
+      title: `📢 ${notice.title}`,
+      message: notice.content?.length > 120 ? `${notice.content.substring(0, 120)}...` : notice.content,
+      time: 'Just now',
+      type: 'NOTICE',
+      isRead: false,
+      target: notice.target,
+    };
+    setNotifications(prev => [notif, ...prev]);
+
     return notice;
   };
 

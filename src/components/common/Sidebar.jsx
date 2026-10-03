@@ -52,8 +52,9 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       case ROLES.TEACHER:
         return [
           { id: 'dashboard', label: 'Faculty Dashboard', icon: LayoutDashboard },
+          { id: 'profile', label: 'My Faculty Profile', icon: UserCheck },
           { id: 'students', label: 'Students / Add Student', icon: Users },
-          { id: 'attendance', label: 'Mark Attendance', icon: UserCheck },
+          { id: 'attendance', label: 'Mark Attendance', icon: CalendarCheck },
           { id: 'timetable', label: 'My Timetable', icon: Clock },
           { id: 'homework', label: 'Homework & Tasks', icon: BookOpen },
           { id: 'study-material', label: 'Study Materials', icon: UploadCloud },
