@@ -20,9 +20,45 @@ export const StudentExams = () => {
   const [activeTab, setActiveTab] = useState('report');
   const [showHallTicket, setShowHallTicket] = useState(false);
 
-  const studentId = currentUser?.id || 'user-student-1';
-  const report = examsData.results[studentId] || examsData.results['user-student-1'];
-  const midTermExam = examsData.exams.find(e => e.id === 'exam-mid-2026');
+  const studentId = currentUser?.id || 'user-student-default';
+  
+  const defaultReport = {
+    examTitle: 'Term 1 Half-Yearly Examinations 2026',
+    studentName: currentUser?.name || 'Aarav Sharma',
+    class: currentUser?.class || 'Class 10-A',
+    rollNo: currentUser?.rollNo || '01',
+    attendance: '96.5%',
+    totalMarks: 468,
+    maxTotal: 500,
+    percentage: 93.6,
+    gpa: 3.9,
+    rank: 1,
+    teacherRemarks: 'Exceptional academic consistency and active participation in science & math seminars.',
+    subjects: [
+      { name: 'Mathematics', marks: 96, maxMarks: 100, highestMarks: 98, grade: 'A+', remarks: 'Outstanding problem solving' },
+      { name: 'Physics', marks: 92, maxMarks: 100, highestMarks: 95, grade: 'A+', remarks: 'Excellent lab performance' },
+      { name: 'Chemistry', marks: 89, maxMarks: 100, highestMarks: 94, grade: 'A', remarks: 'Good conceptual clarity' },
+      { name: 'English Literature', marks: 93, maxMarks: 100, highestMarks: 97, grade: 'A+', remarks: 'Commendable creative writing' },
+      { name: 'Computer Science & AI', marks: 98, maxMarks: 100, highestMarks: 99, grade: 'A+', remarks: 'Exceptional coding logic' },
+    ],
+  };
+
+  const defaultExamSchedule = {
+    id: 'exam-mid-2026',
+    title: 'Term 1 Half-Yearly Examinations 2026',
+    startDate: 'October 20, 2026',
+    endDate: 'October 28, 2026',
+    schedule: [
+      { date: '20 Oct 2026', subject: 'Advanced Mathematics', time: '09:00 AM - 12:00 PM', room: 'Hall A' },
+      { date: '22 Oct 2026', subject: 'Physics & Lab Theory', time: '09:00 AM - 12:00 PM', room: 'Hall A' },
+      { date: '24 Oct 2026', subject: 'Chemistry & Practical', time: '09:00 AM - 12:00 PM', room: 'Hall A' },
+      { date: '26 Oct 2026', subject: 'English Literature & Grammar', time: '09:00 AM - 12:00 PM', room: 'Hall B' },
+      { date: '28 Oct 2026', subject: 'Computer Science & AI Logic', time: '09:00 AM - 12:00 PM', room: 'Computer Lab 1' },
+    ]
+  };
+
+  const report = examsData?.results?.[studentId] || examsData?.results?.['user-student-default'] || defaultReport;
+  const midTermExam = examsData?.exams?.find(e => e.id === 'exam-mid-2026') || examsData?.exams?.[0] || defaultExamSchedule;
 
   return (
     <div className="animate-fade-in">

@@ -21,7 +21,7 @@ export const StudentDashboard = ({ setActiveTab }) => {
   const { homework, fees, notices, examsData } = useSchoolData();
 
   const myHomework = homework.filter(h => h.class === (currentUser?.class || 'Class 10-A'));
-  const pendingHwCount = myHomework.filter(h => !h.studentStatus?.[currentUser?.id || 'user-student-1']?.submitted).length;
+  const pendingHwCount = myHomework.filter(h => !h.studentStatus?.[currentUser?.id || 'user-student-default']?.submitted).length;
 
   const myFees = fees.filter(f => {
     if (!currentUser) return false;
@@ -46,7 +46,7 @@ export const StudentDashboard = ({ setActiveTab }) => {
     ? 0
     : (myFees.filter(f => f.status === 'Pending').reduce((sum, f) => sum + f.amount, 0) || (myFees.some(f => f.status === 'Paid') ? 0 : 25000));
 
-  const studentResult = examsData.results[currentUser?.id || 'user-student-1'] || examsData.results['user-student-1'];
+  const studentResult = examsData.results[currentUser?.id || 'user-student-default'] || examsData.results['user-student-default'];
 
   // Match broadcast notices for student
   const myNotices = notices.filter((n) => {

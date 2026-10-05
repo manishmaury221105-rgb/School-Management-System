@@ -30,10 +30,17 @@ export const ParentDashboard = ({ setActiveTab }) => {
     setSelectedChildId,
   } = useSchoolData();
 
-  // Anita Sharma has 2 children: Rohan Sharma (10-A) & Maya Sharma (6-B)
-  const children = students.filter(s =>
-    s.id === 'user-student-1' || s.id === 'user-student-2'
-  );
+  // Dynamically match logged-in parent's wards
+  const children = React.useMemo(() => {
+    if (!currentUser) return [students[0]];
+    const myChildren = students.filter(s =>
+      s.parentId === currentUser.id ||
+      (currentUser.childrenIds && currentUser.childrenIds.includes(s.id)) ||
+      (currentUser.phone && s.parentContact && s.parentContact.replace(/\D/g, '') === currentUser.phone.replace(/\D/g, '')) ||
+      (currentUser.name && s.parentName && s.parentName.toLowerCase().trim() === currentUser.name.toLowerCase().trim())
+    );
+    return myChildren.length > 0 ? myChildren : [students[0]];
+  }, [currentUser, students]);
 
   const activeChild = students.find(s => s.id === selectedChildId) || children[0] || students[0];
 

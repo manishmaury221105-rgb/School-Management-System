@@ -38,7 +38,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const getAllKnownUsers = () => {
-    const dynamicTeachers = (getSafeStorageList('edusphere_v2_teachers') || []).map(t => ({
+    const rawTeachers = getSafeStorageList('edusphere_v3_teachers').length > 0
+      ? getSafeStorageList('edusphere_v3_teachers')
+      : getSafeStorageList('edusphere_v2_teachers');
+    const dynamicTeachers = (rawTeachers || []).map(t => ({
       id: t.id,
       role: ROLES.TEACHER,
       name: t.name,
@@ -51,7 +54,10 @@ export const AuthProvider = ({ children }) => {
       classTeacherOf: t.classTeacherOf || '',
     }));
 
-    const dynamicStudents = (getSafeStorageList('edusphere_v2_students') || []).map(s => ({
+    const rawStudents = getSafeStorageList('edusphere_v3_students').length > 0
+      ? getSafeStorageList('edusphere_v3_students')
+      : getSafeStorageList('edusphere_v2_students');
+    const dynamicStudents = (rawStudents || []).map(s => ({
       id: s.id,
       role: ROLES.STUDENT,
       studentId: s.studentId,
@@ -67,7 +73,10 @@ export const AuthProvider = ({ children }) => {
       parentContact: s.parentContact,
     }));
 
-    const dynamicParents = (getSafeStorageList('edusphere_v2_parents') || []).map(p => ({
+    const rawParents = getSafeStorageList('edusphere_v3_parents').length > 0
+      ? getSafeStorageList('edusphere_v3_parents')
+      : getSafeStorageList('edusphere_v2_parents');
+    const dynamicParents = (rawParents || []).map(p => ({
       id: p.id,
       role: ROLES.PARENT,
       name: p.name,

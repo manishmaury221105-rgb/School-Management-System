@@ -100,14 +100,14 @@ export const TeacherDashboard = ({ setActiveTab }) => {
           onClick={() => setActiveTab('notices')}
         />
         <StatCard
-          label="Parent Leave Requests"
-          value={pendingLeavesCount}
-          icon={AlertCircle}
-          trend={pendingLeavesCount > 0 ? 'Requires Review' : 'All Cleared'}
-          trendPositive={pendingLeavesCount === 0}
+          label="Assigned Classroom"
+          value={currentUser?.classTeacherOf || assignedClasses[0] || 'Class 10-A'}
+          icon={Users}
+          trend={currentUser?.subject || 'Mathematics & Physics'}
+          trendPositive={true}
           accentColor="#f59e0b"
           lightBg="#fef3c7"
-          onClick={() => setActiveTab('leave')}
+          onClick={() => setActiveTab('students')}
         />
       </div>
 

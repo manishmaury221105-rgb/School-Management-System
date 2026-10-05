@@ -69,6 +69,17 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
           { id: 'fees', label: 'Fee Invoices & Pay', icon: Wallet },
           { id: 'notices', label: 'Notice Board', icon: BellRing },
         ];
+      case ROLES.PARENT:
+        return [
+          { id: 'dashboard', label: 'Parent Portal', icon: LayoutDashboard },
+          { id: 'attendance', label: 'Child Attendance', icon: CalendarCheck },
+          { id: 'academics', label: 'Academics & Grades', icon: Award },
+          { id: 'homework', label: 'Homework Tracker', icon: BookOpen },
+          { id: 'fees', label: 'Fee Payments', icon: Wallet },
+          { id: 'leave', label: 'Apply Leave', icon: FileText },
+          { id: 'teachers', label: 'Faculty Directory', icon: UserCheck },
+          { id: 'notices', label: 'School Notices', icon: BellRing },
+        ];
       default:
         return [];
     }

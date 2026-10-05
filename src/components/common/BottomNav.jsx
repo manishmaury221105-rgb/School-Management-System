@@ -12,6 +12,7 @@ import {
   Wallet,
   School,
   Users,
+  Award,
 } from 'lucide-react';
 
 export const BottomNav = ({ activeTab, setActiveTab }) => {
@@ -42,6 +43,14 @@ export const BottomNav = ({ activeTab, setActiveTab }) => {
           { id: 'timetable', label: 'Schedule', icon: Clock },
           { id: 'homework', label: 'Homework', icon: BookOpen },
           { id: 'fees', label: 'Fees', icon: Wallet },
+        ];
+      case ROLES.PARENT:
+        return [
+          { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
+          { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+          { id: 'academics', label: 'Grades', icon: Award },
+          { id: 'fees', label: 'Fees', icon: Wallet },
+          { id: 'notices', label: 'Notices', icon: BellRing },
         ];
       default:
         return [];

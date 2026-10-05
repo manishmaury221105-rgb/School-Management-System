@@ -6,7 +6,27 @@ export const ParentAcademics = () => {
   const { students, examsData, selectedChildId } = useSchoolData();
 
   const child = students.find(s => s.id === selectedChildId) || students[0];
-  const report = examsData.results[child?.id] || examsData.results['user-student-1'];
+  
+  const defaultReport = {
+    examTitle: 'Term 1 Assessment Report Card',
+    rank: 1,
+    totalStudentsInClass: 32,
+    attendance: `${child?.attendancePercent || 96}%`,
+    totalMarks: 468,
+    maxTotal: 500,
+    percentage: 93.6,
+    gpa: child?.gpa || 3.9,
+    remarks: 'Consistent academic dedication, excellent subject clarity, and positive classroom participation.',
+    subjects: [
+      { name: 'Mathematics', marks: 96, maxMarks: 100, highestMarks: 98, grade: 'A+', remarks: 'Outstanding analytical skills' },
+      { name: 'Physics', marks: 92, maxMarks: 100, highestMarks: 95, grade: 'A+', remarks: 'Strong laboratory precision' },
+      { name: 'Chemistry', marks: 89, maxMarks: 100, highestMarks: 94, grade: 'A', remarks: 'Good grasp of equations' },
+      { name: 'English Literature', marks: 93, maxMarks: 100, highestMarks: 97, grade: 'A+', remarks: 'Excellent essay composition' },
+      { name: 'Computer Science', marks: 98, maxMarks: 100, highestMarks: 99, grade: 'A+', remarks: 'Superb programming fundamentals' },
+    ],
+  };
+
+  const report = examsData?.results?.[child?.id] || examsData?.results?.['user-student-default'] || defaultReport;
 
   return (
     <div className="animate-fade-in">
