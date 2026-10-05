@@ -23,11 +23,6 @@ export const TeacherManagement = () => {
   const { currentUser } = useAuth();
   const { teachers, addTeacher, updateTeacher, deleteTeacher, classes } = useSchoolData();
 
-  // Strict Privacy Guard: If a logged-in teacher somehow renders this component, immediately route to their personal isolated profile
-  if (currentUser?.role === ROLES.TEACHER) {
-    return <TeacherProfile />;
-  }
-
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -64,6 +59,11 @@ export const TeacherManagement = () => {
     dob: '1988-05-15',
     experience: '5 Years',
   });
+
+  // Strict Privacy Guard: If a logged-in teacher somehow renders this component, immediately route to their personal isolated profile
+  if (currentUser?.role === ROLES.TEACHER) {
+    return <TeacherProfile />;
+  }
 
   const handleEditPhotoUpload = (e) => {
     const file = e.target.files && e.target.files[0];

@@ -13,6 +13,7 @@ import {
   Download,
   Pencil,
   CreditCard,
+  Camera,
 } from 'lucide-react';
 
 export const StudentManagement = ({ setActiveTab }) => {

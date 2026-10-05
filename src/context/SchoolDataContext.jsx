@@ -545,6 +545,26 @@ export const SchoolDataProvider = ({ children }) => {
     setNotices(prev => prev.filter(n => n.id !== noticeId));
   };
 
+  // Timetable Photo Management
+  const uploadTimetablePhoto = (className, photoData) => {
+    setTimetable(prev => ({
+      ...(prev || {}),
+      [className]: {
+        ...(typeof prev?.[className] === 'object' ? prev[className] : {}),
+        ...photoData,
+        updatedAt: new Date().toISOString(),
+      },
+    }));
+  };
+
+  const deleteTimetablePhoto = (className) => {
+    setTimetable(prev => {
+      const updated = { ...(prev || {}) };
+      delete updated[className];
+      return updated;
+    });
+  };
+
   // Leaves
   const applyLeave = (leaveData) => {
     const id = `leave-${Date.now()}`;
@@ -654,6 +674,8 @@ export const SchoolDataProvider = ({ children }) => {
         deleteNotice,
         applyLeave,
         updateLeaveStatus,
+        uploadTimetablePhoto,
+        deleteTimetablePhoto,
         resetAllData,
       }}
     >

@@ -1,141 +1,243 @@
 import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
-import { Clock, MapPin, User, Calendar, BookOpen } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { Modal } from '../common/Modal';
+import {
+  Calendar,
+  Image as ImageIcon,
+  Download,
+  Printer,
+  Maximize2,
+  FileImage,
+  Sparkles,
+} from 'lucide-react';
 
 export const StudentTimetable = () => {
   const { timetable } = useSchoolData();
-  const [selectedDay, setSelectedDay] = useState('Monday');
+  const { currentUser } = useAuth();
+  const studentClass = currentUser?.class || 'Class 10-A';
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
 
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const classSchedule = timetable['Class 10-A'] || {};
-  const daySchedule = classSchedule[selectedDay] || [];
+  // Get active timetable photo for the student's enrolled class
+  const classTimetableData = timetable?.[studentClass];
+  const activeImage = typeof classTimetableData === 'object' ? classTimetableData.photo : null;
+  const activeTitle = (typeof classTimetableData === 'object' && classTimetableData.title) || `${studentClass} Weekly Timetable`;
+  const activeUploadedBy = (typeof classTimetableData === 'object' && classTimetableData.uploadedBy) || 'Class Faculty';
+  const activeNotes = typeof classTimetableData === 'object' ? classTimetableData.notes : '';
+  const activeUploadedDate = (typeof classTimetableData === 'object' && classTimetableData.updatedAt)
+    ? new Date(classTimetableData.updatedAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+    : 'Active Session';
+
+  const handleDownload = () => {
+    if (!activeImage) return;
+    const link = document.createElement('a');
+    link.href = activeImage;
+    link.download = `${studentClass.replace(/\s+/g, '_')}_Timetable_Routine.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePrint = () => {
+    if (!activeImage) return;
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(`
+        <html>
+          <head>
+            <title>${studentClass} Timetable Routine</title>
+            <style>
+              body { margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #fff; }
+              img { max-width: 100%; height: auto; display: block; }
+            </style>
+          </head>
+          <body>
+            <img src="${activeImage}" onload="window.print(); window.close();" />
+          </body>
+        </html>
+      `);
+      win.document.close();
+    }
+  };
 
   return (
-    <div className="animate-fade-in">
-      <div className="page-header-wrap">
+    <div className="animate-fade-in" style={{ paddingBottom: '2.5rem' }}>
+      {/* Page Header */}
+      <div className="page-header-wrap" style={{ marginBottom: '1.5rem' }}>
         <div>
-          <h1 className="page-title">Weekly Class Timetable</h1>
+          <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Calendar size={26} color="var(--primary)" />
+            <span>Weekly Class Timetable</span>
+          </h1>
           <p className="page-subtitle">
-            Class 10-A • 7 Academic Periods Daily • St. Xavier International Academy
+            {studentClass} • Official Academic Routine & Subject Schedule
           </p>
         </div>
-      </div>
 
-      {/* Day Selector Tabs */}
-      <div style={{
-        display: 'flex',
-        gap: '0.5rem',
-        overflowX: 'auto',
-        paddingBottom: '0.75rem',
-        marginBottom: '1.5rem'
-      }}>
-        {days.map((day) => (
-          <button
-            key={day}
-            onClick={() => setSelectedDay(day)}
-            style={{
-              padding: '8px 18px',
-              borderRadius: 'var(--radius-full)',
-              fontSize: '0.9rem',
-              fontWeight: selectedDay === day ? '700' : '600',
-              background: selectedDay === day ? 'var(--primary)' : 'var(--bg-card)',
-              color: selectedDay === day ? 'white' : 'var(--text-secondary)',
-              border: '1px solid var(--border)',
-              boxShadow: selectedDay === day ? '0 4px 12px var(--primary-glow)' : 'var(--shadow-xs)',
-              whiteSpace: 'nowrap',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            {day}
-          </button>
-        ))}
-      </div>
-
-      {/* Periods List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-        {daySchedule.map((slot, idx) => {
-          const isOngoing = selectedDay === 'Monday' && slot.period === 1;
-          return (
-            <div
-              key={slot.period}
-              className="card-elevated"
-              style={{
-                padding: '1.25rem',
-                border: isOngoing ? '2px solid var(--primary)' : '1px solid var(--border)',
-                background: isOngoing ? 'linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(14, 165, 233, 0.05))' : 'var(--bg-card)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '1rem',
-                position: 'relative',
-              }}
+        {activeImage && (
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setIsZoomOpen(true)}
+              className="btn-secondary"
+              style={{ fontSize: '0.85rem', padding: '7px 14px' }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                <div style={{
-                  width: '46px',
-                  height: '46px',
-                  borderRadius: '12px',
-                  background: isOngoing ? 'var(--primary)' : 'var(--bg-input)',
-                  color: isOngoing ? 'white' : 'var(--primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: '800',
-                  fontSize: '1.1rem',
-                }}>
-                  P{slot.period}
-                </div>
+              <Maximize2 size={15} />
+              <span>Zoom View</span>
+            </button>
+            <button
+              onClick={handleDownload}
+              className="btn-secondary"
+              style={{ fontSize: '0.85rem', padding: '7px 14px' }}
+            >
+              <Download size={15} />
+              <span>Download</span>
+            </button>
+            <button
+              onClick={handlePrint}
+              className="btn-primary"
+              style={{ fontSize: '0.85rem', padding: '7px 14px' }}
+            >
+              <Printer size={15} />
+              <span>Print Routine</span>
+            </button>
+          </div>
+        )}
+      </div>
 
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-                      {slot.subject}
-                    </div>
-                    {isOngoing && (
-                      <span style={{
-                        fontSize: '0.68rem',
-                        fontWeight: '800',
-                        background: '#10b981',
-                        color: 'white',
-                        padding: '2px 8px',
-                        borderRadius: '12px',
-                      }}>
-                        ● CURRENT LECTURE
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                    <Clock size={13} />
-                    <span>{slot.time}</span>
-                  </div>
-                </div>
+      {/* Routine Display Card */}
+      {activeImage ? (
+        <div className="card-elevated" style={{ padding: '1.25rem', border: '1px solid var(--border)' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '0.5rem',
+            marginBottom: '1rem',
+            borderBottom: '1px solid var(--border)',
+            paddingBottom: '0.75rem',
+          }}>
+            <div>
+              <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                {activeTitle}
               </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem', fontWeight: '600' }}>
-                  <User size={15} color="var(--primary)" />
-                  <span>{slot.teacher}</span>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '4px 10px',
-                  background: 'var(--bg-input)',
-                  borderRadius: '8px',
-                  fontSize: '0.82rem',
-                  fontWeight: '700',
-                  color: 'var(--text-secondary)'
-                }}>
-                  <MapPin size={14} />
-                  <span>{slot.room}</span>
-                </div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Published by <strong>{activeUploadedBy}</strong> • Updated on {activeUploadedDate}
               </div>
             </div>
-          );
-        })}
-      </div>
+
+            <div style={{
+              fontSize: '0.78rem',
+              fontWeight: '800',
+              background: 'rgba(16, 185, 129, 0.1)',
+              color: '#059669',
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-full)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}>
+              <span>● ACTIVE ROUTINE</span>
+            </div>
+          </div>
+
+          {activeNotes && (
+            <div style={{
+              padding: '0.65rem 0.85rem',
+              background: 'var(--bg-input)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border)',
+              fontSize: '0.82rem',
+              color: 'var(--text-secondary)',
+              marginBottom: '1rem',
+            }}>
+              📌 <strong>Notice from Faculty:</strong> {activeNotes}
+            </div>
+          )}
+
+          {/* Clickable Routine Photo Container */}
+          <div
+            onClick={() => setIsZoomOpen(true)}
+            style={{
+              borderRadius: 'var(--radius-lg)',
+              overflow: 'hidden',
+              background: 'var(--bg-input)',
+              border: '1px solid var(--border)',
+              cursor: 'pointer',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: '0.5rem',
+            }}
+            title="Click to zoom in"
+          >
+            <img
+              src={activeImage}
+              alt={`${studentClass} Timetable`}
+              style={{
+                width: '100%',
+                maxHeight: '600px',
+                objectFit: 'contain',
+                borderRadius: 'var(--radius-md)',
+                display: 'block',
+              }}
+            />
+          </div>
+        </div>
+      ) : (
+        /* Empty State */
+        <div className="card-elevated" style={{
+          padding: '3.5rem 1.5rem',
+          textAlign: 'center',
+          border: '2px dashed var(--border)',
+          background: 'var(--bg-card)',
+        }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            background: 'var(--bg-input)',
+            color: 'var(--text-muted)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1rem auto',
+          }}>
+            <FileImage size={32} />
+          </div>
+          <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '4px' }}>
+            Timetable Routine Not Yet Uploaded
+          </div>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', maxWidth: '420px', margin: '0 auto' }}>
+            Your class faculty or school administrator will upload the official weekly period timetable photo soon.
+          </p>
+        </div>
+      )}
+
+      {/* Zoom / Fullscreen Modal */}
+      <Modal
+        isOpen={isZoomOpen}
+        onClose={() => setIsZoomOpen(false)}
+        title={`${studentClass} - Timetable Routine`}
+      >
+        <div style={{ textAlign: 'center', maxHeight: '75vh', overflowY: 'auto' }}>
+          <img
+            src={activeImage}
+            alt="Fullscreen Timetable"
+            style={{ width: '100%', height: 'auto', borderRadius: 'var(--radius-md)', display: 'block' }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', marginTop: '1.25rem' }}>
+            <button onClick={handleDownload} className="btn-secondary">
+              <Download size={16} />
+              <span>Download Image</span>
+            </button>
+            <button onClick={handlePrint} className="btn-primary">
+              <Printer size={16} />
+              <span>Print Routine</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
