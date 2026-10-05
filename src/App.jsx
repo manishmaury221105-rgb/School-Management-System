@@ -16,7 +16,6 @@ import { ClassManagement } from './components/admin/ClassManagement';
 import { SubjectManagement } from './components/admin/SubjectManagement';
 import { FeeManagement } from './components/admin/FeeManagement';
 import { NoticeBroadcast } from './components/admin/NoticeBroadcast';
-import { TimetableManager } from './components/admin/TimetableManager';
 import { StudyMaterialManager } from './components/admin/StudyMaterialManager';
 import { LibraryManager } from './components/admin/LibraryManager';
 import { TransportManager } from './components/admin/TransportManager';
@@ -29,6 +28,7 @@ import { SchoolSettings } from './components/admin/SchoolSettings';
 import { TeacherDashboard } from './components/teacher/TeacherDashboard';
 import { TeacherProfile } from './components/teacher/TeacherProfile';
 import { AttendanceMarker } from './components/teacher/AttendanceMarker';
+import { TeacherTimetable } from './components/teacher/TeacherTimetable';
 import { HomeworkManager } from './components/teacher/HomeworkManager';
 import { GradebookManager } from './components/teacher/GradebookManager';
 import { StudentPerformance } from './components/teacher/StudentPerformance';
@@ -84,8 +84,6 @@ export const App = () => {
             return <ClassManagement />;
           case 'subjects':
             return <SubjectManagement />;
-          case 'timetable':
-            return <TimetableManager />;
           case 'attendance':
             return <AttendanceMarker />;
           case 'fees':
@@ -125,7 +123,7 @@ export const App = () => {
           case 'attendance':
             return <AttendanceMarker />;
           case 'timetable':
-            return <TimetableManager />;
+            return <TeacherTimetable />;
           case 'homework':
             return <HomeworkManager />;
           case 'study-material':

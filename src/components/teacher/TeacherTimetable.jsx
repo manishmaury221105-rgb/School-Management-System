@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
-import { useAuth, ROLES } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { Modal } from '../common/Modal';
 import { getSampleTimetablePNG } from '../../utils/sampleTimetableImage';
 import {
@@ -18,12 +18,12 @@ import {
   FileImage,
 } from 'lucide-react';
 
-export const TimetableManager = () => {
+export const TeacherTimetable = () => {
   const { timetable, classes, uploadTimetablePhoto, deleteTimetablePhoto } = useSchoolData();
-  const { currentUser, currentRole } = useAuth();
-  const isAdmin = currentRole === ROLES.ADMIN;
+  const { currentUser } = useAuth();
 
-  const [selectedClass, setSelectedClass] = useState('Class 10-A');
+  const assignedClass = currentUser?.classTeacherOf || currentUser?.assignedClasses?.[0] || 'Class 10-A';
+  const [selectedClass, setSelectedClass] = useState(assignedClass);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [titleInput, setTitleInput] = useState('');
   const [notesInput, setNotesInput] = useState('');
@@ -39,7 +39,7 @@ export const TimetableManager = () => {
   }
 
   const activeTitle = (typeof classTimetableData === 'object' && classTimetableData?.title) || `${selectedClass} Official Routine`;
-  const activeUploadedBy = (typeof classTimetableData === 'object' && classTimetableData?.uploadedBy) || 'Class Teacher';
+  const activeUploadedBy = (typeof classTimetableData === 'object' && classTimetableData?.uploadedBy) || currentUser?.name || 'Class Teacher';
   const activeUploadedDate = (typeof classTimetableData === 'object' && classTimetableData?.updatedAt)
     ? new Date(classTimetableData.updatedAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
     : 'Recently Updated';
@@ -62,9 +62,9 @@ export const TimetableManager = () => {
 
     uploadTimetablePhoto(selectedClass, {
       photo: imageToSave,
-      title: titleInput.trim() || `${selectedClass} Weekly Timetable & Routine`,
+      title: titleInput.trim() || `${selectedClass} Weekly Timetable Routine`,
       notes: notesInput.trim(),
-      uploadedBy: currentUser?.name || (isAdmin ? 'School Administrator' : 'Class Teacher'),
+      uploadedBy: currentUser?.name || 'Class Teacher',
     });
 
     setPhotoPreview(null);
@@ -77,7 +77,7 @@ export const TimetableManager = () => {
   const handleLoadSampleRoutine = () => {
     const sample = getSampleTimetablePNG(selectedClass);
     setPhotoPreview(sample);
-    setTitleInput(`${selectedClass} Complete Weekly Routine 2026-27`);
+    setTitleInput(`${selectedClass} Complete Weekly Routine`);
   };
 
   const handleDeleteCurrentPhoto = () => {
@@ -91,7 +91,7 @@ export const TimetableManager = () => {
     if (!src) return;
     const link = document.createElement('a');
     link.href = src;
-    link.download = `${selectedClass.replace(/\s+/g, '_')}_Timetable_Routine.png`;
+    link.download = `${selectedClass.replace(/\s+/g, '_')}_Timetable.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -106,7 +106,7 @@ export const TimetableManager = () => {
         <!DOCTYPE html>
         <html>
           <head>
-            <title>${selectedClass} Timetable Routine</title>
+            <title>${selectedClass} Timetable</title>
             <style>
               body { margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #fff; }
               img { max-width: 100%; height: auto; display: block; }
@@ -128,10 +128,10 @@ export const TimetableManager = () => {
         <div>
           <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Calendar size={26} color="var(--primary)" />
-            <span>Class Timetable & Routine</span>
+            <span>Class Timetable Photo Upload</span>
           </h1>
           <p className="page-subtitle">
-            Upload class timetable photos. Enrolled students and parents will immediately see the photo.
+            Upload timetable photo for your class. Enrolled students will immediately see this photo in their portal.
           </p>
         </div>
 
@@ -150,14 +150,14 @@ export const TimetableManager = () => {
           >
             {classes?.map((c) => (
               <option key={c.id || c.name} value={c.name}>
-                {c.name}
+                {c.name} {c.name === assignedClass ? '★ (My Class)' : ''}
               </option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Upload Success Alert */}
+      {/* Success Notification */}
       {uploadSuccessMsg && (
         <div style={{
           display: 'flex',
@@ -173,11 +173,11 @@ export const TimetableManager = () => {
           marginBottom: '1.25rem',
         }}>
           <CheckCircle size={18} />
-          <span>Timetable photo for {selectedClass} successfully saved and published!</span>
+          <span>Timetable photo for {selectedClass} successfully published for all students!</span>
         </div>
       )}
 
-      {/* Upload Box */}
+      {/* Upload Form Card */}
       <div className="card-elevated" style={{ padding: '1.5rem', marginBottom: '2rem', border: '1.5px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.25rem' }}>
           <div>
@@ -186,7 +186,7 @@ export const TimetableManager = () => {
               <span>Upload Timetable Photo ({selectedClass})</span>
             </h2>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-              Upload a clear photo or screenshot of the weekly period schedule.
+              Upload a clear photo or screenshot of the weekly period routine.
             </p>
           </div>
 
@@ -195,16 +195,16 @@ export const TimetableManager = () => {
             onClick={handleLoadSampleRoutine}
             className="btn-secondary"
             style={{ fontSize: '0.8rem', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
-            title="Load ready-made sample routine"
+            title="Load sample routine"
           >
             <Sparkles size={14} color="var(--primary)" />
-            <span>Load Sample Routine</span>
+            <span>Load Sample Photo</span>
           </button>
         </div>
 
         <form onSubmit={handleSavePhoto}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
-            {/* Upload Dropzone */}
+            {/* File Picker Box */}
             <div>
               <div
                 onClick={() => fileInputRef.current?.click()}
@@ -295,11 +295,11 @@ export const TimetableManager = () => {
 
               <div>
                 <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-                  Special Notes / Instructions for Students (Optional)
+                  Special Notice for Students (Optional)
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="e.g. Lab periods require laboratory coats."
+                  placeholder="e.g. Science lab coats mandatory on practical days."
                   value={notesInput}
                   onChange={(e) => setNotesInput(e.target.value)}
                   style={{ width: '100%', resize: 'vertical' }}
@@ -329,7 +329,7 @@ export const TimetableManager = () => {
                   }}
                 >
                   <UploadCloud size={16} />
-                  <span>Save & Publish Timetable</span>
+                  <span>Upload & Publish Photo</span>
                 </button>
               </div>
             </div>
@@ -337,7 +337,7 @@ export const TimetableManager = () => {
         </form>
       </div>
 
-      {/* Lower Section: Display Uploaded Photo */}
+      {/* Display Current Photo */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
           <div>
@@ -346,7 +346,7 @@ export const TimetableManager = () => {
               <span>Current Timetable Photo ({selectedClass})</span>
             </h2>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Active weekly routine visible to all enrolled students of {selectedClass}.
+              This exact photo is visible to all students of {selectedClass}.
             </p>
           </div>
 
@@ -356,7 +356,6 @@ export const TimetableManager = () => {
                 onClick={() => setIsZoomOpen(true)}
                 className="btn-secondary"
                 style={{ fontSize: '0.82rem', padding: '6px 12px' }}
-                title="Open Fullscreen Zoom View"
               >
                 <Maximize2 size={15} />
                 <span>Zoom View</span>
@@ -365,7 +364,6 @@ export const TimetableManager = () => {
                 onClick={handleDownload}
                 className="btn-secondary"
                 style={{ fontSize: '0.82rem', padding: '6px 12px' }}
-                title="Download Timetable Image"
               >
                 <Download size={15} />
                 <span>Download</span>
@@ -374,7 +372,6 @@ export const TimetableManager = () => {
                 onClick={handlePrint}
                 className="btn-secondary"
                 style={{ fontSize: '0.82rem', padding: '6px 12px' }}
-                title="Print Timetable"
               >
                 <Printer size={15} />
                 <span>Print</span>
@@ -383,17 +380,16 @@ export const TimetableManager = () => {
                 onClick={handleDeleteCurrentPhoto}
                 className="btn-secondary"
                 style={{ fontSize: '0.82rem', padding: '6px 12px', color: '#ef4444', borderColor: '#fca5a5' }}
-                title="Delete this timetable photo"
               >
                 <Trash2 size={15} />
-                <span>Delete</span>
+                <span>Delete Photo</span>
               </button>
             </div>
           )}
         </div>
 
         {activeImage ? (
-          <div className="card-elevated" style={{ padding: '1.25rem', border: '1px solid var(--border)', overflow: 'hidden' }}>
+          <div className="card-elevated" style={{ padding: '1.25rem', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
               <div>
                 <div style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-primary)' }}>
@@ -412,7 +408,7 @@ export const TimetableManager = () => {
                 padding: '4px 10px',
                 borderRadius: 'var(--radius-full)',
               }}>
-                ● LIVE & ACTIVE
+                ● LIVE FOR STUDENTS
               </div>
             </div>
 
@@ -424,7 +420,6 @@ export const TimetableManager = () => {
                 background: 'var(--bg-input)',
                 border: '1px solid var(--border)',
                 cursor: 'pointer',
-                position: 'relative',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -437,7 +432,7 @@ export const TimetableManager = () => {
                 alt={`${selectedClass} Timetable`}
                 style={{
                   width: '100%',
-                  maxHeight: '520px',
+                  maxHeight: '550px',
                   objectFit: 'contain',
                   borderRadius: 'var(--radius-md)',
                   display: 'block',
@@ -469,7 +464,7 @@ export const TimetableManager = () => {
               No Timetable Photo Uploaded for {selectedClass}
             </div>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', maxWidth: '450px', margin: '0 auto 1.25rem auto' }}>
-              Upload a routine image or photo using the upload box above so students of {selectedClass} can view it.
+              Upload a routine image using the box above so students of {selectedClass} can see their weekly routine.
             </p>
             <button
               onClick={handleLoadSampleRoutine}
@@ -477,13 +472,13 @@ export const TimetableManager = () => {
               style={{ margin: '0 auto', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
               <Sparkles size={16} />
-              <span>Load Sample Timetable Photo</span>
+              <span>Load Sample Photo</span>
             </button>
           </div>
         )}
       </div>
 
-      {/* Fullscreen Modal */}
+      {/* Zoom Modal */}
       <Modal
         isOpen={isZoomOpen}
         onClose={() => setIsZoomOpen(false)}
@@ -502,7 +497,7 @@ export const TimetableManager = () => {
             </button>
             <button onClick={handlePrint} className="btn-primary">
               <Printer size={16} />
-              <span>Print Routine</span>
+              <span>Print Timetable</span>
             </button>
           </div>
         </div>

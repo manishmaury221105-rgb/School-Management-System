@@ -39,11 +39,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
           { id: 'teachers', label: 'Faculty & Staff (Onboarding)', icon: UserCheck },
           { id: 'classes', label: 'Classes & Sections', icon: School },
           { id: 'subjects', label: 'Subjects Master', icon: Layers },
-          { id: 'timetable', label: 'Master Timetable', icon: Calendar },
           { id: 'fees', label: 'Fees & Invoicing', icon: CreditCard },
-          { id: 'notices', label: 'Notice Circulars', icon: BellRing },
-          { id: 'leave', label: 'Leave Approvals', icon: FileText },
-          { id: 'reports', label: 'Audit & Reports', icon: FileSpreadsheet },
           { id: 'settings', label: 'School Settings', icon: Settings },
         ];
       case ROLES.TEACHER:

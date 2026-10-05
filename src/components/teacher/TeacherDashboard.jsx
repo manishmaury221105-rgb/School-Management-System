@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSchoolData } from '../../context/SchoolDataContext';
 import { StatCard } from '../common/StatCard';
+import { getClassSchedule, PERIOD_SLOTS } from '../../utils/timetableData';
 import {
   UserCheck,
   BookOpen,
@@ -16,6 +17,7 @@ import {
   UserPlus,
   BellRing,
   Plus,
+  MapPin,
 } from 'lucide-react';
 
 export const TeacherDashboard = ({ setActiveTab }) => {
@@ -52,13 +54,17 @@ export const TeacherDashboard = ({ setActiveTab }) => {
             <UserPlus size={16} />
             <span>Add / Enroll Student</span>
           </button>
+          <button onClick={() => setActiveTab('timetable')} className="btn-secondary">
+            <Clock size={16} />
+            <span>My Timetable</span>
+          </button>
           <button onClick={() => setActiveTab('notices')} className="btn-secondary">
             <BellRing size={16} />
             <span>Notice Broadcaster</span>
           </button>
           <button onClick={() => setActiveTab('attendance')} className="btn-secondary">
             <UserCheck size={16} />
-            <span>Mark Today's Attendance</span>
+            <span>Mark Attendance</span>
           </button>
           <button onClick={() => setActiveTab('homework')} className="btn-secondary">
             <BookOpen size={16} />
@@ -107,7 +113,7 @@ export const TeacherDashboard = ({ setActiveTab }) => {
           trendPositive={true}
           accentColor="#f59e0b"
           lightBg="#fef3c7"
-          onClick={() => setActiveTab('students')}
+          onClick={() => setActiveTab('timetable')}
         />
       </div>
 
@@ -116,22 +122,34 @@ export const TeacherDashboard = ({ setActiveTab }) => {
         {/* Today's Teaching Schedule */}
         <div className="card-elevated" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '800' }}>Today's Teaching Schedule</h3>
-            <span style={{ fontSize: '0.78rem', color: 'var(--primary)', fontWeight: '700' }}>
-              4 Lectures Today
-            </span>
+            <div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: '800' }}>Today's Teaching Schedule</h3>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                {currentUser?.name || 'Dr. Alok Verma'} • Official Roster
+              </p>
+            </div>
+            <button
+              onClick={() => setActiveTab('timetable')}
+              style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}
+            >
+              Full Timetable <ArrowRight size={14} />
+            </button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-            <div style={{
-              padding: '1rem',
-              borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(14, 165, 233, 0.08))',
-              border: '1.5px solid var(--primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
+            <div
+              onClick={() => setActiveTab('timetable')}
+              style={{
+                padding: '0.9rem',
+                borderRadius: 'var(--radius-md)',
+                background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(14, 165, 233, 0.08))',
+                border: '1.5px solid var(--primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+              }}
+            >
               <div>
                 <span style={{
                   fontSize: '0.7rem',
@@ -144,10 +162,10 @@ export const TeacherDashboard = ({ setActiveTab }) => {
                 }}>
                   ● LIVE NOW
                 </span>
-                <div style={{ fontSize: '1rem', fontWeight: '800', marginTop: '4px' }}>
+                <div style={{ fontSize: '0.98rem', fontWeight: '800', marginTop: '4px' }}>
                   Period 1: Advanced Mathematics
                 </div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                   Class 10-A • Room 304 • Topic: Quadratic Formulas
                 </div>
               </div>
@@ -156,20 +174,24 @@ export const TeacherDashboard = ({ setActiveTab }) => {
               </div>
             </div>
 
-            <div style={{
-              padding: '1rem',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--bg-input)',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
+            <div
+              onClick={() => setActiveTab('timetable')}
+              style={{
+                padding: '0.9rem',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--bg-input)',
+                border: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+              }}
+            >
               <div>
                 <div style={{ fontSize: '0.95rem', fontWeight: '700' }}>
                   Period 2: Physics Practical Lab
                 </div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                   Class 10-A • Physics Lab • Induction Experiments
                 </div>
               </div>
@@ -178,20 +200,24 @@ export const TeacherDashboard = ({ setActiveTab }) => {
               </div>
             </div>
 
-            <div style={{
-              padding: '1rem',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--bg-input)',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
+            <div
+              onClick={() => setActiveTab('timetable')}
+              style={{
+                padding: '0.9rem',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--bg-input)',
+                border: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+              }}
+            >
               <div>
                 <div style={{ fontSize: '0.95rem', fontWeight: '700' }}>
                   Period 4: Grade 9-B Applied Mathematics
                 </div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                   Class 9-B • Room 202 • Linear Equations
                 </div>
               </div>

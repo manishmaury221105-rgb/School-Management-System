@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   AlertCircle,
   BellRing,
+  FileImage,
 } from 'lucide-react';
 
 export const StudentDashboard = ({ setActiveTab }) => {
@@ -63,6 +64,11 @@ export const StudentDashboard = ({ setActiveTab }) => {
     );
   });
 
+  const studentClass = currentUser?.class || 'Class 10-A';
+  const { timetable } = useSchoolData();
+  const classTimetable = timetable?.[studentClass];
+  const hasTimetable = Boolean(classTimetable?.photo || studentClass === 'Class 10-A');
+
   return (
     <div className="animate-fade-in">
       {/* Student Welcome Banner */}
@@ -86,7 +92,7 @@ export const StudentDashboard = ({ setActiveTab }) => {
               Hello, {currentUser?.name || 'Rohan Sharma'}!
             </h1>
             <p style={{ color: '#c7d2fe', fontSize: '0.92rem', marginTop: '4px' }}>
-              {currentUser?.class || 'Class 10-A'} • Roll #{currentUser?.rollNo || '18'} • House: {currentUser?.house || 'Emerald Dragons'}
+              {studentClass} • Roll #{currentUser?.rollNo || '18'} • House: {currentUser?.house || 'Emerald Dragons'}
             </p>
           </div>
 
@@ -142,7 +148,7 @@ export const StudentDashboard = ({ setActiveTab }) => {
               }}
             >
               <Clock size={16} />
-              <span>Today's Timetable</span>
+              <span>Class Timetable</span>
             </button>
           </div>
         </div>
@@ -192,89 +198,65 @@ export const StudentDashboard = ({ setActiveTab }) => {
         />
       </div>
 
-      {/* Two Column Grid: Today's Live Schedule & Pending Tasks */}
+      {/* Two Column Grid: Class Timetable & Pending Tasks */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem', marginBottom: '1.75rem' }}>
-        {/* Today's Schedule Card */}
+        {/* Class Timetable Card */}
         <div className="card-elevated" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '800' }}>Today's Classes</h3>
+            <div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: '800' }}>Class Timetable</h3>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                {studentClass} • Official Period Routine
+              </p>
+            </div>
             <button
               onClick={() => setActiveTab('timetable')}
               style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}
             >
-              Full Schedule <ArrowRight size={14} />
+              View Full Photo <ArrowRight size={14} />
             </button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{
-              padding: '0.85rem',
-              borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(14, 165, 233, 0.1))',
-              border: '1.5px solid var(--primary)',
+          <div
+            onClick={() => setActiveTab('timetable')}
+            style={{
+              padding: '1.25rem',
+              borderRadius: 'var(--radius-lg)',
+              background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(14, 165, 233, 0.06))',
+              border: '1.5px solid var(--border)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <div>
-                <span style={{ fontSize: '0.68rem', fontWeight: '800', background: 'var(--primary)', color: 'white', padding: '2px 6px', borderRadius: '4px' }}>
-                  ONGOING
-                </span>
-                <div style={{ fontSize: '0.95rem', fontWeight: '800', marginTop: '3px' }}>
-                  Period 1: Mathematics
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                  Mrs. Sarah Jenkins • Room 304
-                </div>
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--primary)',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <FileImage size={24} />
               </div>
-              <div style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--primary)' }}>
-                08:30 - 09:15
+              <div>
+                <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                  {studentClass} Timetable Routine
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  {hasTimetable ? 'Published by Class Teacher • Click to open & zoom' : 'Awaiting upload from Class Teacher'}
+                </div>
               </div>
             </div>
 
-            <div style={{
-              padding: '0.85rem',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--bg-input)',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <div>
-                <div style={{ fontSize: '0.95rem', fontWeight: '700' }}>
-                  Period 2: Physics Practical Lab
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                  Mrs. Sarah Jenkins • Physics Lab
-                </div>
-              </div>
-              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                09:15 - 10:00
-              </div>
-            </div>
-
-            <div style={{
-              padding: '0.85rem',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--bg-input)',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <div>
-                <div style={{ fontSize: '0.95rem', fontWeight: '700' }}>
-                  Period 3: English Literature
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                  Mr. David Miller • Room 304
-                </div>
-              </div>
-              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                10:15 - 11:00
-              </div>
-            </div>
+            <span className="badge-status badge-active">
+              {hasTimetable ? 'Active' : 'Pending'}
+            </span>
           </div>
         </div>
 

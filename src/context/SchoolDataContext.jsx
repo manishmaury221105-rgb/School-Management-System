@@ -413,7 +413,28 @@ export const SchoolDataProvider = ({ children }) => {
     );
   };
 
-  // Exam Marks
+  // Exam Marks & Bulk CSV Report Card Upload
+  const uploadBulkReportCards = (parsedList, className, examTitle) => {
+    setExamsData(prev => {
+      const newResults = { ...(prev?.results || {}) };
+      parsedList.forEach(r => {
+        if (r.studentId) {
+          newResults[r.studentId] = r;
+        }
+        if (r.rollNo && r.class) {
+          newResults[`${r.class}_roll_${r.rollNo}`] = r;
+        }
+        if (r.studentName) {
+          newResults[`name_${r.studentName.trim().toLowerCase()}`] = r;
+        }
+      });
+      return {
+        ...prev,
+        results: newResults,
+      };
+    });
+  };
+
   const updateStudentMarks = (studentId, subjectName, marks, remarks) => {
     setExamsData(prev => {
       const studentResult = prev.results[studentId];
@@ -713,6 +734,7 @@ export const SchoolDataProvider = ({ children }) => {
         submitHomework,
         gradeHomework,
         updateStudentMarks,
+        uploadBulkReportCards,
         payFee,
         collectFee,
         addNotice,

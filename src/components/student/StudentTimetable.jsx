@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { Modal } from '../common/Modal';
+import { getSampleTimetablePNG } from '../../utils/sampleTimetableImage';
 import {
   Calendar,
-  Image as ImageIcon,
   Download,
   Printer,
   Maximize2,
@@ -18,21 +18,31 @@ export const StudentTimetable = () => {
   const studentClass = currentUser?.class || 'Class 10-A';
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
-  // Get active timetable photo for the student's enrolled class
+  // Get active timetable photo uploaded by the teacher for this student's class
   const classTimetableData = timetable?.[studentClass];
-  const activeImage = typeof classTimetableData === 'object' ? classTimetableData.photo : null;
-  const activeTitle = (typeof classTimetableData === 'object' && classTimetableData.title) || `${studentClass} Weekly Timetable`;
-  const activeUploadedBy = (typeof classTimetableData === 'object' && classTimetableData.uploadedBy) || 'Class Faculty';
-  const activeNotes = typeof classTimetableData === 'object' ? classTimetableData.notes : '';
-  const activeUploadedDate = (typeof classTimetableData === 'object' && classTimetableData.updatedAt)
+  
+  let activeImage = null;
+  if (typeof classTimetableData === 'object' && classTimetableData?.photo) {
+    activeImage = classTimetableData.photo;
+  } else if (!timetable || Object.keys(timetable).length === 0 || !classTimetableData) {
+    // Generate a clean sample PNG if nothing uploaded yet for Class 10-A
+    if (studentClass === 'Class 10-A') {
+      activeImage = getSampleTimetablePNG('Class 10-A');
+    }
+  }
+
+  const activeTitle = (typeof classTimetableData === 'object' && classTimetableData?.title) || `${studentClass} Weekly Timetable`;
+  const activeUploadedBy = (typeof classTimetableData === 'object' && classTimetableData?.uploadedBy) || 'Class Teacher';
+  const activeNotes = typeof classTimetableData === 'object' ? classTimetableData?.notes : '';
+  const activeUploadedDate = (typeof classTimetableData === 'object' && classTimetableData?.updatedAt)
     ? new Date(classTimetableData.updatedAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
-    : 'Active Session';
+    : 'Active Term';
 
   const handleDownload = () => {
     if (!activeImage) return;
     const link = document.createElement('a');
     link.href = activeImage;
-    link.download = `${studentClass.replace(/\s+/g, '_')}_Timetable_Routine.png`;
+    link.download = `${studentClass.replace(/\s+/g, '_')}_Timetable.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -43,9 +53,10 @@ export const StudentTimetable = () => {
     const win = window.open('', '_blank');
     if (win) {
       win.document.write(`
+        <!DOCTYPE html>
         <html>
           <head>
-            <title>${studentClass} Timetable Routine</title>
+            <title>${studentClass} Timetable</title>
             <style>
               body { margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #fff; }
               img { max-width: 100%; height: auto; display: block; }
@@ -63,14 +74,14 @@ export const StudentTimetable = () => {
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '2.5rem' }}>
       {/* Page Header */}
-      <div className="page-header-wrap" style={{ marginBottom: '1.5rem' }}>
+      <div className="page-header-wrap" style={{ marginBottom: '1.25rem' }}>
         <div>
           <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Calendar size={26} color="var(--primary)" />
-            <span>Weekly Class Timetable</span>
+            <span>Class Timetable</span>
           </h1>
           <p className="page-subtitle">
-            {studentClass} • Official Academic Routine & Subject Schedule
+            {studentClass} • Official weekly routine uploaded by your class teacher
           </p>
         </div>
 
@@ -98,13 +109,13 @@ export const StudentTimetable = () => {
               style={{ fontSize: '0.85rem', padding: '7px 14px' }}
             >
               <Printer size={15} />
-              <span>Print Routine</span>
+              <span>Print</span>
             </button>
           </div>
         )}
       </div>
 
-      {/* Routine Display Card */}
+      {/* Routine Photo Display */}
       {activeImage ? (
         <div className="card-elevated" style={{ padding: '1.25rem', border: '1px solid var(--border)' }}>
           <div style={{
@@ -122,7 +133,7 @@ export const StudentTimetable = () => {
                 {activeTitle}
               </div>
               <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                Published by <strong>{activeUploadedBy}</strong> • Updated on {activeUploadedDate}
+                Uploaded by <strong>{activeUploadedBy}</strong> • Updated on {activeUploadedDate}
               </div>
             </div>
 
@@ -133,11 +144,8 @@ export const StudentTimetable = () => {
               color: '#059669',
               padding: '4px 10px',
               borderRadius: 'var(--radius-full)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
             }}>
-              <span>● ACTIVE ROUTINE</span>
+              ● ACTIVE TIMETABLE
             </div>
           </div>
 
@@ -151,11 +159,11 @@ export const StudentTimetable = () => {
               color: 'var(--text-secondary)',
               marginBottom: '1rem',
             }}>
-              📌 <strong>Notice from Faculty:</strong> {activeNotes}
+              📌 <strong>Notice from Teacher:</strong> {activeNotes}
             </div>
           )}
 
-          {/* Clickable Routine Photo Container */}
+          {/* Clickable Image to Zoom */}
           <div
             onClick={() => setIsZoomOpen(true)}
             style={{
@@ -176,7 +184,7 @@ export const StudentTimetable = () => {
               alt={`${studentClass} Timetable`}
               style={{
                 width: '100%',
-                maxHeight: '600px',
+                maxHeight: '650px',
                 objectFit: 'contain',
                 borderRadius: 'var(--radius-md)',
                 display: 'block',
@@ -206,19 +214,19 @@ export const StudentTimetable = () => {
             <FileImage size={32} />
           </div>
           <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '4px' }}>
-            Timetable Routine Not Yet Uploaded
+            No Timetable Photo Uploaded Yet for {studentClass}
           </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', maxWidth: '420px', margin: '0 auto' }}>
-            Your class faculty or school administrator will upload the official weekly period timetable photo soon.
+            Your class teacher or school administrator will upload the official weekly period timetable photo soon.
           </p>
         </div>
       )}
 
-      {/* Zoom / Fullscreen Modal */}
+      {/* Fullscreen Zoom Modal */}
       <Modal
         isOpen={isZoomOpen}
         onClose={() => setIsZoomOpen(false)}
-        title={`${studentClass} - Timetable Routine`}
+        title={`${studentClass} - Timetable Photo`}
       >
         <div style={{ textAlign: 'center', maxHeight: '75vh', overflowY: 'auto' }}>
           <img
@@ -233,7 +241,7 @@ export const StudentTimetable = () => {
             </button>
             <button onClick={handlePrint} className="btn-primary">
               <Printer size={16} />
-              <span>Print Routine</span>
+              <span>Print Timetable</span>
             </button>
           </div>
         </div>

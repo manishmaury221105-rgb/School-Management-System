@@ -23,10 +23,10 @@ export const BottomNav = ({ activeTab, setActiveTab }) => {
       case ROLES.ADMIN:
         return [
           { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
+          { id: 'students', label: 'Students', icon: Users },
           { id: 'teachers', label: 'Faculty', icon: UserCheck },
           { id: 'classes', label: 'Classes', icon: School },
           { id: 'fees', label: 'Fees', icon: CreditCard },
-          { id: 'notices', label: 'Notices', icon: BellRing },
         ];
       case ROLES.TEACHER:
         return [
