@@ -56,7 +56,7 @@ export const NoticeBroadcast = () => {
         <div>
           <h1 className="page-title">Notice & Circular Broadcaster</h1>
           <p className="page-subtitle">
-            Publish institutional notifications with targeted audience delivery (Teachers, Students, Parents, All) and priority triggers.
+            Publish institutional notifications with targeted audience delivery (Teachers, Students, All) and priority triggers.
           </p>
         </div>
         <button onClick={() => setIsModalOpen(true)} className="btn-primary">
@@ -87,13 +87,6 @@ export const NoticeBroadcast = () => {
           style={{ padding: '6px 14px', fontSize: '0.82rem' }}
         >
           Students Only
-        </button>
-        <button
-          onClick={() => setFilterAudience('PARENT')}
-          className={filterAudience === 'PARENT' ? 'btn-primary' : 'btn-secondary'}
-          style={{ padding: '6px 14px', fontSize: '0.82rem' }}
-        >
-          Parents Only
         </button>
       </div>
 
@@ -234,7 +227,6 @@ export const NoticeBroadcast = () => {
                 <option value="ALL">All (Everyone)</option>
                 <option value="TEACHER">Teachers Only</option>
                 <option value="STUDENT">Students Only</option>
-                <option value="PARENT">Parents Only</option>
               </select>
             </div>
           </div>

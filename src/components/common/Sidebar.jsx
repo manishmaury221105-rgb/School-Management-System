@@ -41,9 +41,6 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
           { id: 'subjects', label: 'Subjects Master', icon: Layers },
           { id: 'timetable', label: 'Master Timetable', icon: Calendar },
           { id: 'fees', label: 'Fees & Invoicing', icon: CreditCard },
-          { id: 'library', label: 'Library Catalog', icon: Book },
-          { id: 'transport', label: 'Transport Logistics', icon: Bus },
-          { id: 'events', label: 'School Events', icon: Calendar },
           { id: 'notices', label: 'Notice Circulars', icon: BellRing },
           { id: 'leave', label: 'Leave Approvals', icon: FileText },
           { id: 'reports', label: 'Audit & Reports', icon: FileSpreadsheet },
@@ -57,11 +54,8 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
           { id: 'attendance', label: 'Mark Attendance', icon: CalendarCheck },
           { id: 'timetable', label: 'My Timetable', icon: Clock },
           { id: 'homework', label: 'Homework & Tasks', icon: BookOpen },
-          { id: 'study-material', label: 'Study Materials', icon: UploadCloud },
           { id: 'gradebook', label: 'Exam & Gradebook', icon: Award },
-          { id: 'performance', label: 'Student Analytics', icon: TrendingUp },
           { id: 'notices', label: 'Class Notices', icon: BellRing },
-          { id: 'leave', label: 'Leave Approvals', icon: FileText },
         ];
       case ROLES.STUDENT:
         return [
@@ -71,10 +65,8 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
           { id: 'attendance', label: 'Live Attendance', icon: CalendarCheck },
           { id: 'timetable', label: 'Class Timetable', icon: Clock },
           { id: 'homework', label: 'Homework & Tasks', icon: BookOpen },
-          { id: 'study-material', label: 'Study Notes & PDF', icon: UploadCloud },
           { id: 'exams', label: 'Exams & Results', icon: Award },
           { id: 'fees', label: 'Fee Invoices & Pay', icon: Wallet },
-          { id: 'events', label: 'School Events', icon: Calendar },
           { id: 'notices', label: 'Notice Board', icon: BellRing },
         ];
       default:

@@ -26,12 +26,8 @@ export const ROLE_PERMISSIONS = {
       'fees',
       'exams',
       'homework',
-      'study-material',
       'notices',
-      'events',
       'leave',
-      'library',
-      'transport',
       'reports',
       'settings',
     ],
@@ -48,11 +44,8 @@ export const ROLE_PERMISSIONS = {
       'attendance',
       'timetable',
       'homework',
-      'study-material',
       'gradebook',
-      'performance',
       'notices',
-      'leave',
       'profile',
     ],
   },
@@ -69,12 +62,9 @@ export const ROLE_PERMISSIONS = {
       'attendance',
       'timetable',
       'homework',
-      'study-material',
       'exams',
       'fees',
       'notices',
-      'events',
-      'library',
     ],
   },
   PARENT: {
@@ -92,7 +82,6 @@ export const ROLE_PERMISSIONS = {
       'fees',
       'leave',
       'notices',
-      'events',
     ],
   },
 };
@@ -474,7 +463,137 @@ export const INITIAL_LIBRARY_TRANSACTIONS = [];
 export const INITIAL_TRANSPORT_ROUTES = [];
 export const INITIAL_EVENTS = [];
 export const INITIAL_NOTIFICATIONS = [];
-export const INITIAL_ATTENDANCE_RECORDS = {};
+export const ACADEMIC_SESSION = {
+  startDate: '2026-04-01',
+  endDate: '2027-03-31',
+  label: 'Academic Session 2026–2027 (1 Apr – 31 Mar)',
+  totalWorkingDays: 313,
+};
+
+// Deterministic fast string hash for realistic stable attendance simulation
+const pseudoHash = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+};
+
+// Generate Full Year Student Attendance (1 April 2026 to 31 March 2027)
+export const generateSessionAttendanceRecords = () => {
+  const records = {};
+  const studentRateMap = {
+    'user-student-default': 96,
+    'stu-2': 94,
+    'stu-3': 88,
+    'stu-4': 92,
+    'stu-5': 78,
+    'stu-6': 95,
+    'stu-7': 91,
+    'stu-8': 97,
+  };
+
+  const studentClassMap = {
+    'user-student-default': 'Class 10-A',
+    'stu-2': 'Class 10-A',
+    'stu-3': 'Class 10-A',
+    'stu-4': 'Class 10-A',
+    'stu-5': 'Class 10-A',
+    'stu-6': 'Class 9-B',
+    'stu-7': 'Class 9-B',
+    'stu-8': 'Class 9-A',
+  };
+
+  for (let d = new Date(2026, 3, 1); d <= new Date(2027, 2, 31, 23, 59, 59); d.setDate(d.getDate() + 1)) {
+    const day = d.getDay();
+    if (day === 0) continue; // Sunday holiday
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dayNum = String(d.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${dayNum}`;
+
+    Object.entries(studentClassMap).forEach(([stuId, className]) => {
+      if (!records[className]) records[className] = {};
+      if (!records[className][dateStr]) records[className][dateStr] = {};
+
+      const targetRate = studentRateMap[stuId] || 90;
+      const h = pseudoHash(dateStr + stuId) % 100;
+      let status = 'Present';
+      if (h >= targetRate) {
+        status = (h % 2 === 0) ? 'Absent' : 'Late';
+      }
+      records[className][dateStr][stuId] = status;
+    });
+  }
+
+  return records;
+};
+
+// Generate Full Year Staff Attendance (1 April 2026 to 31 March 2027)
+export const generateSessionStaffAttendanceRecords = () => {
+  const records = {};
+  const staffConfigs = [
+    {
+      id: 'user-teacher-default',
+      name: 'Dr. Alok Verma',
+      presentDuty: 'On Duty • Period 1-4 & Class Incharge',
+      lateDuty: 'Traffic Delay • Morning Lab Setup',
+      leaveDuty: 'Approved Academic & Casual Leave',
+    },
+    {
+      id: 'teacher-2',
+      name: 'Mrs. Sunita Sharma',
+      presentDuty: 'Morning Assembly & English Department',
+      lateDuty: 'Late Entry • Class Supervision',
+      leaveDuty: 'Approved Medical / Exam Duty',
+    },
+    {
+      id: 'teacher-3',
+      name: 'Mr. Rajesh Sen',
+      presentDuty: 'Computer Lab Practical Sessions & AI Club',
+      lateDuty: 'Hardware Maintenance & Late Sign-In',
+      leaveDuty: 'Hackathon & Workshop Duty',
+    },
+  ];
+
+  for (let d = new Date(2026, 3, 1); d <= new Date(2027, 2, 31, 23, 59, 59); d.setDate(d.getDate() + 1)) {
+    const day = d.getDay();
+    if (day === 0) continue; // Sunday weekly off
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dayNum = String(d.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${dayNum}`;
+
+    records[dateStr] = {};
+    staffConfigs.forEach((staff) => {
+      const h = pseudoHash(dateStr + staff.id) % 100;
+      let status = 'Present';
+      let checkIn = '08:15 AM';
+      let checkOut = '03:45 PM';
+      let remarks = staff.presentDuty;
+
+      if (h >= 96) {
+        status = 'On Leave';
+        checkIn = '—';
+        checkOut = '—';
+        remarks = staff.leaveDuty;
+      } else if (h >= 92) {
+        status = 'Late';
+        checkIn = '08:35 AM';
+        checkOut = '03:45 PM';
+        remarks = staff.lateDuty;
+      }
+
+      records[dateStr][staff.id] = { status, checkIn, checkOut, remarks };
+    });
+  }
+
+  return records;
+};
+
+export const INITIAL_ATTENDANCE_RECORDS = generateSessionAttendanceRecords();
+export const INITIAL_STAFF_ATTENDANCE = generateSessionStaffAttendanceRecords();
 export const INITIAL_HOMEWORK = [];
 export const INITIAL_TIMETABLE = {};
 export const INITIAL_EXAMS_AND_RESULTS = {

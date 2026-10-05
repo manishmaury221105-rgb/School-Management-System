@@ -5,14 +5,33 @@ import { Modal } from '../common/Modal';
 import { FileText, Plus, Trash2, Download, UploadCloud, Search } from 'lucide-react';
 
 export const TeacherStudyMaterials = () => {
-  const { studyMaterials, addStudyMaterial, deleteStudyMaterial, classes, subjects } = useSchoolData();
+  const { studyMaterials, addStudyMaterial, deleteStudyMaterial, classes, subjects, teachers } = useSchoolData();
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const activeTeacher = teachers?.find(t =>
+    t.id === currentUser?.id ||
+    (currentUser?.phone && t.phone === currentUser?.phone) ||
+    (currentUser?.email && t.email?.toLowerCase() === currentUser?.email?.toLowerCase())
+  ) || currentUser;
+
+  const teacherClasses = React.useMemo(() => {
+    const list = [];
+    if (activeTeacher?.classTeacherOf) list.push(activeTeacher.classTeacherOf);
+    if (Array.isArray(activeTeacher?.assignedClasses)) {
+      activeTeacher.assignedClasses.forEach(c => {
+        if (!list.includes(c)) list.push(c);
+      });
+    }
+    return list.length > 0 ? list : ['Class 10-A'];
+  }, [activeTeacher]);
+
+  const defaultClass = activeTeacher?.classTeacherOf || teacherClasses[0] || 'Class 10-A';
+
   const [formData, setFormData] = useState({
     title: '',
-    class: 'Class 10-A',
+    class: defaultClass,
     subject: 'Mathematics',
     chapter: '',
     topic: '',
@@ -21,7 +40,7 @@ export const TeacherStudyMaterials = () => {
   });
 
   const teacherMaterials = studyMaterials.filter(
-    (m) => m.uploadedBy === currentUser?.name || m.class === 'Class 10-A'
+    (m) => m.uploadedBy === (currentUser?.name || activeTeacher?.name) || teacherClasses.includes(m.class)
   );
 
   const filtered = teacherMaterials.filter((m) =>
@@ -34,12 +53,13 @@ export const TeacherStudyMaterials = () => {
     if (!formData.title) return;
     addStudyMaterial({
       ...formData,
-      uploadedBy: currentUser?.name || 'Mrs. Sarah Jenkins',
+      class: formData.class || defaultClass,
+      uploadedBy: currentUser?.name || activeTeacher?.name || 'Faculty Member',
     });
     setIsModalOpen(false);
     setFormData({
       title: '',
-      class: 'Class 10-A',
+      class: defaultClass,
       subject: 'Mathematics',
       chapter: '',
       topic: '',
@@ -184,8 +204,10 @@ export const TeacherStudyMaterials = () => {
                 onChange={(e) => setFormData({ ...formData, class: e.target.value })}
                 style={{ width: '100%' }}
               >
-                {classes.map((c) => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
+                {teacherClasses.map((cls) => (
+                  <option key={cls} value={cls}>
+                    {cls} {cls === activeTeacher?.classTeacherOf ? '★ (Class Teacher)' : ''}
+                  </option>
                 ))}
               </select>
             </div>

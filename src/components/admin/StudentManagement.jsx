@@ -45,9 +45,10 @@ export const StudentManagement = ({ setActiveTab }) => {
   }, [isAdmin, classes, activeTeacher]);
 
   const defaultAssignedClass = activeTeacher?.classTeacherOf || (Array.isArray(activeTeacher?.assignedClasses) && activeTeacher.assignedClasses[0]) || classes[0]?.name || 'Class 10-A';
+  const allowedClassNames = React.useMemo(() => new Set(allowedClasses.map(c => c.name)), [allowedClasses]);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedClass, setSelectedClass] = useState('ALL');
+  const [selectedClass, setSelectedClass] = useState(() => (isAdmin ? 'ALL' : defaultAssignedClass));
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isFeeModalOpen, setIsFeeModalOpen] = useState(false);
@@ -169,6 +170,10 @@ export const StudentManagement = ({ setActiveTab }) => {
   };
 
   const filteredStudents = students.filter((s) => {
+    // If not admin, student MUST belong to teacher's assigned classes
+    if (!isAdmin && !allowedClassNames.has(s.class)) {
+      return false;
+    }
     const matchesSearch =
       (s.name && s.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (s.studentId && s.studentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -266,18 +271,38 @@ export const StudentManagement = ({ setActiveTab }) => {
               <select
                 value={selectedClass}
                 onChange={(e) => setSelectedClass(e.target.value)}
-                style={{ padding: '8px 12px', fontSize: '0.88rem' }}
+                style={{ padding: '8px 12px', fontSize: '0.88rem', fontWeight: '600' }}
               >
-                <option value="ALL">All Classes & Sections ({students.length})</option>
-                {classes.map((c) => {
-                  const count = students.filter(s => s.class === c.name).length;
-                  const isAssigned = !isAdmin && (activeTeacher?.classTeacherOf === c.name || (Array.isArray(activeTeacher?.assignedClasses) && activeTeacher.assignedClasses.includes(c.name)));
-                  return (
-                    <option key={c.id || c.name} value={c.name}>
-                      {c.name} ({count}) {isAssigned ? (activeTeacher?.classTeacherOf === c.name ? '★ Class Teacher' : '• My Class') : ''}
-                    </option>
-                  );
-                })}
+                {isAdmin ? (
+                  <>
+                    <option value="ALL">All Classes & Sections ({students.length})</option>
+                    {classes.map((c) => {
+                      const count = students.filter(s => s.class === c.name).length;
+                      return (
+                        <option key={c.id || c.name} value={c.name}>
+                          {c.name} ({count})
+                        </option>
+                      );
+                    })}
+                  </>
+                ) : (
+                  <>
+                    {allowedClasses.length > 1 && (
+                      <option value="ALL">
+                        All My Assigned Classes ({students.filter(s => allowedClassNames.has(s.class)).length})
+                      </option>
+                    )}
+                    {allowedClasses.map((c) => {
+                      const count = students.filter(s => s.class === c.name).length;
+                      const isClassTeacher = activeTeacher?.classTeacherOf === c.name;
+                      return (
+                        <option key={c.id || c.name} value={c.name}>
+                          {c.name} ({count} Students) {isClassTeacher ? '★ Class Teacher' : '• Assigned'}
+                        </option>
+                      );
+                    })}
+                  </>
+                )}
               </select>
             </div>
           </div>

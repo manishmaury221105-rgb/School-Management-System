@@ -15,10 +15,29 @@ import {
 } from 'lucide-react';
 
 export const HomeworkManager = () => {
-  const { homework, addHomework, gradeHomework, students } = useSchoolData();
+  const { homework, addHomework, gradeHomework, students, teachers } = useSchoolData();
   const { currentUser } = useAuth();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedHwForSubmissions, setSelectedHwForSubmissions] = useState(null);
+
+  const activeTeacher = teachers?.find(t =>
+    t.id === currentUser?.id ||
+    (currentUser?.phone && t.phone === currentUser?.phone) ||
+    (currentUser?.email && t.email?.toLowerCase() === currentUser?.email?.toLowerCase())
+  ) || currentUser;
+
+  const teacherClasses = React.useMemo(() => {
+    const list = [];
+    if (activeTeacher?.classTeacherOf) list.push(activeTeacher.classTeacherOf);
+    if (Array.isArray(activeTeacher?.assignedClasses)) {
+      activeTeacher.assignedClasses.forEach(c => {
+        if (!list.includes(c)) list.push(c);
+      });
+    }
+    return list.length > 0 ? list : ['Class 10-A'];
+  }, [activeTeacher]);
+
+  const defaultClass = activeTeacher?.classTeacherOf || teacherClasses[0] || 'Class 10-A';
 
   // Grade submission modal state
   const [gradeModalStudent, setGradeModalStudent] = useState(null);
@@ -28,7 +47,7 @@ export const HomeworkManager = () => {
   const [formData, setFormData] = useState({
     title: '',
     subject: 'Mathematics',
-    class: 'Class 10-A',
+    class: defaultClass,
     dueDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
     description: '',
   });
@@ -38,13 +57,14 @@ export const HomeworkManager = () => {
     if (!formData.title || !formData.description) return;
     addHomework({
       ...formData,
-      assignedBy: currentUser?.name || 'Mrs. Sarah Jenkins',
+      class: formData.class || defaultClass,
+      assignedBy: currentUser?.name || activeTeacher?.name || 'Faculty Member',
     });
     setIsCreateModalOpen(false);
     setFormData({
       title: '',
       subject: 'Mathematics',
-      class: 'Class 10-A',
+      class: defaultClass,
       dueDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
       description: '',
     });
@@ -217,9 +237,11 @@ export const HomeworkManager = () => {
                 onChange={(e) => setFormData({ ...formData, class: e.target.value })}
                 style={{ width: '100%' }}
               >
-                <option value="Class 10-A">Class 10-A</option>
-                <option value="Class 9-B">Class 9-B</option>
-                <option value="Class 6-B">Class 6-B</option>
+                {teacherClasses.map((cls) => (
+                  <option key={cls} value={cls}>
+                    {cls} {cls === activeTeacher?.classTeacherOf ? '★ (Class Teacher)' : ''}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

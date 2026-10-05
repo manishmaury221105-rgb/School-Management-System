@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
+import { useAuth, ROLES } from '../../context/AuthContext';
 import { Modal } from '../common/Modal';
 import {
   TrendingUp,
@@ -13,11 +14,34 @@ import {
 } from 'lucide-react';
 
 export const StudentPerformance = () => {
-  const { students, examsData } = useSchoolData();
+  const { students, examsData, teachers } = useSchoolData();
+  const { currentUser, currentRole } = useAuth();
+  const isAdmin = currentRole === ROLES.ADMIN;
   const [selectedStudent, setSelectedStudent] = useState(null);
 
-  const topStudents = [...students].sort((a, b) => (b.gpa || 0) - (a.gpa || 0)).slice(0, 4);
-  const atRiskStudents = students.filter(s => s.attendancePercent < 85 || (s.gpa && s.gpa < 3.2));
+  const activeTeacher = teachers?.find(t =>
+    t.id === currentUser?.id ||
+    (currentUser?.phone && t.phone === currentUser?.phone) ||
+    (currentUser?.email && t.email?.toLowerCase() === currentUser?.email?.toLowerCase())
+  ) || currentUser;
+
+  const teacherClasses = React.useMemo(() => {
+    const list = [];
+    if (activeTeacher?.classTeacherOf) list.push(activeTeacher.classTeacherOf);
+    if (Array.isArray(activeTeacher?.assignedClasses)) {
+      activeTeacher.assignedClasses.forEach(c => {
+        if (!list.includes(c)) list.push(c);
+      });
+    }
+    return list.length > 0 ? list : ['Class 10-A'];
+  }, [activeTeacher]);
+
+  const classStudents = isAdmin
+    ? students
+    : students.filter(s => teacherClasses.includes(s.class));
+
+  const topStudents = [...classStudents].sort((a, b) => (b.gpa || 0) - (a.gpa || 0)).slice(0, 4);
+  const atRiskStudents = classStudents.filter(s => s.attendancePercent < 85 || (s.gpa && s.gpa < 3.2));
 
   return (
     <div className="animate-fade-in">

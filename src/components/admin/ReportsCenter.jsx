@@ -13,12 +13,14 @@ import {
   BookOpen,
   Bus,
   Book,
+  UserCheck,
 } from 'lucide-react';
 
 export const ReportsCenter = () => {
-  const { students, teachers, fees, attendance, examsData, books, transportRoutes, homework } = useSchoolData();
+  const { students, teachers, fees, attendance, staffAttendance, examsData, books, transportRoutes, homework } = useSchoolData();
   const [reportType, setReportType] = useState('STUDENT');
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterMonth, setFilterMonth] = useState('ALL');
 
   const handleExportCSV = (filename, headers, rows) => {
     const csvContent =
@@ -247,6 +249,180 @@ export const ReportsCenter = () => {
         );
       }
 
+      case 'STUDENT_ATTENDANCE': {
+        const studentAttendanceRows = [];
+        Object.entries(attendance || {}).forEach(([cls, datesMap]) => {
+          Object.entries(datesMap || {}).forEach(([dateStr, stuMap]) => {
+            if (filterMonth !== 'ALL' && !dateStr.startsWith(filterMonth)) return;
+            Object.entries(stuMap || {}).forEach(([stuId, st]) => {
+              const stu = students.find((s) => s.id === stuId);
+              if (
+                !searchTerm ||
+                (stu?.name && stu.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                cls.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                dateStr.includes(searchTerm)
+              ) {
+                studentAttendanceRows.push({
+                  date: dateStr,
+                  class: cls,
+                  studentId: stu?.studentId || stuId,
+                  studentName: stu?.name || stuId,
+                  rollNo: stu?.rollNo || '01',
+                  status: st,
+                });
+              }
+            });
+          });
+        });
+
+        return (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '800' }}>Student Academic Attendance Register (1 Apr 2026 – 31 Mar 2027)</h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Showing {studentAttendanceRows.length} attendance event logs</p>
+              </div>
+              <button
+                onClick={() =>
+                  handleExportCSV(
+                    'edusphere_students_attendance_session',
+                    ['Date', 'Class', 'RollNo', 'StudentID', 'StudentName', 'Status'],
+                    studentAttendanceRows.map((r) => [r.date, `"${r.class}"`, r.rollNo, r.studentId, `"${r.studentName}"`, r.status])
+                  )
+                }
+                className="btn-primary"
+                style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+              >
+                <Download size={14} />
+                <span>Export Session CSV</span>
+              </button>
+            </div>
+
+            <table className="custom-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Class</th>
+                  <th>Roll #</th>
+                  <th>Student ID</th>
+                  <th>Student Name</th>
+                  <th>Attendance Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {studentAttendanceRows.slice(0, 100).map((row, idx) => (
+                  <tr key={idx}>
+                    <td><strong>{row.date}</strong></td>
+                    <td>{row.class}</td>
+                    <td>#{row.rollNo}</td>
+                    <td style={{ fontFamily: 'monospace' }}>{row.studentId}</td>
+                    <td><strong>{row.studentName}</strong></td>
+                    <td>
+                      <span className={`badge-status ${row.status === 'Present' ? 'badge-present' : row.status === 'Late' ? 'badge-late' : 'badge-absent'}`}>
+                        {row.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {studentAttendanceRows.length > 100 && (
+              <div style={{ textAlign: 'center', padding: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Showing first 100 records of {studentAttendanceRows.length}. Export CSV to download complete dataset.
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      case 'STAFF_ATTENDANCE': {
+        const staffAttendanceRows = [];
+        Object.entries(staffAttendance || {}).forEach(([dateStr, staffMap]) => {
+          if (filterMonth !== 'ALL' && !dateStr.startsWith(filterMonth)) return;
+          Object.entries(staffMap || {}).forEach(([tId, rec]) => {
+            const t = teachers.find((tch) => tch.id === tId);
+            if (
+              !searchTerm ||
+              (t?.name && t.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+              (t?.subject && t.subject.toLowerCase().includes(searchTerm.toLowerCase())) ||
+              dateStr.includes(searchTerm)
+            ) {
+              staffAttendanceRows.push({
+                date: dateStr,
+                teacherId: t?.teacherId || tId,
+                name: t?.name || tId,
+                subject: t?.subject || 'Faculty',
+                status: rec.status || 'Present',
+                checkIn: rec.checkIn || '08:15 AM',
+                checkOut: rec.checkOut || '03:45 PM',
+                remarks: rec.remarks || 'On Duty',
+              });
+            }
+          });
+        });
+
+        return (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '800' }}>Faculty & Staff Attendance Register (1 Apr 2026 – 31 Mar 2027)</h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Showing {staffAttendanceRows.length} staff attendance records</p>
+              </div>
+              <button
+                onClick={() =>
+                  handleExportCSV(
+                    'edusphere_faculty_attendance_session',
+                    ['Date', 'StaffID', 'StaffName', 'Subject', 'Status', 'CheckIn', 'CheckOut', 'Remarks'],
+                    staffAttendanceRows.map((r) => [r.date, r.teacherId, `"${r.name}"`, `"${r.subject}"`, r.status, r.checkIn, r.checkOut, `"${r.remarks}"`])
+                  )
+                }
+                className="btn-primary"
+                style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+              >
+                <Download size={14} />
+                <span>Export Session CSV</span>
+              </button>
+            </div>
+
+            <table className="custom-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Staff ID</th>
+                  <th>Faculty Member</th>
+                  <th>Department / Subject</th>
+                  <th>Status</th>
+                  <th>Timings</th>
+                  <th>Duty Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {staffAttendanceRows.slice(0, 100).map((row, idx) => (
+                  <tr key={idx}>
+                    <td><strong>{row.date}</strong></td>
+                    <td style={{ fontFamily: 'monospace' }}>{row.teacherId}</td>
+                    <td><strong>{row.name}</strong></td>
+                    <td>{row.subject}</td>
+                    <td>
+                      <span className={`badge-status ${row.status === 'Present' ? 'badge-present' : row.status === 'Late' ? 'badge-late' : row.status === 'On Leave' ? 'badge-paid' : 'badge-absent'}`}>
+                        {row.status}
+                      </span>
+                    </td>
+                    <td style={{ fontSize: '0.82rem' }}>{row.checkIn} — {row.checkOut}</td>
+                    <td style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{row.remarks}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {staffAttendanceRows.length > 100 && (
+              <div style={{ textAlign: 'center', padding: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Showing first 100 records of {staffAttendanceRows.length}. Export CSV to download complete dataset.
+              </div>
+            )}
+          </div>
+        );
+      }
+
       default:
         return null;
     }
@@ -276,7 +452,9 @@ export const ReportsCenter = () => {
         marginBottom: '1.5rem',
       }}>
         {[
-          { id: 'STUDENT', label: 'Students Report', icon: Users },
+          { id: 'STUDENT', label: 'Students Directory', icon: Users },
+          { id: 'STUDENT_ATTENDANCE', label: 'Student Attendance (1 Apr – 31 Mar)', icon: CalendarCheck },
+          { id: 'STAFF_ATTENDANCE', label: 'Faculty Attendance (1 Apr – 31 Mar)', icon: UserCheck },
           { id: 'FEES', label: 'Fees & Collections', icon: CreditCard },
           { id: 'TEACHER', label: 'Teachers & Payroll', icon: Award },
           { id: 'LIBRARY', label: 'Library Catalog', icon: Book },
@@ -309,10 +487,10 @@ export const ReportsCenter = () => {
         })}
       </div>
 
-      {/* Search Toolbar */}
+      {/* Search & Month Filter Toolbar */}
       <div className="table-container" style={{ padding: '1.5rem' }}>
-        <div style={{ marginBottom: '1.25rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <div className="table-search-input" style={{ flex: 1 }}>
+        <div style={{ marginBottom: '1.25rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="table-search-input" style={{ flex: 1, minWidth: '240px' }}>
             <Search size={16} color="var(--text-muted)" />
             <input
               type="text"
@@ -321,6 +499,31 @@ export const ReportsCenter = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+
+          {(reportType === 'STUDENT_ATTENDANCE' || reportType === 'STAFF_ATTENDANCE') && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)' }}>Month:</span>
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                style={{ padding: '6px 12px', fontSize: '0.85rem', fontWeight: '600' }}
+              >
+                <option value="ALL">All Session (1 Apr – 31 Mar)</option>
+                <option value="2026-04">April 2026</option>
+                <option value="2026-05">May 2026</option>
+                <option value="2026-06">June 2026</option>
+                <option value="2026-07">July 2026</option>
+                <option value="2026-08">August 2026</option>
+                <option value="2026-09">September 2026</option>
+                <option value="2026-10">October 2026</option>
+                <option value="2026-11">November 2026</option>
+                <option value="2026-12">December 2026</option>
+                <option value="2027-01">January 2027</option>
+                <option value="2027-02">February 2027</option>
+                <option value="2027-03">March 2027</option>
+              </select>
+            </div>
+          )}
         </div>
 
         <div style={{ overflowX: 'auto' }}>

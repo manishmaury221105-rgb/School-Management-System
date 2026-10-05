@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
+import { useAuth, ROLES } from '../../context/AuthContext';
 import { Modal } from '../common/Modal';
 import {
   Award,
@@ -13,14 +14,52 @@ import {
 } from 'lucide-react';
 
 export const GradebookManager = () => {
-  const { examsData, updateStudentMarks } = useSchoolData();
-  const [selectedStudentId, setSelectedStudentId] = useState('user-student-1');
+  const { examsData, updateStudentMarks, students, teachers } = useSchoolData();
+  const { currentUser, currentRole } = useAuth();
+  const isAdmin = currentRole === ROLES.ADMIN;
+
+  const activeTeacher = teachers?.find(t =>
+    t.id === currentUser?.id ||
+    (currentUser?.phone && t.phone === currentUser?.phone) ||
+    (currentUser?.email && t.email?.toLowerCase() === currentUser?.email?.toLowerCase())
+  ) || currentUser;
+
+  const teacherClasses = useMemo(() => {
+    const list = [];
+    if (activeTeacher?.classTeacherOf) list.push(activeTeacher.classTeacherOf);
+    if (Array.isArray(activeTeacher?.assignedClasses)) {
+      activeTeacher.assignedClasses.forEach(c => {
+        if (!list.includes(c)) list.push(c);
+      });
+    }
+    return list.length > 0 ? list : ['Class 10-A'];
+  }, [activeTeacher]);
+
+  const classStudents = useMemo(() => {
+    if (isAdmin) return students;
+    return students.filter(s => teacherClasses.includes(s.class));
+  }, [isAdmin, students, teacherClasses]);
+
+  const [selectedStudentId, setSelectedStudentId] = useState(() => classStudents[0]?.id || 'user-student-default');
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [marksInput, setMarksInput] = useState('');
   const [remarksInput, setRemarksInput] = useState('');
   const [toastSuccess, setToastSuccess] = useState(false);
 
-  const studentResult = examsData.results[selectedStudentId] || examsData.results['user-student-1'];
+  const selectedStudent = classStudents.find(s => s.id === selectedStudentId) || classStudents[0];
+  const studentResult = examsData.results[selectedStudentId] || examsData.results['user-student-default'] || examsData.results['user-student-1'] || {
+    totalMarks: 462,
+    maxTotal: 500,
+    percentage: 92.4,
+    gpa: 3.9,
+    subjects: [
+      { name: 'Mathematics', marks: 95, maxMarks: 100, grade: 'A+', remarks: 'Outstanding problem solving' },
+      { name: 'Physics', marks: 88, maxMarks: 100, grade: 'A', remarks: 'Good conceptual clarity' },
+      { name: 'Chemistry', marks: 92, maxMarks: 100, grade: 'A+', remarks: 'Excellent lab performance' },
+      { name: 'English', marks: 89, maxMarks: 100, grade: 'A', remarks: 'Commendable creative writing' },
+      { name: 'Computer Science', marks: 98, maxMarks: 100, grade: 'A+', remarks: 'Exceptional coding logic' },
+    ],
+  };
 
   const handleEditSubject = (subj) => {
     setSelectedSubject(subj);
@@ -76,8 +115,11 @@ export const GradebookManager = () => {
             onChange={(e) => setSelectedStudentId(e.target.value)}
             style={{ fontWeight: '700', minWidth: '240px' }}
           >
-            <option value="user-student-1">Rohan Sharma (Class 10-A • Roll #18)</option>
-            <option value="user-student-2">Maya Sharma (Class 6-B • Roll #07)</option>
+            {classStudents.map((stu) => (
+              <option key={stu.id} value={stu.id}>
+                {stu.name} ({stu.class} • Roll #{stu.rollNo})
+              </option>
+            ))}
           </select>
         </div>
 

@@ -18,33 +18,56 @@ import {
 } from 'lucide-react';
 
 export const TeacherNotices = () => {
-  const { notices, addNotice, leaveRequests, updateLeaveStatus } = useSchoolData();
+  const { notices, addNotice, leaveRequests, updateLeaveStatus, teachers } = useSchoolData();
   const { currentUser } = useAuth();
   const [activeSubTab, setActiveSubTab] = useState('notices');
   const [filterCategory, setFilterCategory] = useState('ALL');
   const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false);
 
+  // Identify teacher assigned classes
+  const activeTeacher = teachers?.find(t =>
+    t.id === currentUser?.id ||
+    (currentUser?.phone && t.phone === currentUser?.phone) ||
+    (currentUser?.email && t.email?.toLowerCase() === currentUser?.email?.toLowerCase())
+  ) || currentUser;
+
+  const teacherClasses = React.useMemo(() => {
+    const list = [];
+    if (activeTeacher?.classTeacherOf) list.push(activeTeacher.classTeacherOf);
+    if (Array.isArray(activeTeacher?.assignedClasses)) {
+      activeTeacher.assignedClasses.forEach(c => {
+        if (!list.includes(c)) list.push(c);
+      });
+    }
+    return list.length > 0 ? list : ['Class 10-A'];
+  }, [activeTeacher]);
+
+  const defaultTargetClass = activeTeacher?.classTeacherOf || teacherClasses[0] || 'Class 10-A';
+
   const [noticeForm, setNoticeForm] = useState({
     title: '',
     category: 'Academic',
     priority: 'High',
-    target: 'STUDENT',
+    target: defaultTargetClass,
     content: '',
   });
 
   const handleCreateNotice = (e) => {
     e.preventDefault();
     if (!noticeForm.title || !noticeForm.content) return;
+    const targetClass = noticeForm.target || defaultTargetClass;
     addNotice({
       ...noticeForm,
-      author: `${currentUser?.name || 'Mrs. Sarah Jenkins'} (Class Teacher 10-A)`,
+      target: targetClass,
+      targetClass: targetClass,
+      author: `${currentUser?.name || activeTeacher?.name || 'Faculty Member'} (Class Teacher ${targetClass})`,
     });
     setIsNoticeModalOpen(false);
     setNoticeForm({
       title: '',
       category: 'Academic',
       priority: 'High',
-      target: 'STUDENT',
+      target: defaultTargetClass,
       content: '',
     });
   };
@@ -56,13 +79,24 @@ export const TeacherNotices = () => {
 
   // Filter notices for Teacher View
   const filteredNotices = notices.filter((n) => {
+    if (!n) return false;
+    const tgt = String(n.target || 'ALL').trim().toUpperCase();
+    const isTargetRelevant =
+      tgt === 'ALL' ||
+      tgt === 'EVERYONE' ||
+      tgt === 'TEACHER' ||
+      tgt === 'FACULTY' ||
+      tgt === 'STUDENT' ||
+      tgt === 'STUDENTS' ||
+      teacherClasses.some(c => c.toUpperCase() === tgt);
+
+    if (!isTargetRelevant) return false;
+
     if (filterCategory === 'FACULTY') {
-      const tgt = (n.target || '').toUpperCase();
-      return tgt === 'TEACHER' || tgt === 'ALL';
+      return tgt === 'TEACHER' || tgt === 'FACULTY' || tgt === 'ALL';
     }
     if (filterCategory === 'STUDENTS') {
-      const tgt = (n.target || '').toUpperCase();
-      return tgt === 'STUDENT' || tgt === 'ALL' || tgt === 'STUDENTS';
+      return tgt === 'STUDENT' || tgt === 'STUDENTS' || teacherClasses.some(c => c.toUpperCase() === tgt);
     }
     if (filterCategory === 'URGENT') {
       return n.priority === 'Urgent' || n.priority === 'High';
@@ -349,16 +383,18 @@ export const TeacherNotices = () => {
 
             <div>
               <label style={{ fontSize: '0.82rem', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-                Target Audience
+                Target Class (Students Only)
               </label>
               <select
                 value={noticeForm.target}
                 onChange={(e) => setNoticeForm({ ...noticeForm, target: e.target.value })}
-                style={{ width: '100%' }}
+                style={{ width: '100%', fontWeight: '600' }}
               >
-                <option value="STUDENT">Students Only</option>
-                <option value="ALL">Everyone (All)</option>
-                <option value="TEACHER">Faculty Only</option>
+                {teacherClasses.map((cls) => (
+                  <option key={cls} value={cls}>
+                    {cls} (Class Students) {cls === activeTeacher?.classTeacherOf ? '★' : ''}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

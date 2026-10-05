@@ -18,18 +18,48 @@ import {
   INITIAL_FEES,
   INITIAL_NOTICES,
   INITIAL_LEAVE_REQUESTS,
+  INITIAL_STAFF_ATTENDANCE,
 } from '../data/mockData';
 
-const DB_VERSION = 'edusphere_v2';
+const DB_VERSION = 'edusphere_v3';
 
 const getSafeStorage = (key, fallback) => {
   try {
     const versionedKey = `${DB_VERSION}_${key}`;
     const saved = localStorage.getItem(versionedKey);
-    if (!saved) return fallback;
+    if (!saved) {
+      // Also check old v2 if exists and migrate
+      const oldSaved = localStorage.getItem(`edusphere_v2_${key}`);
+      if (oldSaved) {
+        try {
+          const oldParsed = JSON.parse(oldSaved);
+          if (key === 'attendance' || key === 'staff_attendance') {
+            return { ...fallback, ...(oldParsed || {}) };
+          }
+          return oldParsed ?? fallback;
+        } catch (e) {
+          return fallback;
+        }
+      }
+      return fallback;
+    }
     const parsed = JSON.parse(saved);
     if (Array.isArray(fallback) && Array.isArray(parsed) && parsed.length === 0 && fallback.length > 0) {
       return fallback;
+    }
+    if (key === 'attendance') {
+      // Merge class records with fallback full session records
+      if (!parsed || Object.keys(parsed).length === 0) return fallback;
+      const merged = { ...fallback };
+      Object.keys(parsed).forEach((cls) => {
+        merged[cls] = { ...(fallback[cls] || {}), ...(parsed[cls] || {}) };
+      });
+      return merged;
+    }
+    if (key === 'staff_attendance') {
+      if (!parsed || Object.keys(parsed).length < 50) {
+        return { ...fallback, ...(parsed || {}) };
+      }
     }
     return parsed ?? fallback;
   } catch (err) {
@@ -54,6 +84,7 @@ export const SchoolDataProvider = ({ children }) => {
   const [events, setEvents] = useState(() => getSafeStorage('events', INITIAL_EVENTS));
   const [notifications, setNotifications] = useState(() => getSafeStorage('notifications', INITIAL_NOTIFICATIONS));
   const [attendance, setAttendance] = useState(() => getSafeStorage('attendance', INITIAL_ATTENDANCE_RECORDS));
+  const [staffAttendance, setStaffAttendance] = useState(() => getSafeStorage('staff_attendance', INITIAL_STAFF_ATTENDANCE));
   const [homework, setHomework] = useState(() => getSafeStorage('homework', INITIAL_HOMEWORK));
   const [timetable, setTimetable] = useState(() => getSafeStorage('timetable', INITIAL_TIMETABLE));
   const [examsData, setExamsData] = useState(() => getSafeStorage('exams', INITIAL_EXAMS_AND_RESULTS));
@@ -68,6 +99,7 @@ export const SchoolDataProvider = ({ children }) => {
   useEffect(() => { localStorage.setItem(`${DB_VERSION}_parents`, JSON.stringify(parents)); }, [parents]);
   useEffect(() => { localStorage.setItem(`${DB_VERSION}_students`, JSON.stringify(students)); }, [students]);
   useEffect(() => { localStorage.setItem(`${DB_VERSION}_teachers`, JSON.stringify(teachers)); }, [teachers]);
+  useEffect(() => { localStorage.setItem(`${DB_VERSION}_staff_attendance`, JSON.stringify(staffAttendance)); }, [staffAttendance]);
   useEffect(() => { localStorage.setItem(`${DB_VERSION}_materials`, JSON.stringify(studyMaterials)); }, [studyMaterials]);
   useEffect(() => { localStorage.setItem(`${DB_VERSION}_books`, JSON.stringify(books)); }, [books]);
   useEffect(() => { localStorage.setItem(`${DB_VERSION}_lib_tx`, JSON.stringify(libraryTransactions)); }, [libraryTransactions]);
@@ -310,6 +342,17 @@ export const SchoolDataProvider = ({ children }) => {
         },
       };
     });
+  };
+
+  // Staff Attendance
+  const markBulkStaffAttendance = (date, statusMap) => {
+    setStaffAttendance(prev => ({
+      ...(prev || {}),
+      [date]: {
+        ...(prev?.[date] || {}),
+        ...statusMap,
+      },
+    }));
   };
 
   // Homework
@@ -633,6 +676,7 @@ export const SchoolDataProvider = ({ children }) => {
         events,
         notifications,
         attendance,
+        staffAttendance,
         homework,
         timetable,
         examsData,
@@ -664,6 +708,7 @@ export const SchoolDataProvider = ({ children }) => {
         markNotificationRead,
         addNotification,
         markBulkAttendance,
+        markBulkStaffAttendance,
         addHomework,
         submitHomework,
         gradeHomework,
