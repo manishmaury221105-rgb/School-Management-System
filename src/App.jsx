@@ -41,6 +41,7 @@ import { StudentProfile } from './components/student/StudentProfile';
 import { StudentAttendance } from './components/student/StudentAttendance';
 import { StudentTimetable } from './components/student/StudentTimetable';
 import { StudentHomework } from './components/student/StudentHomework';
+import { StudentStudyMaterial } from './components/student/StudentStudyMaterial';
 import { StudentExams } from './components/student/StudentExams';
 import { StudentFees } from './components/student/StudentFees';
 import { StudentNotices } from './components/student/StudentNotices';

@@ -26,13 +26,13 @@ export const TeacherDashboard = ({ setActiveTab }) => {
 
   const assignedClasses = currentUser?.assignedClasses || ['Class 10-A', 'Class 9-B'];
   const todayDate = new Date().toISOString().split('T')[0];
-  const todayAttendance = attendance['Class 10-A']?.[todayDate] || {};
+  const todayAttendance = attendance?.['Class 10-A']?.[todayDate] || {};
   const isAttendanceMarkedToday = Object.keys(todayAttendance).length > 0;
 
-  const pendingLeavesCount = leaveRequests.filter(l => l.status === 'Pending').length;
+  const pendingLeavesCount = (leaveRequests || []).filter(l => l.status === 'Pending').length;
 
-  const teacherCirculars = notices.filter(n => {
-    const tgt = (n.target || 'ALL').toUpperCase();
+  const teacherCirculars = (notices || []).filter(n => {
+    const tgt = ((n && n.target) || 'ALL').toUpperCase();
     return tgt === 'TEACHER' || tgt === 'ALL';
   });
 

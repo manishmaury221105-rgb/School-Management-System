@@ -19,12 +19,12 @@ import {
 
 export const StudentDashboard = ({ setActiveTab }) => {
   const { currentUser } = useAuth();
-  const { homework, fees, notices, examsData } = useSchoolData();
+  const { homework, fees, notices, examsData, timetable } = useSchoolData();
 
-  const myHomework = homework.filter(h => h.class === (currentUser?.class || 'Class 10-A'));
+  const myHomework = (homework || []).filter(h => h.class === (currentUser?.class || 'Class 10-A'));
   const pendingHwCount = myHomework.filter(h => !h.studentStatus?.[currentUser?.id || 'user-student-default']?.submitted).length;
 
-  const myFees = fees.filter(f => {
+  const myFees = (fees || []).filter(f => {
     if (!currentUser) return false;
     const matchId = f.studentId && (
       f.studentId === currentUser.id ||
@@ -47,10 +47,10 @@ export const StudentDashboard = ({ setActiveTab }) => {
     ? 0
     : (myFees.filter(f => f.status === 'Pending').reduce((sum, f) => sum + f.amount, 0) || (myFees.some(f => f.status === 'Paid') ? 0 : 25000));
 
-  const studentResult = examsData.results[currentUser?.id || 'user-student-default'] || examsData.results['user-student-default'];
+  const studentResult = examsData?.results?.[currentUser?.id || 'user-student-default'] || examsData?.results?.['user-student-default'];
 
   // Match broadcast notices for student
-  const myNotices = notices.filter((n) => {
+  const myNotices = (notices || []).filter((n) => {
     if (!n) return false;
     const tgt = String(n.target || 'ALL').trim().toUpperCase();
     const userClass = String(currentUser?.class || '').trim().toUpperCase();
@@ -65,7 +65,6 @@ export const StudentDashboard = ({ setActiveTab }) => {
   });
 
   const studentClass = currentUser?.class || 'Class 10-A';
-  const { timetable } = useSchoolData();
   const classTimetable = timetable?.[studentClass];
   const hasTimetable = Boolean(classTimetable?.photo || studentClass === 'Class 10-A');
 

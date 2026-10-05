@@ -9,11 +9,11 @@ export const StudentStudyMaterial = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const studentClass = currentUser?.class || 'Class 10-A';
-  const myMaterials = studyMaterials.filter(m => m.class === studentClass || m.class === 'All Classes');
+  const myMaterials = (studyMaterials || []).filter(m => m && (m.class === studentClass || m.class === 'All Classes'));
 
   const filtered = myMaterials.filter(m =>
-    m.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (m.title && m.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (m.subject && m.subject.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (m.chapter && m.chapter.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 

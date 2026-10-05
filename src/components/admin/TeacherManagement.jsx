@@ -88,11 +88,6 @@ export const TeacherManagement = () => {
     experience: '5 Years',
   });
 
-  // Strict Privacy Guard: If a logged-in teacher somehow renders this component, immediately route to their personal isolated profile
-  if (currentUser?.role === ROLES.TEACHER) {
-    return <TeacherProfile />;
-  }
-
   // Initialize and synchronize staff attendance map
   useEffect(() => {
     const existing = staffAttendance?.[selectedDate] || {};
@@ -107,6 +102,11 @@ export const TeacherManagement = () => {
     });
     setAttendanceMap(initial);
   }, [selectedDate, teachers, staffAttendance]);
+
+  // Strict Privacy Guard: If a logged-in teacher somehow renders this component, immediately route to their personal isolated profile
+  if (currentUser?.role === ROLES.TEACHER) {
+    return <TeacherProfile />;
+  }
 
   const handleStatusChange = (teacherId, status) => {
     setAttendanceMap((prev) => ({
