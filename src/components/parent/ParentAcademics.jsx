@@ -1,13 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
-import { Award, Download, TrendingUp, BookOpen, Star, CheckCircle } from 'lucide-react';
+import { Award, Download, TrendingUp, BookOpen, Star, CheckCircle, Printer, Check } from 'lucide-react';
+import { downloadReportCardPdf, printReportCardPdf } from '../../utils/pdfReportCardGenerator';
 
 export const ParentAcademics = () => {
   const { students, examsData, selectedChildId } = useSchoolData();
+  const [downloading, setDownloading] = useState(false);
 
   const child = students.find(s => s.id === selectedChildId) || students[0];
   
   const defaultReport = {
+    studentName: child?.name || 'Aarav Sharma',
+    class: child?.class || 'Class 10-A',
+    rollNo: child?.rollNo || '01',
     examTitle: 'Term 1 Assessment Report Card',
     rank: 1,
     totalStudentsInClass: 32,
@@ -26,7 +31,24 @@ export const ParentAcademics = () => {
     ],
   };
 
-  const report = examsData?.results?.[child?.id] || examsData?.results?.['user-student-default'] || defaultReport;
+  const rawReport = examsData?.results?.[child?.id] || examsData?.results?.['user-student-default'] || defaultReport;
+  const report = {
+    ...rawReport,
+    studentName: rawReport.studentName || child?.name,
+    class: rawReport.class || child?.class,
+    rollNo: rawReport.rollNo || child?.rollNo,
+  };
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      await downloadReportCardPdf(report);
+    } catch (err) {
+      console.error('Report Card PDF error:', err);
+    } finally {
+      setTimeout(() => setDownloading(false), 2500);
+    }
+  };
 
   return (
     <div className="animate-fade-in">
@@ -37,10 +59,25 @@ export const ParentAcademics = () => {
             {child?.class} • Roll #{child?.rollNo} • Term 1 Assessment Report Card & Teacher Evaluation.
           </p>
         </div>
-        <button onClick={() => window.print()} className="btn-primary">
-          <Download size={16} />
-          <span>Download Report Card</span>
-        </button>
+        <div style={{ display: 'flex', gap: '0.65rem' }}>
+          <button
+            onClick={() => printReportCardPdf(report)}
+            className="btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Printer size={15} />
+            <span>Print</span>
+          </button>
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: downloading ? '#10b981' : 'var(--primary)' }}
+          >
+            {downloading ? <Check size={16} /> : <Download size={16} />}
+            <span>{downloading ? 'Downloaded!' : 'Download Report Card (PDF)'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Report Summary Card */}

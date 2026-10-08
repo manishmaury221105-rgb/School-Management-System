@@ -1,15 +1,41 @@
 import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
 import { useAuth } from '../../context/AuthContext';
-import { FileText, Download, Search, BookOpen, Clock } from 'lucide-react';
+import { FileText, Download, Search, BookOpen, Clock, Check, Printer } from 'lucide-react';
+import { downloadStudyMaterialPdf, printStudyMaterialPdf } from '../../utils/pdfStudyMaterialGenerator';
 
 export const StudentStudyMaterial = () => {
   const { studyMaterials } = useSchoolData();
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [downloadingId, setDownloadingId] = useState(null);
+  const [toastMsg, setToastMsg] = useState('');
 
   const studentClass = currentUser?.class || 'Class 10-A';
   const myMaterials = (studyMaterials || []).filter(m => m && (m.class === studentClass || m.class === 'All Classes'));
+
+  const handleDownloadMaterial = async (mat) => {
+    setDownloadingId(mat.id);
+    setToastMsg(`Preparing PDF: ${mat.title}...`);
+    try {
+      const res = await downloadStudyMaterialPdf(mat);
+      if (res && res.success) {
+        setToastMsg(`✓ Downloaded: ${mat.title}.pdf`);
+      } else if (res && res.cancelled) {
+        setToastMsg('');
+      } else {
+        setToastMsg(`✓ File generated: ${mat.title}`);
+      }
+    } catch (err) {
+      console.error('Download error:', err);
+      setToastMsg('⚠️ Download failed, please try print option.');
+    } finally {
+      setTimeout(() => {
+        setDownloadingId(null);
+        setToastMsg('');
+      }, 3500);
+    }
+  };
 
   const filtered = myMaterials.filter(m =>
     (m.title && m.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -27,6 +53,28 @@ export const StudentStudyMaterial = () => {
           </p>
         </div>
       </div>
+
+      {/* Toast Alert */}
+      {toastMsg && (
+        <div
+          className="animate-fade-in"
+          style={{
+            padding: '0.75rem 1.25rem',
+            background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(16, 185, 129, 0.12))',
+            border: '1px solid var(--primary)',
+            borderRadius: 'var(--radius-md)',
+            color: 'var(--text-primary)',
+            fontSize: '0.88rem',
+            fontWeight: '700',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <span>{toastMsg}</span>
+        </div>
+      )}
 
       <div className="table-container">
         <div className="table-toolbar">
@@ -110,14 +158,33 @@ export const StudentStudyMaterial = () => {
                 <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                   By: {mat.uploadedBy}
                 </span>
-                <button
-                  onClick={() => alert(`Downloading ${mat.title}...`)}
-                  className="btn-primary"
-                  style={{ padding: '6px 14px', fontSize: '0.82rem' }}
-                >
-                  <Download size={14} />
-                  <span>Download</span>
-                </button>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    onClick={() => printStudyMaterialPdf(mat)}
+                    className="btn-secondary"
+                    style={{ padding: '6px 10px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    title="Print Study Material"
+                  >
+                    <Printer size={13} />
+                    <span>Print</span>
+                  </button>
+                  <button
+                    onClick={() => handleDownloadMaterial(mat)}
+                    disabled={downloadingId === mat.id}
+                    className="btn-primary"
+                    style={{
+                      padding: '6px 14px',
+                      fontSize: '0.82rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      background: downloadingId === mat.id ? '#10b981' : 'var(--primary)',
+                    }}
+                  >
+                    {downloadingId === mat.id ? <Check size={14} /> : <Download size={14} />}
+                    <span>{downloadingId === mat.id ? 'Downloading...' : 'Download PDF'}</span>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -126,3 +193,4 @@ export const StudentStudyMaterial = () => {
     </div>
   );
 };
+

@@ -4,8 +4,15 @@ import { ROLES, INITIAL_USERS, ROLE_PERMISSIONS } from '../data/mockData';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // Always start directly on the Login Page
-  const [currentUser, setCurrentUser] = useState(null);
+  // Restore user session from LocalStorage
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('edusphere_current_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('edusphere_theme') || 'light';
@@ -118,17 +125,17 @@ export const AuthProvider = ({ children }) => {
 
     if (user) {
       const rawInput = (passwordOrDob || '').trim();
-      const inputPass = rawInput.replace(/[\s\-\/\.]/g, '');
+      const inputPass = rawInput.replace(/[\s\-/. ]/g, '');
 
       // Build possible DOB variations for the user
       const possibleDobFormats = new Set();
       if (user.dob) {
         const rawDobStr = String(user.dob).trim();
         possibleDobFormats.add(rawDobStr);
-        possibleDobFormats.add(rawDobStr.replace(/[\s\-\/\.]/g, ''));
+        possibleDobFormats.add(rawDobStr.replace(/[\s\-/. ]/g, ''));
 
-        const ymdMatch = rawDobStr.match(/^(\d{4})[-\/\.](\d{1,2})[-\/\.](\d{1,2})$/);
-        const dmyMatch = rawDobStr.match(/^(\d{1,2})[-\/\.](\d{1,2})[-\/\.](\d{4})$/);
+        const ymdMatch = rawDobStr.match(/^(\d{4})[-/. ](\d{1,2})[-/. ](\d{1,2})$/);
+        const dmyMatch = rawDobStr.match(/^(\d{1,2})[-/. ](\d{1,2})[-/. ](\d{4})$/);
 
         if (ymdMatch) {
           const [, y, m, d] = ymdMatch;
@@ -212,6 +219,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setCurrentUser(null);
+    localStorage.removeItem('edusphere_current_user');
+    localStorage.removeItem('edusphere_active_tab');
   };
 
   const hasPermission = (tabId) => {

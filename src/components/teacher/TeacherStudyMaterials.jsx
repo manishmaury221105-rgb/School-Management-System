@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { Modal } from '../common/Modal';
-import { FileText, Plus, Trash2, Download, UploadCloud, Search } from 'lucide-react';
+import { FileText, Plus, Trash2, Download, UploadCloud, Search, Printer } from 'lucide-react';
+import { downloadStudyMaterialPdf, printStudyMaterialPdf } from '../../utils/pdfStudyMaterialGenerator';
 
 export const TeacherStudyMaterials = () => {
   const { studyMaterials, addStudyMaterial, deleteStudyMaterial, classes, subjects, teachers } = useSchoolData();
@@ -158,6 +159,24 @@ export const TeacherStudyMaterials = () => {
                   By: {mat.uploadedBy}
                 </span>
                 <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    onClick={() => printStudyMaterialPdf(mat)}
+                    className="btn-secondary"
+                    style={{ padding: '4px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    title="Print Document"
+                  >
+                    <Printer size={13} />
+                    <span>Print</span>
+                  </button>
+                  <button
+                    onClick={() => downloadStudyMaterialPdf(mat)}
+                    className="btn-secondary"
+                    style={{ padding: '4px 10px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--primary)' }}
+                    title="Download Official PDF"
+                  >
+                    <Download size={13} />
+                    <span>PDF</span>
+                  </button>
                   <button
                     onClick={() => deleteStudyMaterial(mat.id)}
                     className="icon-btn"

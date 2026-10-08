@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
 import { StatCard } from '../common/StatCard';
-import { CalendarCheck, CheckCircle, XCircle, AlertCircle, Clock, Download, FileSpreadsheet } from 'lucide-react';
+import { CalendarCheck, CheckCircle, XCircle, AlertCircle, Clock, Download, FileSpreadsheet, FileText, Check } from 'lucide-react';
+import { downloadStudentAttendancePdf } from '../../utils/pdfAttendanceReportGenerator';
 
 export const ParentAttendance = () => {
   const { students, attendance, selectedChildId } = useSchoolData();
@@ -77,6 +78,19 @@ export const ParentAttendance = () => {
     document.body.removeChild(link);
   };
 
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    setDownloadingPdf(true);
+    try {
+      await downloadStudentAttendancePdf(child, classLogs, sessionStats, child?.class);
+    } catch (err) {
+      console.error('PDF error:', err);
+    } finally {
+      setTimeout(() => setDownloadingPdf(false), 2500);
+    }
+  };
+
   return (
     <div className="animate-fade-in">
       <div className="page-header-wrap">
@@ -86,10 +100,21 @@ export const ParentAttendance = () => {
             {child?.class} • Roll #{child?.rollNo} • Academic Session 2026–2027 (1 Apr 2026 — 31 Mar 2027)
           </p>
         </div>
-        <button onClick={exportParentAttendanceCSV} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Download size={15} />
-          <span>Export Full Session (1 Apr – 31 Mar) CSV</span>
-        </button>
+        <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+          <button
+            onClick={handleDownloadPdf}
+            disabled={downloadingPdf}
+            className="btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: downloadingPdf ? '#10b981' : 'var(--primary)' }}
+          >
+            {downloadingPdf ? <Check size={15} /> : <FileText size={15} />}
+            <span>{downloadingPdf ? 'Downloaded!' : 'Download Attendance (PDF)'}</span>
+          </button>
+          <button onClick={exportParentAttendanceCSV} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Download size={15} />
+            <span>Export CSV</span>
+          </button>
+        </div>
       </div>
 
       <div className="stats-grid-4">

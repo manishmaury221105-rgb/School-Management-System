@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import { triggerPdfDownload, triggerPdfPrint } from './pdfDownloadHelper';
 
 /**
  * Converts a number to Indian Rupees in words
@@ -309,13 +310,13 @@ export function createReceiptPdfDoc(receipt) {
 /**
  * Downloads the receipt as a PDF file
  */
-export function downloadReceiptPdf(receipt) {
+export async function downloadReceiptPdf(receipt) {
   try {
     const doc = createReceiptPdfDoc(receipt);
     const studentName = (receipt.studentName || receipt.name || 'Student').replace(/\s+/g, '_');
     const fileName = `Fee_Receipt_${receipt.receiptNo || 'REC'}_${studentName}.pdf`;
-    doc.save(fileName);
-    return true;
+    const res = await triggerPdfDownload(doc, fileName, `Fee Receipt - ${receipt.studentName || receipt.name || 'Student'}`);
+    return res && res.success;
   } catch (err) {
     console.error('Failed to download PDF receipt:', err);
     return false;
@@ -328,31 +329,7 @@ export function downloadReceiptPdf(receipt) {
 export function printReceiptPdf(receipt) {
   try {
     const doc = createReceiptPdfDoc(receipt);
-    const pdfBlob = doc.output('blob');
-    const blobUrl = URL.createObjectURL(pdfBlob);
-
-    // Create an iframe to trigger native browser print without leaving page
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    iframe.src = blobUrl;
-
-    document.body.appendChild(iframe);
-    iframe.onload = () => {
-      setTimeout(() => {
-        try {
-          iframe.contentWindow.focus();
-          iframe.contentWindow.print();
-        } catch {
-          window.open(blobUrl, '_blank');
-        }
-      }, 300);
-    };
-    return true;
+    return triggerPdfPrint(doc);
   } catch (err) {
     console.error('Failed to print PDF:', err);
     window.print();

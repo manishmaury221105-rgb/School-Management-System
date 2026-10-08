@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import { triggerPdfDownload, triggerPdfPrint } from './pdfDownloadHelper';
 
 /**
  * Creates an official, beautifully formatted jsPDF document for Student Academic Report Card
@@ -339,14 +340,14 @@ export function createReportCardPdfDoc(report) {
 /**
  * Downloads the Report Card as a PDF document
  */
-export function downloadReportCardPdf(report) {
+export async function downloadReportCardPdf(report) {
   try {
     const doc = createReportCardPdfDoc(report);
     const cleanStudentName = (report.studentName || report.name || 'Student').replace(/\s+/g, '_');
     const cleanExam = (report.examTitle || 'Report_Card').replace(/[^a-zA-Z0-9]/g, '_');
     const fileName = `${cleanStudentName}_${cleanExam}.pdf`;
-    doc.save(fileName);
-    return true;
+    const res = await triggerPdfDownload(doc, fileName, `Report Card - ${report.studentName || report.name || 'Student'}`);
+    return res && res.success;
   } catch (err) {
     console.error('Failed to download report card PDF:', err);
     return false;
@@ -359,30 +360,7 @@ export function downloadReportCardPdf(report) {
 export function printReportCardPdf(report) {
   try {
     const doc = createReportCardPdfDoc(report);
-    const pdfBlob = doc.output('blob');
-    const blobUrl = URL.createObjectURL(pdfBlob);
-
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    iframe.src = blobUrl;
-
-    document.body.appendChild(iframe);
-    iframe.onload = () => {
-      setTimeout(() => {
-        try {
-          iframe.contentWindow.focus();
-          iframe.contentWindow.print();
-        } catch {
-          window.open(blobUrl, '_blank');
-        }
-      }, 300);
-    };
-    return true;
+    return triggerPdfPrint(doc);
   } catch (err) {
     console.error('Failed to print PDF:', err);
     window.print();

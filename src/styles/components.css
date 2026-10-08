@@ -295,6 +295,50 @@
   margin-bottom: 1.75rem;
 }
 
+.teacher-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+}
+
+@media (max-width: 420px) {
+  .teacher-actions-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .teacher-actions-grid {
+    display: flex;
+    flex-wrap: wrap;
+    width: auto;
+  }
+}
+
+.student-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+}
+
+@media (max-width: 420px) {
+  .student-actions-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .student-actions-grid {
+    display: flex;
+    flex-wrap: wrap;
+    width: auto;
+  }
+}
+
 .page-title {
   font-size: 1.75rem;
   font-weight: 800;

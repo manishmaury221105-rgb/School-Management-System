@@ -7,15 +7,16 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  ShieldCheck,
   Save,
   Check,
-  Users,
   ChevronLeft,
   ChevronRight,
   FileSpreadsheet,
   Download,
+  FileText,
 } from 'lucide-react';
+import { downloadClassAttendancePdf } from '../../utils/pdfAttendanceReportGenerator';
+import { triggerCsvDownload } from '../../utils/csvDownloadHelper';
 
 export const AttendanceMarker = () => {
   const { students, attendance, markBulkAttendance, teachers, classes } = useSchoolData();
@@ -109,7 +110,7 @@ export const AttendanceMarker = () => {
     setSelectedDate(`${monthStr}-01`);
   };
 
-  const exportDailyStudentCSV = () => {
+  const exportDailyStudentCSV = async () => {
     const rows = [
       ['Class', 'Date', 'Roll No', 'Student ID', 'Student Name', 'Parent Name', 'Parent Contact', 'Status']
     ];
@@ -125,17 +126,11 @@ export const AttendanceMarker = () => {
         statusMap[stu.id] || 'Present'
       ]);
     });
-    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map((r) => r.join(',')).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `student_attendance_${selectedClass.replace(/\s+/g, '_')}_${selectedDate}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const csvContent = rows.map((r) => r.join(',')).join('\n');
+    await triggerCsvDownload(csvContent, `student_attendance_${selectedClass.replace(/\s+/g, '_')}_${selectedDate}.csv`, `${selectedClass} Daily Attendance`);
   };
 
-  const exportSessionStudentCSV = () => {
+  const exportSessionStudentCSV = async () => {
     const rows = [
       ['Date', 'Day', 'Class', 'Roll No', 'Student ID', 'Student Name', 'Status']
     ];
@@ -157,14 +152,8 @@ export const AttendanceMarker = () => {
         ]);
       });
     });
-    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map((r) => r.join(',')).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `student_attendance_Session_1Apr_31Mar_${selectedClass.replace(/\s+/g, '_')}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const csvContent = rows.map((r) => r.join(',')).join('\n');
+    await triggerCsvDownload(csvContent, `student_attendance_Session_1Apr_31Mar_${selectedClass.replace(/\s+/g, '_')}.csv`, `${selectedClass} Full Session Attendance`);
   };
 
   // Stats calculation
@@ -173,6 +162,19 @@ export const AttendanceMarker = () => {
   const absentCount = Object.values(statusMap).filter((s) => s === 'Absent').length;
   const lateCount = Object.values(statusMap).filter((s) => s === 'Late').length;
   const presentRate = totalStudents > 0 ? Math.round((presentCount / totalStudents) * 100) : 0;
+
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const handleExportPDF = async () => {
+    setDownloadingPdf(true);
+    try {
+      await downloadClassAttendancePdf(selectedClass, selectedDate, classStudents, statusMap);
+    } catch (err) {
+      console.error('PDF export error:', err);
+    } finally {
+      setTimeout(() => setDownloadingPdf(false), 2500);
+    }
+  };
 
   return (
     <div className="animate-fade-in">
@@ -184,6 +186,16 @@ export const AttendanceMarker = () => {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+          <button
+            onClick={handleExportPDF}
+            disabled={downloadingPdf}
+            className="btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: downloadingPdf ? '#10b981' : 'var(--primary)' }}
+            title="Download Daily Class Attendance Register as PDF"
+          >
+            {downloadingPdf ? <Check size={15} /> : <FileText size={15} />}
+            <span>{downloadingPdf ? 'Downloaded!' : 'Export Register (PDF)'}</span>
+          </button>
           <button onClick={exportDailyStudentCSV} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} title="Export selected date attendance">
             <Download size={15} />
             <span>Export Daily CSV</span>
@@ -194,7 +206,7 @@ export const AttendanceMarker = () => {
           </button>
           <button onClick={handleSave} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Save size={16} />
-            <span>Save Attendance Register</span>
+            <span>Save Register</span>
           </button>
         </div>
       </div>

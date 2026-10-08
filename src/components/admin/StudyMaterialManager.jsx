@@ -1,12 +1,33 @@
 import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
 import { Modal } from '../common/Modal';
-import { FileText, Plus, Trash2, Download, Search, BookOpen, UploadCloud, Video } from 'lucide-react';
+import { FileText, Plus, Trash2, Download, Search, BookOpen, UploadCloud, Video, Printer } from 'lucide-react';
+import { downloadStudyMaterialPdf, printStudyMaterialPdf } from '../../utils/pdfStudyMaterialGenerator';
 
 export const StudyMaterialManager = () => {
   const { studyMaterials, addStudyMaterial, deleteStudyMaterial, classes, subjects, teachers } = useSchoolData();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
+
+  const handleDownload = async (mat) => {
+    setToastMsg(`Preparing PDF for ${mat.title}...`);
+    try {
+      const res = await downloadStudyMaterialPdf(mat);
+      if (res && res.success) {
+        setToastMsg(`✓ Downloaded ${mat.title}.pdf`);
+      } else if (res && res.cancelled) {
+        setToastMsg('');
+      } else {
+        setToastMsg(`✓ File generated: ${mat.title}`);
+      }
+    } catch (err) {
+      console.error('Download failed:', err);
+      setToastMsg('⚠️ Download failed, please try print.');
+    } finally {
+      setTimeout(() => setToastMsg(''), 3000);
+    }
+  };
 
   const [formData, setFormData] = useState({
     title: '',
@@ -142,12 +163,21 @@ export const StudyMaterialManager = () => {
                 </span>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <button
-                    onClick={() => alert(`Downloading ${mat.title}...`)}
+                    onClick={() => printStudyMaterialPdf(mat)}
                     className="btn-secondary"
-                    style={{ padding: '4px 10px', fontSize: '0.78rem' }}
+                    style={{ padding: '4px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    title="Print Document"
+                  >
+                    <Printer size={13} />
+                    <span>Print</span>
+                  </button>
+                  <button
+                    onClick={() => handleDownload(mat)}
+                    className="btn-secondary"
+                    style={{ padding: '4px 10px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--primary)' }}
                   >
                     <Download size={13} />
-                    <span>Download</span>
+                    <span>PDF</span>
                   </button>
                   <button
                     onClick={() => deleteStudyMaterial(mat.id)}

@@ -29,3 +29,4 @@ build_sim/
 ios/App/App/public/
 *.xcbuilddata/
 DerivedData/
+*.apk

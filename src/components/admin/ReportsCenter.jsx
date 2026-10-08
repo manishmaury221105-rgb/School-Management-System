@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
+import { triggerCsvDownload } from '../../utils/csvDownloadHelper';
 import {
   FileSpreadsheet,
   Download,
@@ -22,17 +23,9 @@ export const ReportsCenter = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMonth, setFilterMonth] = useState('ALL');
 
-  const handleExportCSV = (filename, headers, rows) => {
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(',')].concat(rows.map(r => r.join(','))).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleExportCSV = async (filename, headers, rows) => {
+    const csvContent = [headers.join(',')].concat(rows.map(r => r.join(','))).join('\n');
+    await triggerCsvDownload(csvContent, `${filename}_${new Date().toISOString().split('T')[0]}.csv`, `${filename} Report Export`);
   };
 
   const renderReportContent = () => {

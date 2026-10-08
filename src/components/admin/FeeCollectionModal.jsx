@@ -3,26 +3,15 @@ import { useSchoolData } from '../../context/SchoolDataContext';
 import { Modal } from '../common/Modal';
 import {
   CreditCard,
-  IndianRupee,
-  Receipt,
   CheckCircle2,
   Printer,
   Download,
-  User,
-  Hash,
-  School,
-  Calendar,
-  Phone,
-  Share2,
-  FileText,
-  Check,
 } from 'lucide-react';
 import {
   downloadReceiptPdf,
   printReceiptPdf,
   shareReceiptPdf,
   sharePdfToWhatsApp,
-  shareDirectToWhatsApp,
 } from '../../utils/pdfReceiptGenerator';
 
 const WhatsAppIcon = ({ size = 18 }) => (
@@ -65,7 +54,6 @@ function formatMonthsSummary(monthsList) {
 export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onSuccess }) => {
   const { students, classes, collectFee } = useSchoolData();
 
-  const [selectedStudentId, setSelectedStudentId] = useState('');
   const [selectedMonths, setSelectedMonths] = useState(['October 2026']);
   const [monthlyRate, setMonthlyRate] = useState(2500);
   const [formData, setFormData] = useState({
@@ -127,7 +115,6 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
     const baseRate = 2500;
     setMonthlyRate(baseRate);
     if (initialStudent) {
-      setSelectedStudentId(initialStudent.id || '');
       const initialMonths = ['October 2026'];
       setSelectedMonths(initialMonths);
       setMatchedStudentInfo(initialStudent);
@@ -146,7 +133,6 @@ export const FeeCollectionModal = ({ isOpen, onClose, initialStudent = null, onS
         remarks: 'Fee payment',
       });
     } else {
-      setSelectedStudentId('');
       const initialMonths = ['October 2026'];
       setSelectedMonths(initialMonths);
       setMatchedStudentInfo(null);

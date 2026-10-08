@@ -37,7 +37,7 @@ const getSafeStorage = (key, fallback) => {
             return { ...fallback, ...(oldParsed || {}) };
           }
           return oldParsed ?? fallback;
-        } catch (e) {
+        } catch {
           return fallback;
         }
       }
@@ -414,18 +414,23 @@ export const SchoolDataProvider = ({ children }) => {
   };
 
   // Exam Marks & Bulk CSV Report Card Upload
-  const uploadBulkReportCards = (parsedList, className, examTitle) => {
+  const uploadBulkReportCards = (parsedList, className = 'Class 10-A', examTitle = 'Term 1 Report Card 2026') => {
     setExamsData(prev => {
       const newResults = { ...(prev?.results || {}) };
       parsedList.forEach(r => {
-        if (r.studentId) {
-          newResults[r.studentId] = r;
+        const item = {
+          ...r,
+          class: r.class || className,
+          examTitle: r.examTitle || examTitle,
+        };
+        if (item.studentId) {
+          newResults[item.studentId] = item;
         }
-        if (r.rollNo && r.class) {
-          newResults[`${r.class}_roll_${r.rollNo}`] = r;
+        if (item.rollNo && item.class) {
+          newResults[`${item.class}_roll_${item.rollNo}`] = item;
         }
-        if (r.studentName) {
-          newResults[`name_${r.studentName.trim().toLowerCase()}`] = r;
+        if (item.studentName) {
+          newResults[`name_${item.studentName.trim().toLowerCase()}`] = item;
         }
       });
       return {

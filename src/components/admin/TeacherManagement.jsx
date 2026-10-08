@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ROLES } from '../../data/mockData';
 import { TeacherProfile } from '../teacher/TeacherProfile';
 import { Modal } from '../common/Modal';
+import { triggerCsvDownload } from '../../utils/csvDownloadHelper';
 import {
   UserCheck,
   Search,
@@ -161,7 +162,7 @@ export const TeacherManagement = () => {
     setTimeout(() => setSaveSuccess(false), 3000);
   };
 
-  const exportStaffAttendanceCSV = () => {
+  const exportStaffAttendanceCSV = async () => {
     const rows = [
       ['Date', 'Staff ID', 'Staff Name', 'Subject', 'Status', 'Check-In', 'Check-Out', 'Remarks'],
     ];
@@ -178,17 +179,11 @@ export const TeacherManagement = () => {
         `"${rec.remarks || ''}"`,
       ]);
     });
-    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map((r) => r.join(',')).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `faculty_staff_attendance_${selectedDate}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const csvContent = rows.map((r) => r.join(',')).join('\n');
+    await triggerCsvDownload(csvContent, `faculty_staff_attendance_${selectedDate}.csv`, 'Daily Faculty Attendance');
   };
 
-  const exportFullSessionStaffCSV = () => {
+  const exportFullSessionStaffCSV = async () => {
     const rows = [
       ['Date', 'Day', 'Staff ID', 'Staff Name', 'Subject', 'Status', 'Check-In', 'Check-Out', 'Duty Remarks']
     ];
@@ -211,14 +206,8 @@ export const TeacherManagement = () => {
         ]);
       });
     });
-    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map((r) => r.join(',')).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `faculty_staff_attendance_FullSession_1Apr_31Mar.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const csvContent = rows.map((r) => r.join(',')).join('\n');
+    await triggerCsvDownload(csvContent, `faculty_staff_attendance_FullSession_1Apr_31Mar.csv`, 'Full Session Faculty Attendance');
   };
 
   const handlePrevDay = () => {

@@ -7,13 +7,12 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Award,
-  AlertCircle,
   Download,
-  Search,
-  Filter,
-  FileSpreadsheet,
+  FileText,
+  Check,
 } from 'lucide-react';
+import { downloadStudentAttendancePdf } from '../../utils/pdfAttendanceReportGenerator';
+import { triggerCsvDownload } from '../../utils/csvDownloadHelper';
 
 export const StudentAttendance = () => {
   const { currentUser } = useAuth();
@@ -66,7 +65,7 @@ export const StudentAttendance = () => {
     });
   }, [allDates, classLogs, studentId, selectedMonth, statusFilter, searchDate]);
 
-  const exportStudentAttendanceCSV = () => {
+  const exportStudentAttendanceCSV = async () => {
     const rows = [
       ['Academic Session', 'Class', 'Student ID', 'Student Name', 'Date', 'Day', 'Status', 'Check-In Time', 'Class Incharge']
     ];
@@ -85,14 +84,21 @@ export const StudentAttendance = () => {
         'Dr. Alok Verma'
       ]);
     });
-    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map((r) => r.join(',')).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `student_attendance_${student?.name?.replace(/\s+/g, '_')}_Session_1Apr_31Mar.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const csvContent = rows.map((r) => r.join(',')).join('\n');
+    await triggerCsvDownload(csvContent, `student_attendance_${student?.name?.replace(/\s+/g, '_')}_Session_1Apr_31Mar.csv`, `${student?.name} Attendance Log`);
+  };
+
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    setDownloadingPdf(true);
+    try {
+      await downloadStudentAttendancePdf(student, classLogs, sessionStats, studentClass);
+    } catch (err) {
+      console.error('PDF error:', err);
+    } finally {
+      setTimeout(() => setDownloadingPdf(false), 2500);
+    }
   };
 
   return (
@@ -104,10 +110,21 @@ export const StudentAttendance = () => {
             Academic Session 2026–2027 (1 April 2026 — 31 March 2027) • Daily presence register & exam eligibility.
           </p>
         </div>
-        <button onClick={exportStudentAttendanceCSV} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Download size={15} />
-          <span>Export Full Session (1 Apr – 31 Mar) CSV</span>
-        </button>
+        <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+          <button
+            onClick={handleDownloadPdf}
+            disabled={downloadingPdf}
+            className="btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: downloadingPdf ? '#10b981' : 'var(--primary)' }}
+          >
+            {downloadingPdf ? <Check size={15} /> : <FileText size={15} />}
+            <span>{downloadingPdf ? 'Downloaded!' : 'Download Attendance (PDF)'}</span>
+          </button>
+          <button onClick={exportStudentAttendanceCSV} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Download size={15} />
+            <span>Export CSV</span>
+          </button>
+        </div>
       </div>
 
       <div className="stats-grid-4">

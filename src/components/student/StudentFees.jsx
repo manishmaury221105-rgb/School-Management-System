@@ -7,14 +7,9 @@ import {
   downloadReceiptPdf,
   shareReceiptPdf,
   sharePdfToWhatsApp,
-  shareDirectToWhatsApp,
 } from '../../utils/pdfReceiptGenerator';
-import confetti from 'canvas-confetti';
 import {
-  Wallet,
   CreditCard,
-  CheckCircle2,
-  Clock,
   Receipt,
   Download,
   Smartphone,

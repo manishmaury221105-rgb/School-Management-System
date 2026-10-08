@@ -124,20 +124,17 @@ export const LoginView = () => {
             marginBottom: '0.85rem',
           }}
         >
-          <div
+          <img
+            src="/edusphere-icon.png"
+            alt="EduSphere Logo"
             style={{
-              width: '28px',
-              height: '28px',
+              width: '32px',
+              height: '32px',
               borderRadius: '8px',
-              background: 'linear-gradient(135deg, #4f46e5, #06b6d4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
+              objectFit: 'contain',
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
             }}
-          >
-            <GraduationCap size={16} />
-          </div>
+          />
           <span style={{ fontWeight: '800', fontSize: '1.05rem', color: '#0f172a', letterSpacing: '-0.02em' }}>
             EduSphere <span style={{ color: '#4f46e5' }}>360</span>
           </span>

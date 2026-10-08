@@ -5,7 +5,6 @@ import { FeeReceiptModal } from '../common/FeeReceiptModal';
 import { FeeCollectionModal } from './FeeCollectionModal';
 import {
   downloadReceiptPdf,
-  printReceiptPdf,
   shareReceiptPdf,
   sharePdfToWhatsApp,
 } from '../../utils/pdfReceiptGenerator';
@@ -18,7 +17,6 @@ import {
   Filter,
   Receipt,
   Download,
-  Printer,
   Check,
   Plus,
   Share2,

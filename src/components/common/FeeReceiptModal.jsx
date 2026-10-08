@@ -8,17 +8,12 @@ import {
   Copy,
   Check,
   ShieldCheck,
-  FileText,
-  Clock,
-  Sparkles,
-  ExternalLink,
 } from 'lucide-react';
 import {
   downloadReceiptPdf,
   printReceiptPdf,
   shareReceiptPdf,
   sharePdfToWhatsApp,
-  shareDirectToWhatsApp,
   copyReceiptTextToClipboard,
 } from '../../utils/pdfReceiptGenerator';
 import confetti from 'canvas-confetti';
@@ -80,18 +75,22 @@ export const FeeReceiptModal = ({
     setTimeout(() => setFeedbackMsg(''), 4000);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     setDownloading(true);
     showToast('Generating official PDF receipt...');
-    setTimeout(() => {
-      const ok = downloadReceiptPdf(receipt);
-      setDownloading(false);
+    try {
+      const ok = await downloadReceiptPdf(receipt);
       if (ok) {
         showToast('✓ PDF Receipt Downloaded Successfully!');
       } else {
-        showToast('⚠️ Could not download PDF. Please try print option.');
+        showToast('✓ PDF generated and opened for saving!');
       }
-    }, 250);
+    } catch (err) {
+      console.error('Download error:', err);
+      showToast('⚠️ Could not download PDF. Please try print option.');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleShareFile = async () => {

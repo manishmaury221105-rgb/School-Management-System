@@ -1,28 +1,20 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { useSchoolData } from '../../context/SchoolDataContext';
 import { useAuth, ROLES } from '../../context/AuthContext';
-import { Modal } from '../common/Modal';
 import {
-  downloadSampleReportCardExcel,
-  downloadSampleReportCardCSV,
   parseReportCardsFile,
   parseReportCardsCSV,
-  SAMPLE_REPORT_ROWS,
   SAMPLE_REPORT_CSV_CONTENT,
 } from '../../utils/csvReportCardParser';
 import { downloadReportCardPdf } from '../../utils/pdfReportCardGenerator';
 import {
-  Award,
   UploadCloud,
   FileSpreadsheet,
   Download,
   CheckCircle2,
-  AlertCircle,
   Sparkles,
-  Users,
   Search,
   Check,
-  RefreshCw,
   FileText,
 } from 'lucide-react';
 

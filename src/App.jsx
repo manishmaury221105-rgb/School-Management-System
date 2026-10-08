@@ -57,12 +57,30 @@ import { ParentLeaveApply } from './components/parent/ParentLeaveApply';
 import { ParentNotices } from './components/parent/ParentNotices';
 
 export const App = () => {
-  const { isAuthenticated, currentRole } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const { isAuthenticated, currentRole, hasPermission } = useAuth();
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('edusphere_active_tab') || 'dashboard';
+  });
 
+  // Verify tab validity when currentRole changes, or restore saved tab
   useEffect(() => {
-    setActiveTab('dashboard');
+    if (currentRole) {
+      const savedTab = localStorage.getItem('edusphere_active_tab') || 'dashboard';
+      if (hasPermission && hasPermission(savedTab)) {
+        setActiveTab(savedTab);
+      } else {
+        setActiveTab('dashboard');
+        localStorage.setItem('edusphere_active_tab', 'dashboard');
+      }
+    }
   }, [currentRole]);
+
+  // Persist current active tab to LocalStorage on every navigation
+  useEffect(() => {
+    if (activeTab) {
+      localStorage.setItem('edusphere_active_tab', activeTab);
+    }
+  }, [activeTab]);
 
   if (!isAuthenticated) {
     return <LoginView />;

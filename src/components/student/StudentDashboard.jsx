@@ -95,59 +95,64 @@ export const StudentDashboard = ({ setActiveTab }) => {
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div className="student-actions-grid" style={{ marginTop: '0.5rem' }}>
             <button
               onClick={() => setActiveTab('notices')}
               style={{
-                background: 'rgba(255,255,255,0.2)',
+                background: 'rgba(255,255,255,0.18)',
                 color: 'white',
                 border: '1px solid rgba(255,255,255,0.3)',
-                padding: '8px 16px',
+                padding: '8px 12px',
                 borderRadius: 'var(--radius-md)',
-                fontSize: '0.85rem',
+                fontSize: '0.82rem',
                 fontWeight: '700',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: '6px'
               }}
             >
-              <BellRing size={16} />
+              <BellRing size={15} />
               <span>Notice Board ({myNotices.length})</span>
             </button>
             <button
               onClick={() => setActiveTab('profile')}
               style={{
-                background: 'rgba(255,255,255,0.2)',
+                background: 'rgba(255,255,255,0.18)',
                 color: 'white',
                 border: '1px solid rgba(255,255,255,0.3)',
-                padding: '8px 16px',
+                padding: '8px 12px',
                 borderRadius: 'var(--radius-md)',
-                fontSize: '0.85rem',
+                fontSize: '0.82rem',
                 fontWeight: '700',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: '6px'
               }}
             >
-              <GraduationCap size={16} />
+              <GraduationCap size={15} />
               <span>Digital ID Card</span>
             </button>
             <button
-              onClick={() => setActiveTab('timetable')}
+              onClick={() => setActiveTab('exams')}
               style={{
                 background: 'white',
                 color: '#312e81',
-                padding: '8px 16px',
+                border: '1px solid white',
+                padding: '8px 12px',
                 borderRadius: 'var(--radius-md)',
-                fontSize: '0.85rem',
+                fontSize: '0.82rem',
                 fontWeight: '800',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px'
+                justifyContent: 'center',
+                gap: '6px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
               }}
             >
-              <Clock size={16} />
-              <span>Class Timetable</span>
+              <Award size={15} />
+              <span>Exam Results</span>
             </button>
           </div>
         </div>

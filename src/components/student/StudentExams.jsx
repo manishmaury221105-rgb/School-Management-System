@@ -1,19 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSchoolData } from '../../context/SchoolDataContext';
-import { Modal } from '../common/Modal';
 import { downloadReportCardPdf, printReportCardPdf } from '../../utils/pdfReportCardGenerator';
 import {
   Award,
-  Calendar,
   Download,
   Printer,
-  CheckCircle2,
   FileText,
-  Sparkles,
-  TrendingUp,
-  User,
-  GraduationCap,
   Check,
 } from 'lucide-react';
 

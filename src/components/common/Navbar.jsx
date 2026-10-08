@@ -42,11 +42,20 @@ export const Navbar = () => {
       <header className="top-navbar">
         {/* Brand & Logo */}
         <div className="brand-logo-wrap">
-          <div className="brand-icon-box">
-            <GraduationCap size={24} />
-          </div>
+          <img
+            src="/edusphere-icon.png"
+            alt="EduSphere Logo"
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '9px',
+              objectFit: 'contain',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(226, 232, 240, 0.8)'
+            }}
+          />
           <div>
-            <div style={{ lineHeight: 1.1 }}>EduSphere <span style={{ color: 'var(--primary)', fontSize: '0.85em' }}>360</span></div>
+            <div style={{ lineHeight: 1.1, fontWeight: '800' }}>EduSphere <span style={{ color: 'var(--primary)', fontSize: '0.85em' }}>360</span></div>
             <div style={{ fontSize: '0.68rem', fontWeight: '500', color: 'var(--text-muted)' }}>
               Enterprise SIS Platform
             </div>

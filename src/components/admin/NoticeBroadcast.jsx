@@ -3,15 +3,9 @@ import { useSchoolData } from '../../context/SchoolDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { Modal } from '../common/Modal';
 import {
-  BellRing,
   Plus,
   Trash2,
-  Users,
-  AlertCircle,
-  Tag,
-  CheckCircle,
   Send,
-  Filter,
 } from 'lucide-react';
 
 export const NoticeBroadcast = () => {

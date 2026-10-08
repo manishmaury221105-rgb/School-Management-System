@@ -3,6 +3,7 @@ import { useSchoolData } from '../../context/SchoolDataContext';
 import { useAuth, ROLES } from '../../context/AuthContext';
 import { Modal } from '../common/Modal';
 import { FeeCollectionModal } from './FeeCollectionModal';
+import { triggerCsvDownload } from '../../utils/csvDownloadHelper';
 import {
   Users,
   Search,
@@ -19,7 +20,7 @@ import {
 export const StudentManagement = ({ setActiveTab }) => {
   const { currentRole, currentUser } = useAuth();
   const isAdmin = currentRole === ROLES.ADMIN;
-  const { students, addStudent, updateStudent, deleteStudent, clearAllStudents, classes, teachers } = useSchoolData();
+  const { students, addStudent, updateStudent, deleteStudent, classes, teachers } = useSchoolData();
 
   // Identify teacher profile and calculate allowed classrooms
   const activeTeacher = teachers?.find(t =>
@@ -205,24 +206,16 @@ export const StudentManagement = ({ setActiveTab }) => {
     });
   };
 
-  const exportCSV = () => {
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      ['ID,Name,Class,Roll,Email,Parent,Contact,Attendance']
-        .concat(
-          filteredStudents.map(
-            (s) =>
-              `${s.studentId},"${s.name}","${s.class}",${s.rollNo},${s.email},"${s.parentName}","${s.parentContact}",${s.attendancePercent}%`
-          )
+  const exportCSV = async () => {
+    const csvContent = ['ID,Name,Class,Roll,Email,Parent,Contact,Attendance']
+      .concat(
+        filteredStudents.map(
+          (s) =>
+            `${s.studentId},"${s.name}","${s.class}",${s.rollNo},${s.email},"${s.parentName}","${s.parentContact}",${s.attendancePercent}%`
         )
-        .join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `edusphere_students_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      )
+      .join('\n');
+    await triggerCsvDownload(csvContent, `edusphere_students_${new Date().toISOString().split('T')[0]}.csv`, 'Student Directory Export');
   };
 
   return (

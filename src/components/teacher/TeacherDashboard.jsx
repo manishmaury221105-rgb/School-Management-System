@@ -49,26 +49,30 @@ export const TeacherDashboard = ({ setActiveTab }) => {
             Class 10-A Class Teacher • Mathematics & Physics Department • Broadcast Center
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button onClick={() => setActiveTab('students')} className="btn-primary">
-            <UserPlus size={16} />
-            <span>Add / Enroll Student</span>
+        <div className="teacher-actions-grid">
+          <button
+            onClick={() => setActiveTab('students')}
+            className="btn-primary"
+            style={{ padding: '8px 10px', fontSize: '0.82rem', justifyContent: 'center', gap: '6px' }}
+          >
+            <UserPlus size={15} />
+            <span>Add Student</span>
           </button>
-          <button onClick={() => setActiveTab('timetable')} className="btn-secondary">
-            <Clock size={16} />
-            <span>My Timetable</span>
+          <button
+            onClick={() => setActiveTab('notices')}
+            className="btn-secondary"
+            style={{ padding: '8px 10px', fontSize: '0.82rem', justifyContent: 'center', gap: '6px' }}
+          >
+            <BellRing size={15} />
+            <span>Notices</span>
           </button>
-          <button onClick={() => setActiveTab('notices')} className="btn-secondary">
-            <BellRing size={16} />
-            <span>Notice Broadcaster</span>
-          </button>
-          <button onClick={() => setActiveTab('attendance')} className="btn-secondary">
-            <UserCheck size={16} />
-            <span>Mark Attendance</span>
-          </button>
-          <button onClick={() => setActiveTab('homework')} className="btn-secondary">
-            <BookOpen size={16} />
-            <span>Assign Homework</span>
+          <button
+            onClick={() => setActiveTab('gradebook')}
+            className="btn-secondary"
+            style={{ padding: '8px 10px', fontSize: '0.82rem', justifyContent: 'center', gap: '6px' }}
+          >
+            <Award size={15} />
+            <span>Enter Marks</span>
           </button>
         </div>
       </div>
@@ -116,6 +120,7 @@ export const TeacherDashboard = ({ setActiveTab }) => {
           onClick={() => setActiveTab('timetable')}
         />
       </div>
+
 
       {/* Two Column Section: Today's Schedule & Active Broadcast Circulars */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
@@ -283,74 +288,6 @@ export const TeacherDashboard = ({ setActiveTab }) => {
               );
             })}
           </div>
-        </div>
-      </div>
-
-      {/* Assigned Classes Quick Summary */}
-      <div className="card-elevated" style={{ padding: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-          <h3 style={{ fontSize: '1.15rem', fontWeight: '800' }}>Assigned Class Roster</h3>
-          <button
-            onClick={() => setActiveTab('gradebook')}
-            style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}
-          >
-            Gradebook <ArrowRight size={14} />
-          </button>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-          {assignedClasses.map((clsName, idx) => (
-            <div
-              key={idx}
-              style={{
-                padding: '1rem',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--bg-input)',
-                border: '1px solid var(--border)',
-                boxShadow: 'var(--shadow-xs)'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <div style={{ fontSize: '1.05rem', fontWeight: '800' }}>{clsName}</div>
-                <span className="badge-status badge-active">
-                  {clsName === 'Class 10-A' ? 'Class Teacher' : 'Subject Faculty'}
-                </span>
-              </div>
-              <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                32 Students Enrolled • 94.5% Term Attendance • Room 304
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <button
-                  onClick={() => setActiveTab('students')}
-                  className="btn-primary"
-                  style={{ padding: '4px 10px', fontSize: '0.78rem', flex: 1, justifyContent: 'center' }}
-                >
-                  Students
-                </button>
-                <button
-                  onClick={() => setActiveTab('attendance')}
-                  className="btn-secondary"
-                  style={{ padding: '4px 10px', fontSize: '0.78rem', flex: 1, justifyContent: 'center' }}
-                >
-                  Attendance
-                </button>
-                <button
-                  onClick={() => setActiveTab('homework')}
-                  className="btn-secondary"
-                  style={{ padding: '4px 10px', fontSize: '0.78rem', flex: 1, justifyContent: 'center' }}
-                >
-                  Assignments
-                </button>
-                <button
-                  onClick={() => setActiveTab('gradebook')}
-                  className="btn-secondary"
-                  style={{ padding: '4px 10px', fontSize: '0.78rem', flex: 1, justifyContent: 'center' }}
-                >
-                  Marks
-                </button>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>
